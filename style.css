@@ -1466,3 +1466,76 @@ header .nav{
   header .acts .btn.o.sm{padding:7px 8px;font-size:11px}
   header .burger{flex-basis:33px;width:33px;height:35px}
 }
+
+
+/* ---- Admin sidebar overflow and full-height background fix ---- */
+/* On desktop, keep the entire admin navigation inside the dark sidebar.
+   The old fixed-height sidebar allowed long menu contents to spill onto the page. */
+@media(min-width:1281px){
+  #admin .ad{
+    grid-template-columns:260px minmax(0,1fr);
+    align-items:stretch;
+    min-height:100vh;
+  }
+  #admin .ad aside{
+    position:sticky;
+    top:0;
+    align-self:start;
+    width:auto;
+    height:100vh;
+    min-height:100vh;
+    max-height:100vh;
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    overflow-x:hidden;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(255,255,255,.3) transparent;
+    background:#0f172a!important;
+    color:#f8fafc;
+  }
+  #admin .ad aside h4{
+    flex:0 0 auto;
+    padding-bottom:2px;
+  }
+  #admin .ad aside #adNav{
+    display:flex;
+    flex:0 0 auto;
+    flex-direction:column;
+    gap:4px;
+    min-width:0;
+    width:100%;
+  }
+  #admin .ad aside #adNav button{
+    display:block;
+    flex:0 0 auto;
+    width:100%;
+    min-width:0;
+    box-sizing:border-box;
+    margin:0;
+    padding:12px 14px;
+    border-radius:11px;
+    color:#cbd5e1;
+    text-align:left;
+    line-height:1.35;
+    white-space:normal;
+    overflow-wrap:anywhere;
+  }
+  #admin .ad aside #adNav button.on,
+  #admin .ad aside #adNav button:hover{
+    background:var(--o);
+    color:#fff;
+  }
+  #admin .ad aside>button{
+    flex:0 0 auto;
+    width:100%;
+    margin-top:8px!important;
+  }
+  #admin .ad main{
+    min-width:0;
+    overflow-x:hidden;
+    padding:28px clamp(18px,2.2vw,34px);
+  }
+}

@@ -1,4 +1,4 @@
-const CACHE_NAME='wbbd-shell-v12';
+const CACHE_NAME='wbbd-shell-v13';
 const CORE=['./','./index.html','./style.css','./app.js','./manifest.webmanifest','./assets/logo-mark.png','./assets/logo.png','./assets/messenger-logo.webp','./assets/telegram-logo.webp','./assets/whatsapp-logo.webp'];
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting()));
