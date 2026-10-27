@@ -11,7 +11,7 @@ const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{retur
 const DEFAULT={
  brand:{h1:'Your Vision.',h2:'Our Code.',h3:'Your Success.',lead:'We design and build fast, modern, mobile-friendly websites that help your business look professional and win more customers.',tagline:'আপনার স্বপ্নের ওয়েবসাইট'},
  about:{p1:'Website Builders BD is a web design and development studio in Bangladesh. We turn your ideas into clean, fast and easy-to-use websites — from business sites and portfolios to online shops.',p2:'Our mission is simple: <i>make a professional web presence easy, effective and affordable for every business.</i>'},
- contact:{messenger:'https://m.me/website.builders.bdcom',facebook:'https://www.facebook.com/website.builders.bdcom',youtube:'https://www.youtube.com/@WebTech25',portfolio:'https://sopnil2026.github.io/sopnilPortfolio',email:'sopnilprodhan13@gmail.com',phone:'01740304436',hours:'Sat – Thu · 9 AM – 9 PM',bkash:'01740304436',webmoney:'Ask on Messenger for account details'},
+ contact:{messenger:'https://m.me/website.builders.bdcom',telegram:'https://t.me/',facebook:'https://www.facebook.com/website.builders.bdcom',youtube:'https://www.youtube.com/@WebTech25',portfolio:'https://sopnil2026.github.io/sopnilPortfolio',email:'sopnilprodhan13@gmail.com',phone:'01740304436',hours:'Sat – Thu · 9 AM – 9 PM',bkash:'01740304436',webmoney:'Ask on Messenger for account details'},
  payments:[{n:'bKash',c:'#e2136e',img:''},{n:'Webmoney',c:'#1d6fb8',img:''}],
  stats:[{n:'50%',l:'Advance to start'},{n:'30 Days',l:'Refund window'},{n:'100%',l:'Mobile responsive'}],
  services:[
@@ -33,6 +33,22 @@ const DEFAULT={
   {t:'Spice Garden Restaurant',c:'Business',d:'Menu, gallery and table-booking style layout.',url:'',demo:true,color:'#b45309,#78350f'},
   {t:'Fashion Hub Store',c:'E-Commerce',d:'Product grid, cart and checkout flow.',url:'',demo:true,color:'#db2777,#9d174d'},
   {t:'Smart Clinic',c:'Business',d:'Doctor profiles and appointment request page.',url:'',demo:true,color:'#0891b2,#155e75'}],
+ gallery:[
+  {t:'Modern Business Website',c:'Web Design',d:'A clean, responsive layout concept for a growing business.',color:'#2563eb,#7c3aed'},
+  {t:'Creative Portfolio',c:'Portfolio',d:'A visual showcase for creators, freelancers and developers.',color:'#0891b2,#0f766e'},
+  {t:'Online Store Concept',c:'E-Commerce',d:'A product-focused design idea for online selling.',color:'#db2777,#9d174d'}],
+ blog:[
+  {t:'Why Every Business Needs a Website',category:'Web Strategy',date:'Featured article',d:'Understand how a professional online presence helps people discover and trust your business.',url:''},
+  {t:'A Beginner’s Guide to Responsive Design',category:'Web Development',date:'Learning guide',d:'Learn why websites should adapt cleanly to phones, tablets and desktop screens.',url:''},
+  {t:'Website Speed: Small Fixes That Matter',category:'Performance',date:'Practical tips',d:'Simple ways to make a website feel faster and easier to use.',url:''}],
+ training:[
+  {t:'HTML & CSS Foundations',level:'Beginner',format:'Online learning',d:'Start with page structure, styling, layout and responsive foundations.',url:''},
+  {t:'JavaScript Essentials',level:'Beginner to Intermediate',format:'Hands-on practice',d:'Learn core JavaScript ideas and use them to make a website interactive.',url:''},
+  {t:'Build and Publish a Website',level:'Project-based',format:'Guided project',d:'Practice taking a project from local files to a live website.',url:''}],
+ program:[
+  {t:'Website Launch Program',d:'Plan, build and publish a professional website for your idea or business.',details:'A guided path from requirements to launch.',cta:'Start a Project',url:'#contact'},
+  {t:'Web Skills Starter Program',d:'A clear starting path for people learning HTML, CSS and JavaScript.',details:'Practice with small, real projects.',cta:'Ask About Training',url:'#contact'},
+  {t:'Business Growth Program',d:'Improve your online presentation with a website, portfolio and useful content.',details:'Focus on a reliable, mobile-friendly digital presence.',cta:'Get a Quote',url:'#contact'}],
  faq:[
   {q:'How long does a website take?',a:'Most websites take 7–21 days depending on the package and how quickly you send content.'},
   {q:'How does payment work?',a:'You pay 50% in advance by bKash or Webmoney before work starts, and the rest on delivery after you approve the result.'},
@@ -86,7 +102,7 @@ function render(){
  $('#pkSel').innerHTML=C.packages.map(p=>`<option>${esc(p.n)} – ${esc(p.price)}</option>`).join('')+'<option>Custom / Not sure</option>';
  const cats=['All',...new Set(C.portfolio.map(p=>p.c))];
  $('#flt').innerHTML=cats.map((c,i)=>`<button class="${i?'':'on'}" data-cat="${esc(c)}">${esc(c)}</button>`).join('');
- drawPf('All');
+ drawPf('All');drawGallery();drawBlog();drawTraining();drawProgram();
  $('#steps').innerHTML=C.steps.map((s,i)=>`<div class="st rv d${i%3}"><b>${i+1}</b><h4>${esc(s.t)}</h4><p>${esc(s.d)}</p></div>`).join('');
  const acc=l=>l.map(f=>`<div class="fq"><button>${esc(f.q)}</button><div>${esc(f.a)}</div></div>`).join('');
  $('#faqList').innerHTML=acc(C.faq);$('#polList').innerHTML=acc(C.policies);
@@ -94,13 +110,14 @@ function render(){
   ['📞','Phone / bKash',ct.phone,'tel:+88'+ct.phone.replace(/\D/g,''),ct.hours?'Available '+ct.hours:''],
   ['✉️','Email',ct.email,'mailto:'+ct.email,'We reply as soon as we can'],
   ['💬','Messenger','Chat with us',ct.messenger,'Fastest way to reach us'],
+  ['✈️','Telegram','Chat with us',ct.telegram,'Message us on Telegram'],
   ['🌐','Our Portfolio Website',ct.portfolio.replace(/^https?:\/\//,''),ct.portfolio,'See a live project'],
   ['📘','Facebook','Website Builders BD',ct.facebook,''],
   ['▶️','YouTube','WebTech25',ct.youtube,''],
   ['💳','bKash',ct.bkash+' (Send Money)',null,'Pay 50% advance to start'],
   ['🪙','Webmoney',ct.webmoney,null,'']
  ].map(([i,t,s,h,sub])=>`<${h?`a href="${esc(h)}" ${/^tel|^mailto/.test(h)?'':'target="_blank" rel="noopener"'}`:'div'} class="ci"><i>${i}</i><div><small>${t}</small><b>${esc(s)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div></${h?'a':'div'}>`).join('');
- $$('[data-msgr]').forEach(a=>a.href=ct.messenger);$$('[data-fb]').forEach(a=>a.href=ct.facebook);$$('[data-yt]').forEach(a=>a.href=ct.youtube);$$('[data-pf]').forEach(a=>a.href=ct.portfolio);
+ $('[data-msgr]').forEach(a=>a.href=ct.messenger);$('[data-tg]').forEach(a=>a.href=ct.telegram||'https://t.me/');$('[data-fb]').forEach(a=>a.href=ct.facebook);$$('[data-yt]').forEach(a=>a.href=ct.youtube);$$('[data-pf]').forEach(a=>a.href=ct.portfolio);
  $$('[data-mail]').forEach(a=>a.href='mailto:'+ct.email);$$('[data-tel]').forEach(a=>a.href='tel:+88'+ct.phone.replace(/\D/g,''));
  $$('[data-t]').forEach(s=>s.textContent=ct[s.dataset.t]||'');
  $('#ftServices').innerHTML=C.services.slice(0,6).map(s=>`<a href="#services">${esc(s.t)}</a>`).join('');
@@ -112,6 +129,36 @@ function drawPf(cat){
  $('#pfGrid').innerHTML=C.portfolio.filter(p=>cat==='All'||p.c===cat).map((p,i)=>{
   const [a,b]=(p.color||'#f97316,#ea580c').split(',');const tag=p.url?'a':'div';
   return `<${tag} class="pf rv in" ${p.url?`href="${esc(p.url)}" target="_blank" rel="noopener"`:''}><div class="th" style="background:linear-gradient(135deg,${esc(a)},${esc(b||a)})">${esc(p.t.split(' ').map(w=>w[0]).slice(0,2).join(''))}</div><div class="bd"><small>${esc(p.c)}${p.demo?' · Demo':''}</small><h3>${esc(p.t)}</h3><p>${esc(p.d)}</p></div></${tag}>`}).join('');
+}
+function drawGallery(){
+ const items=C.gallery||[];
+ $('#galleryGrid').innerHTML=items.map(it=>{
+  const colors=(it.color||'#f97316,#ea580c').split(',');
+  const a=/^#[0-9a-f]{6}$/i.test(colors[0]||'')?colors[0]:'#f97316';
+  const b=/^#[0-9a-f]{6}$/i.test(colors[1]||'')?colors[1]:a;
+  return '<article class="content-card rv"><div class="content-art" style="background:linear-gradient(135deg,'+a+','+b+')">'+esc(it.t)+'</div><div class="content-body"><span class="content-meta">'+esc(it.c||'Gallery')+'</span><h3>'+esc(it.t)+'</h3><p>'+esc(it.d)+'</p><a class="btn o sm" href="#contact">Ask about this design</a></div></article>';
+ }).join('');
+}
+function drawBlog(){
+ $('#blogGrid').innerHTML=(C.blog||[]).map(it=>{
+  const hasLink=!!it.url&&/^https?:\/\//i.test(it.url);
+  const href=hasLink?esc(it.url):'#contact';
+  return '<article class="content-card rv"><div class="content-body"><span class="content-meta">'+esc(it.category||'Blog')+' · '+esc(it.date||'Latest')+'</span><h3>'+esc(it.t)+'</h3><p>'+esc(it.d)+'</p><a class="btn o sm" href="'+href+'" '+(hasLink?'target="_blank" rel="noopener"':'')+'>'+(hasLink?'Read article':'Discuss this topic')+' →</a></div></article>';
+ }).join('');
+}
+function drawTraining(){
+ $('#trainingGrid').innerHTML=(C.training||[]).map(it=>{
+  const hasLink=!!it.url&&/^https?:\/\//i.test(it.url);
+  const href=hasLink?esc(it.url):'#contact';
+  return '<article class="content-card rv"><div class="content-body"><span class="content-meta">'+esc(it.level||'Training')+' · '+esc(it.format||'Course')+'</span><h3>'+esc(it.t)+'</h3><p>'+esc(it.d)+'</p><a class="btn o sm" href="'+href+'" '+(hasLink?'target="_blank" rel="noopener"':'')+'>'+(hasLink?'Open training':'Ask about training')+' →</a></div></article>';
+ }).join('');
+}
+function drawProgram(){
+ $('#programGrid').innerHTML=(C.program||[]).map(it=>{
+  const raw=String(it.url||'#contact');
+  const href=/^(https?:\/\/|#[A-Za-z][\w-]*)/i.test(raw)?esc(raw):'#contact';
+  return '<article class="content-card rv"><div class="content-body"><span class="content-meta">Website Builders BD</span><h3>'+esc(it.t)+'</h3><p>'+esc(it.d)+'</p><p>'+esc(it.details||'')+'</p><a class="btn p sm" href="'+href+'">'+esc(it.cta||'Learn more')+' →</a></div></article>';
+ }).join('');
 }
 function observe(){
  const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
@@ -125,8 +172,9 @@ function onScroll(){const y=scrollY,h=document.documentElement.scrollHeight-inne
  $$('#pill a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+cur))}
 addEventListener('scroll',onScroll,{passive:true});onScroll();
 topb.onclick=()=>scrollTo({top:0});
-$('#burger').onclick=()=>$('#pill').classList.toggle('op');
-$('#pill').onclick=e=>{if(e.target.tagName==='A')$('#pill').classList.remove('op')};
+$('#burger').onclick=()=>{const opened=$('#pill').classList.toggle('op');$('#burger').setAttribute('aria-expanded',String(opened));};
+$('#pill').onclick=e=>{if(e.target.closest('a')){$('#pill').classList.remove('op');$('#burger').setAttribute('aria-expanded','false');}};
+document.addEventListener('click',e=>{if(!e.target.closest('.nav')){$('#pill').classList.remove('op');$('#burger').setAttribute('aria-expanded','false');}});
 document.addEventListener('click',e=>{
  const fq=e.target.closest('.fq button');if(fq)fq.parentElement.classList.toggle('op');
  const f=e.target.closest('[data-cat]');if(f){$$('#flt button').forEach(b=>b.classList.remove('on'));f.classList.add('on');drawPf(f.dataset.cat)}
@@ -165,7 +213,7 @@ $('#authForm').addEventListener('submit',async e=>{
   if(em===ADMIN_EMAIL){err.textContent='This email is reserved.';return}
   const us=ls.get(K.u,[]);if(us.some(u=>u.email===em)){err.textContent='Account already exists. Please login.';return}
   us.push({name:nm,email:em,hash:h,at:new Date().toISOString()});ls.set(K.u,us);
-  sessionStorage.setItem(K.s,JSON.stringify({email:em,name:nm,role:'user'}));mo.classList.remove('sh');authUI();toast('Welcome, '+nm+'!');openUser();return}
+  setMode('login');$('#aEmail').value=em;$('#aPass').value='';toast('Account created. Please sign in to continue.');return}
  const ah=ls.get(K.a,ADMIN_HASH);
  if(em===ADMIN_EMAIL){
   if(h===ah){sessionStorage.setItem(K.s,JSON.stringify({email:em,name:'Admin',role:'admin'}));mo.classList.remove('sh');authUI();openAdmin();return}
@@ -176,7 +224,7 @@ $('#authForm').addEventListener('submit',async e=>{
 });
 
 /* ---------- admin ---------- */
-const ADM=['Dashboard','Hero & About','Contact & Links','Payment Methods','Services','Packages','Portfolio','FAQ & Policies','Users','Orders','Settings'];
+const ADM=['Dashboard','Hero & About','Contact & Links','Payment Methods','Services','Packages','Portfolio','Gallery','Blog','Training','Our Program','FAQ & Policies','Users','Orders','Settings'];
 let tab='Dashboard';
 function openAdmin(){const s=session();if(!s||s.role!=='admin')return;$('#admin').classList.add('sh');document.body.style.overflow='hidden';drawAdmin()}
 function closeAdmin(){$('#admin').classList.remove('sh');document.body.style.overflow=''}
@@ -188,12 +236,16 @@ function drawAdmin(){
  $$('#adNav button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;drawAdmin()});
  const m=$('#adMain'),F={Dashboard:dash,'Hero & About':heroEd,'Contact & Links':contactEd,'Payment Methods':payEd,Services:listEd('services',[['i','Icon'],['t','Title'],['d','Description']],{i:'⭐',t:'New service',d:''}),
   Packages:pkEd,Portfolio:listEd('portfolio',[['t','Title'],['c','Category'],['d','Description'],['url','Live link (https://…)'],['color','Colors e.g. #f97316,#ea580c']],{t:'New project',c:'Business',d:'',url:'',demo:true,color:'#f97316,#ea580c'}),
+  Gallery:listEd('gallery',[['t','Title'],['c','Category'],['d','Description'],['color','Colors e.g. #f97316,#ea580c']],{t:'New gallery item',c:'Web Design',d:'',color:'#f97316,#ea580c'}),
+  Blog:listEd('blog',[['t','Title'],['category','Category'],['date','Date / label'],['d','Summary'],['url','Article link (https://…)']],{t:'New article',category:'Web Development',date:'New post',d:'',url:''}),
+  Training:listEd('training',[['t','Title'],['level','Level'],['format','Format'],['d','Description'],['url','Training link (https://…)']],{t:'New training',level:'Beginner',format:'Online',d:'',url:''}),
+  'Our Program':listEd('program',[['t','Title'],['d','Description'],['details','Details'],['cta','Button label'],['url','Button link (#contact or https://…)']],{t:'New program',d:'',details:'',cta:'Learn more',url:'#contact'}),
   'FAQ & Policies':faqEd,Users:usersV,Orders:ordersV,Settings:settingsV};
  m.innerHTML=`<h2>${tab}</h2>`;F[tab](m);
 }
 const inp=(k,l,v,tag='input')=>`<label>${l}<${tag} data-k="${k}">${tag==='textarea'?esc(v):''}</${tag==='textarea'?'textarea':'input'}></label>`.replace('<input data-k',`<input value="${esc(v)}" data-k`);
 function panel(m,title,html){const d=document.createElement('div');d.className='pn';d.innerHTML=(title?`<h3>${title}</h3>`:'')+html;m.appendChild(d);return d}
-function commit(msg='Saved ✓'){save();render();toast(msg)}
+function commit(msg='Saved ✓'){save();render();if($('#userpanel').classList.contains('sh'))drawUser();toast(msg)}
 function dash(m){
  const u=ls.get(K.u,[]),o=ls.get(K.o,[]);
  m.insertAdjacentHTML('beforeend',`<div class="sc4"><div><b>${u.length}</b>Registered users</div><div><b>${o.length}</b>Orders (this browser)</div><div><b>${C.services.length}</b>Services</div><div><b>${C.portfolio.length}</b>Portfolio items</div></div>`);
@@ -206,7 +258,7 @@ function heroEd(m){
  q.querySelector('button').onclick=()=>{$$('[data-k]',q).forEach(i=>C.about[i.dataset.k]=i.value);commit()};
 }
 function contactEd(m){
- const L={messenger:'Messenger link',facebook:'Facebook page link',youtube:'YouTube link',portfolio:'Portfolio website link',hours:'Working hours',email:'Email',phone:'Phone (call button)',bkash:'bKash number',webmoney:'Webmoney details'};
+ const L={messenger:'Messenger link',telegram:'Telegram link (https://t.me/username)',facebook:'Facebook page link',youtube:'YouTube link',portfolio:'Portfolio website link',hours:'Working hours',email:'Email',phone:'Phone (call button)',bkash:'bKash number',webmoney:'Webmoney details'};
  const p=panel(m,'Contact, social & payment',Object.keys(L).map(k=>inp(k,L[k],C.contact[k])).join('')+'<button class="btn p sm" style="margin-top:12px">Save</button>');
  p.querySelector('button').onclick=()=>{$$('[data-k]',p).forEach(i=>C.contact[i.dataset.k]=i.value.trim());commit()};
 }
@@ -237,7 +289,7 @@ function settingsV(m){
  $('#ex',b).onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(C,null,2)],{type:'application/json'}));a.download='wbbd-content.json';a.click()};
  $('#im',b).onchange=e=>{const r=new FileReader();r.onload=()=>{try{C=Object.assign({},DEFAULT,JSON.parse(r.result));commit('Imported');drawAdmin()}catch{toast('Invalid file')}};r.readAsText(e.target.files[0])};
  $('#rs',b).onclick=()=>{if(confirm('Reset all content to defaults?')){localStorage.removeItem(K.c);C=Object.assign({},DEFAULT);render();drawAdmin();toast('Reset')}};
- panel(m,'Important: where your data lives','<p class="note">This site is static (GitHub Pages). Content you edit here and accounts created by visitors are saved in <b>this browser only</b> — other visitors will not see your edits until you export the JSON and paste it into <code>DEFAULT</code> in app.js (or connect a real backend such as Supabase). Visitor logins are for convenience, not strong security.</p>');
+ panel(m,'Important: where your data lives','<p class="note">This site is a static GitHub Pages site. Content, accounts and requests are stored in this browser. Changes update the public sections immediately and are shared with other open tabs on this same browser, but they do not automatically sync to other visitors or devices. To publish Admin edits for everyone, connect a shared database and server-side authentication (for example Supabase) before production use. Browser-only visitor logins are not strong security.</p>');
 }
 
 /* payment methods editor (admin) */
@@ -280,6 +332,20 @@ function drawUser(){
   u.name=nm;if(pw){if(pw.length<6)return toast('Password needs 6+ characters');u.hash=await sha(pw)}
   ls.set(K.u,us);sessionStorage.setItem(K.s,JSON.stringify({...s,name:nm}));authUI();drawUser();toast('Profile saved')};
 }
-addEventListener('keydown',e=>{if(e.key==='Escape'){mo.classList.remove('sh')}});
+addEventListener('keydown',e=>{if(e.key==='Escape'){mo.classList.remove('sh');$('#pill').classList.remove('op');$('#burger').setAttribute('aria-expanded','false');}});
+window.addEventListener('storage',e=>{
+ if(e.key===K.c&&e.newValue){
+  try{
+   const incoming=JSON.parse(e.newValue);
+   C=Object.assign({},DEFAULT,incoming);
+   C.brand=Object.assign({},DEFAULT.brand,incoming.brand||{});
+   C.about=Object.assign({},DEFAULT.about,incoming.about||{});
+   C.contact=Object.assign({},DEFAULT.contact,incoming.contact||{});
+   render();
+   if($('#userpanel').classList.contains('sh'))drawUser();
+  }catch{}
+ }
+});
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
 render();
 })();
