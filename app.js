@@ -11,7 +11,7 @@ const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{retur
 const DEFAULT={
  brand:{h1:'Your Vision.',h2:'Our Code.',h3:'Your Success.',lead:'We design and build fast, modern, mobile-friendly websites that help your business look professional and win more customers.',tagline:'আপনার স্বপ্নের ওয়েবসাইট'},
  about:{p1:'Website Builders BD is a web design and development studio in Bangladesh. We turn your ideas into clean, fast and easy-to-use websites — from business sites and portfolios to online shops.',p2:'Our mission is simple: <i>make a professional web presence easy, effective and affordable for every business.</i>'},
- contact:{messenger:'https://m.me/website.builders.bdcom',telegram:'https://t.me/',facebook:'https://www.facebook.com/website.builders.bdcom',youtube:'https://www.youtube.com/@WebTech25',portfolio:'https://sopnil2026.github.io/sopnilPortfolio',email:'sopnilprodhan13@gmail.com',phone:'01740304436',hours:'Sat – Thu · 9 AM – 9 PM',bkash:'01740304436',webmoney:'Ask on Messenger for account details'},
+ contact:{messenger:'https://m.me/website.builders.bdcom',whatsapp:'https://wa.me/message/SRU4QQYVDKZLP1',telegram:'https://t.me/',facebook:'https://www.facebook.com/website.builders.bdcom',youtube:'https://www.youtube.com/@WebTech25',portfolio:'https://sopnil2026.github.io/sopnilPortfolio',email:'sopnilprodhan13@gmail.com',phone:'01740304436',hours:'Sat – Thu · 9 AM – 9 PM',bkash:'01740304436',webmoney:'Ask on Messenger for account details'},
  payments:[{n:'bKash',c:'#e2136e',img:''},{n:'Webmoney',c:'#1d6fb8',img:''}],
  stats:[{n:'50%',l:'Advance to start'},{n:'30 Days',l:'Refund window'},{n:'100%',l:'Mobile responsive'}],
  services:[
@@ -124,7 +124,7 @@ function render(){
  const acc=l=>l.map(f=>`<div class="fq"><button>${esc(f.q)}</button><div>${esc(f.a)}</div></div>`).join('');
  $('#faqList').innerHTML=acc(C.faq);$('#polList').innerHTML=acc(C.policies);
  $('#cinfo').innerHTML=[
-  ['📞','Phone / bKash',ct.phone,'tel:+88'+ct.phone.replace(/\D/g,''),ct.hours?'Available '+ct.hours:''],
+  ['💬','WhatsApp','Chat with us',ct.whatsapp||'https://wa.me/message/SRU4QQYVDKZLP1','Message us on WhatsApp'],
   ['✉️','Email',ct.email,'mailto:'+ct.email,'We reply as soon as we can'],
   ['💬','Messenger','Chat with us',ct.messenger,'Fastest way to reach us'],
   ['✈️','Telegram','Chat with us',ct.telegram,'Message us on Telegram'],
@@ -135,7 +135,7 @@ function render(){
   ['🪙','Webmoney',ct.webmoney,null,'']
  ].map(([i,t,s,h,sub])=>`<${h?`a href="${esc(h)}" ${/^tel|^mailto/.test(h)?'':'target="_blank" rel="noopener"'}`:'div'} class="ci"><i>${i}</i><div><small>${t}</small><b>${esc(s)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div></${h?'a':'div'}>`).join('');
  $$('[data-msgr]').forEach(a=>a.href=ct.messenger);$$('[data-tg]').forEach(a=>a.href=ct.telegram||'https://t.me/');$$('[data-fb]').forEach(a=>a.href=ct.facebook);$$('[data-yt]').forEach(a=>a.href=ct.youtube);$$('[data-pf]').forEach(a=>a.href=ct.portfolio);
- $$('[data-mail]').forEach(a=>a.href='mailto:'+ct.email);$$('[data-tel]').forEach(a=>a.href='tel:+88'+ct.phone.replace(/\D/g,''));
+  $('[data-mail]').forEach(a=>a.href='mailto:'+ct.email);$('[data-wa]').forEach(a=>{a.href=ct.whatsapp||'https://wa.me/message/SRU4QQYVDKZLP1';a.target='_blank';a.rel='noopener'});
  $$('[data-t]').forEach(s=>s.textContent=ct[s.dataset.t]||'');
  $('#ftServices').innerHTML=C.services.slice(0,6).map(s=>`<a href="#services">${esc(s.t)}</a>`).join('');
  const pays=(C.payments||[]).map(payBadge).join('');$$('[data-pay]').forEach(el=>el.innerHTML=pays);
@@ -308,7 +308,7 @@ function heroEd(m){
  q.querySelector('button').onclick=()=>{$$('[data-k]',q).forEach(i=>C.about[i.dataset.k]=i.value);commit()};
 }
 function contactEd(m){
- const L={messenger:'Messenger link',telegram:'Telegram link (https://t.me/username)',facebook:'Facebook page link',youtube:'YouTube link',portfolio:'Portfolio website link',hours:'Working hours',email:'Email',phone:'Phone (call button)',bkash:'bKash number',webmoney:'Webmoney details'};
+ const L={messenger:'Messenger link',whatsapp:'WhatsApp link (https://wa.me/...)',telegram:'Telegram link (https://t.me/username)',facebook:'Facebook page link',youtube:'YouTube link',portfolio:'Portfolio website link',hours:'Working hours',email:'Email',bkash:'bKash number',webmoney:'Webmoney details'};
  const p=panel(m,'Contact, social & payment',Object.keys(L).map(k=>inp(k,L[k],C.contact[k])).join('')+'<button class="btn p sm" style="margin-top:12px">Save</button>');
  p.querySelector('button').onclick=()=>{$$('[data-k]',p).forEach(i=>C.contact[i.dataset.k]=i.value.trim());commit()};
 }
