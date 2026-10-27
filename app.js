@@ -11,7 +11,7 @@ const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{retur
 const DEFAULT={
  brand:{h1:'Your Vision.',h2:'Our Code.',h3:'Your Success.',lead:'We design and build fast, modern, mobile-friendly websites that help your business look professional and win more customers.',tagline:'আপনার স্বপ্নের ওয়েবসাইট'},
  about:{p1:'Website Builders BD is a web design and development studio in Bangladesh. We turn your ideas into clean, fast and easy-to-use websites — from business sites and portfolios to online shops.',p2:'Our mission is simple: <i>make a professional web presence easy, effective and affordable for every business.</i>'},
- contact:{messenger:'https://m.me/website.builders.bdcom',whatsapp:'https://wa.me/message/SRU4QQYVDKZLP1',telegram:'https://t.me/WebsiteBuildersBD',facebook:'https://www.facebook.com/website.builders.bdcom',youtube:'https://www.youtube.com/@WebTech25',portfolio:'https://sopnil2026.github.io/sopnilPortfolio',email:'sopnilprodhan13@gmail.com',phone:'01740304436',hours:'Sat – Thu · 9 AM – 9 PM',bkash:'01740304436',webmoney:'Ask on Messenger for account details'},
+ contact:{messenger:'https://m.me/website.builders.bdcom',whatsapp:'https://wa.me/message/SRU4QQYVDKZLP1',telegram:'https://t.me/WebsiteBuildersBD',facebook:'https://www.facebook.com/website.builders.bdcom',youtube:'https://www.youtube.com/@WebTech25',portfolio:'https://sopnil2026.github.io/sopnilPortfolio',email:'sopnilprodhan13@gmail.com',location:'Bogura, Bangladesh',mapLink:'https://www.google.com/maps/search/?api=1&query=Bogura%2C%20Bangladesh',hours:'Sat – Thu · 9 AM – 9 PM',bkash:'01740304436',webmoney:'Ask on Messenger for account details'},
  payments:[{n:'bKash',c:'#e2136e',img:''},{n:'Webmoney',c:'#1d6fb8',img:''}],
  stats:[{n:'50%',l:'Advance to start'},{n:'30 Days',l:'Refund window'},{n:'100%',l:'Mobile responsive'}],
  services:[
@@ -37,6 +37,10 @@ const DEFAULT={
   {t:'Modern Business Website',c:'Web Design',d:'A clean, responsive layout concept for a growing business.',color:'#2563eb,#7c3aed'},
   {t:'Creative Portfolio',c:'Portfolio',d:'A visual showcase for creators, freelancers and developers.',color:'#0891b2,#0f766e'},
   {t:'Online Store Concept',c:'E-Commerce',d:'A product-focused design idea for online selling.',color:'#db2777,#9d174d'}],
+ reviews:[
+   {name:'Sample client 01',role:'Demo business website',rating:5,quote:'Replace this sample with a real customer comment about the website and result.',demo:true},
+   {name:'Sample client 02',role:'Demo portfolio project',rating:5,quote:'Add genuine feedback about communication, revisions or the finished project here.',demo:true},
+   {name:'Sample client 03',role:'Demo online store',rating:5,quote:'Paste a real review shared with the customer’s permission before publishing.',demo:true}],
  blog:[
   {t:'Why Every Business Needs a Website',category:'Web Strategy',date:'Featured article',d:'Understand how a professional online presence helps people discover and trust your business.',url:''},
   {t:'A Beginner’s Guide to Responsive Design',category:'Web Development',date:'Learning guide',d:'Learn why websites should adapt cleanly to phones, tablets and desktop screens.',url:''},
@@ -64,6 +68,10 @@ const DEFAULT={
 const stored=ls.get(K.c,{});
 let C=Object.assign({},DEFAULT,stored);
 C.contact=Object.assign({},DEFAULT.contact,stored.contact||{}); // keep new fields for older saved data
+delete C.contact.phone; // Remove the call option, including from older browser-saved settings.
+if(!C.contact.location)C.contact.location=DEFAULT.contact.location;
+if(!C.contact.mapLink)C.contact.mapLink=DEFAULT.contact.mapLink;
+if(!Array.isArray(C.reviews))C.reviews=DEFAULT.reviews.map(r=>({...r}));
 if(!C.contact.portfolio)C.contact.portfolio=DEFAULT.contact.portfolio;
 if(!stored.contact||!stored.contact.telegram||stored.contact.telegram==='https://t.me/'||stored.contact.telegram==='https://t.me')C.contact.telegram=DEFAULT.contact.telegram;
 const save=()=>ls.set(K.c,C);
@@ -120,7 +128,7 @@ function render(){
  $('#pkSel').innerHTML=C.packages.map(p=>`<option>${esc(p.n)} – ${esc(p.price)}</option>`).join('')+'<option>Custom / Not sure</option>';
  const cats=['All',...new Set(C.portfolio.map(p=>p.c))];
  $('#flt').innerHTML=cats.map((c,i)=>`<button class="${i?'':'on'}" data-cat="${esc(c)}">${esc(c)}</button>`).join('');
- drawPf('All');drawGallery();drawBlog();drawTraining();drawProgram();
+ drawPf('All');drawGallery();drawReviews();drawBlog();drawTraining();drawProgram();
  $('#steps').innerHTML=C.steps.map((s,i)=>`<div class="st rv d${i%3}"><b>${i+1}</b><h4>${esc(s.t)}</h4><p>${esc(s.d)}</p></div>`).join('');
  const acc=l=>l.map(f=>`<div class="fq"><button>${esc(f.q)}</button><div>${esc(f.a)}</div></div>`).join('');
  $('#faqList').innerHTML=acc(C.faq);$('#polList').innerHTML=acc(C.policies);
@@ -129,14 +137,21 @@ function render(){
   ['✉️','Email',ct.email,'mailto:'+ct.email,'We reply as soon as we can'],
   ['<img class="brand-contact-logo" src="assets/messenger-logo.webp" alt="">','Messenger','Chat with us',ct.messenger,'Fastest way to reach us'],
   ['<img class="brand-contact-logo" src="assets/telegram-logo.webp" alt="">','Telegram','Chat with us',ct.telegram,'Message us on Telegram'],
+  ['📍','Location',ct.location||'Bogura, Bangladesh',ct.mapLink||'https://www.google.com/maps/search/?api=1&query=Bogura%2C%20Bangladesh','Open map and directions'],
   ['🌐','Our Portfolio Website',ct.portfolio.replace(/^https?:\/\//,''),ct.portfolio,'See a live project'],
   ['📘','Facebook','Website Builders BD',ct.facebook,''],
   ['▶️','YouTube','WebTech25',ct.youtube,''],
   ['💳','bKash',ct.bkash+' (Send Money)',null,'Pay 50% advance to start'],
   ['🪙','Webmoney',ct.webmoney,null,'']
- ].map(([i,t,s,h,sub])=>`<${h?`a href="${esc(h)}" ${/^tel|^mailto/.test(h)?'':'target="_blank" rel="noopener"'}`:'div'} class="ci"><i>${i}</i><div><small>${t}</small><b>${esc(s)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div></${h?'a':'div'}>`).join('');
+ ].map(([i,t,s,h,sub])=>`<${h?`a href="${esc(h)}" ${/^mailto/i.test(h)?'':'target="_blank" rel="noopener"'}`:'div'} class="ci"><i>${i}</i><div><small>${t}</small><b>${esc(s)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div></${h?'a':'div'}>`).join('');
  $$('[data-msgr]').forEach(a=>a.href=ct.messenger);$$('[data-tg]').forEach(a=>a.href=ct.telegram||'https://t.me/WebsiteBuildersBD');$$('[data-fb]').forEach(a=>a.href=ct.facebook);$$('[data-yt]').forEach(a=>a.href=ct.youtube);$$('[data-pf]').forEach(a=>a.href=ct.portfolio);
   $$('[data-mail]').forEach(a=>a.href='mailto:'+ct.email);$$('[data-wa]').forEach(a=>{a.href=ct.whatsapp||'https://wa.me/message/SRU4QQYVDKZLP1';a.target='_blank';a.rel='noopener'});
+  const mapQuery=ct.location||'Bogura, Bangladesh';
+  const mapUrl=ct.mapLink||'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(mapQuery);
+  const mapFrame=$('#locationMap');if(mapFrame)mapFrame.src='https://maps.google.com/maps?q='+encodeURIComponent(mapQuery)+'&output=embed';
+  $$('[data-map]').forEach(a=>{a.href=mapUrl;a.target='_blank';a.rel='noopener'});
+  $$('[data-location-text]').forEach(el=>el.textContent=mapQuery);
+  $$('a[href^="tel:"],[data-call]').forEach(el=>el.remove());
  $$('[data-t]').forEach(s=>s.textContent=ct[s.dataset.t]||'');
  $('#ftServices').innerHTML=C.services.slice(0,6).map(s=>`<a href="#services">${esc(s.t)}</a>`).join('');
  const pays=(C.payments||[]).map(payBadge).join('');$$('[data-pay]').forEach(el=>el.innerHTML=pays);
@@ -180,6 +195,16 @@ function drawGallery(){
      '<div class="gallery-browser-body"><small>DIGITAL EXPERIENCE</small><i class="gallery-line wide"></i><i class="gallery-line"></i><i class="gallery-action"></i><div class="gallery-preview-tiles"><i></i><i></i><i></i></div></div></div></div>'+
    '<div class="gallery-banner-foot"><span>WEBSITE BUILDERS BD</span><span>'+String(i+1).padStart(2,'0')+' <b>/</b> '+String(items.length).padStart(2,'0')+'</span></div></div>';
   return '<article class="content-card gallery-card rv">'+banner+'<div class="content-body"><div class="gallery-card-meta"><span class="content-meta">'+esc(it.c||'Gallery')+'</span><span class="gallery-index">PROJECT '+String(i+1).padStart(2,'0')+'</span></div><h3>'+esc(title)+'</h3><p>'+esc(it.d||'Explore this design concept and visual direction.')+'</p><a class="btn o sm" href="#contact">Ask about this design <span aria-hidden="true">↗</span></a></div></article>';
+ }).join('');
+}
+function drawReviews(){
+ const reviews=Array.isArray(C.reviews)?C.reviews:[];
+ const target=$('#reviewGrid');
+ if(!reviews.length){target.innerHTML='<div class="review-empty"><h3>No reviews added yet</h3><p>Add verified customer feedback from Admin Panel → Reviews.</p></div>';return}
+ target.innerHTML=reviews.map((r,i)=>{
+  const rating=Math.max(1,Math.min(5,Math.round(Number(r.rating)||5)));
+  const stars='★'.repeat(rating)+'☆'.repeat(5-rating);
+  return '<article class="review-card rv d'+(i%3)+'"><div class="review-top"><span class="review-stars" aria-label="'+rating+' out of 5 stars">'+stars+'</span><span class="review-mark '+(r.demo?'sample':'real')+'">'+(r.demo?'SAMPLE REVIEW':'CLIENT FEEDBACK')+'</span></div><blockquote>“'+esc(r.quote||'Add a verified customer review here.')+'”</blockquote><div class="review-author"><span class="review-avatar">'+esc((r.name||'C').trim().slice(0,1).toUpperCase())+'</span><span><b>'+esc(r.name||'Customer')+'</b><small>'+esc(r.role||'Website project')+'</small></span></div></article>';
  }).join('');
 }
 function drawBlog(){
@@ -285,7 +310,7 @@ $('#authForm').addEventListener('submit',async e=>{
 });
 
 /* ---------- admin ---------- */
-const ADM=['Dashboard','Hero & About','Contact & Links','Payment Methods','Services','Packages','Portfolio','Gallery','Blog','Training','Our Program','FAQ & Policies','Users','Orders','Messages','Login Activity','Settings'];
+const ADM=['Dashboard','Hero & About','Contact & Links','Payment Methods','Services','Packages','Portfolio','Gallery','Reviews','Blog','Training','Our Program','FAQ & Policies','Users','Orders','Messages','Login Activity','Settings'];
 let tab='Dashboard';
 function openAdmin(){const s=session();if(!s||s.role!=='admin')return;$('#admin').classList.add('sh');document.body.style.overflow='hidden';drawAdmin()}
 function closeAdmin(){$('#admin').classList.remove('sh');document.body.style.overflow=''}
@@ -298,6 +323,7 @@ function drawAdmin(){
  const m=$('#adMain'),F={Dashboard:dash,'Hero & About':heroEd,'Contact & Links':contactEd,'Payment Methods':payEd,Services:listEd('services',[['i','Icon'],['t','Title'],['d','Description']],{i:'⭐',t:'New service',d:''}),
   Packages:pkEd,Portfolio:listEd('portfolio',[['t','Title'],['c','Category'],['d','Description'],['url','Live link (https://…)'],['color','Colors e.g. #f97316,#ea580c']],{t:'New project',c:'Business',d:'',url:'',demo:true,color:'#f97316,#ea580c'}),
   Gallery:listEd('gallery',[['t','Title'],['c','Category'],['d','Description'],['color','Colors e.g. #f97316,#ea580c']],{t:'New gallery item',c:'Web Design',d:'',color:'#f97316,#ea580c'}),
+  Reviews:listEd('reviews',[['name','Reviewer name'],['role','Business / project'],['rating','Rating (1–5)'],['quote','Review text']],{name:'Sample client',role:'Sample project',rating:5,quote:'Replace with a verified customer review shared with permission.',demo:true}),
   Blog:listEd('blog',[['t','Title'],['category','Category'],['date','Date / label'],['d','Summary'],['url','Article link (https://…)']],{t:'New article',category:'Web Development',date:'New post',d:'',url:''}),
   Training:listEd('training',[['t','Title'],['level','Level'],['format','Format'],['d','Description'],['url','Training link (https://…)']],{t:'New training',level:'Beginner',format:'Online',d:'',url:''}),
   'Our Program':listEd('program',[['t','Title'],['d','Description'],['details','Details'],['cta','Button label'],['url','Button link (#contact or https://…)']],{t:'New program',d:'',details:'',cta:'Learn more',url:'#contact'}),
@@ -334,12 +360,12 @@ function heroEd(m){
  q.querySelector('button').onclick=()=>{$$('[data-k]',q).forEach(i=>C.about[i.dataset.k]=i.value);commit()};
 }
 function contactEd(m){
- const L={messenger:'Messenger link',whatsapp:'WhatsApp link (https://wa.me/...)',telegram:'Telegram link (https://t.me/username)',facebook:'Facebook page link',youtube:'YouTube link',portfolio:'Portfolio website link',hours:'Working hours',email:'Email',bkash:'bKash number',webmoney:'Webmoney details'};
+ const L={messenger:'Messenger link',whatsapp:'WhatsApp link (https://wa.me/...)',telegram:'Telegram link (https://t.me/username)',facebook:'Facebook page link',youtube:'YouTube link',portfolio:'Portfolio website link',location:'Service location (e.g. Bogura, Bangladesh)',mapLink:'Google Maps link',hours:'Working hours',email:'Email',bkash:'bKash number',webmoney:'Webmoney details'};
  const p=panel(m,'Contact, social & payment',Object.keys(L).map(k=>inp(k,L[k],C.contact[k])).join('')+'<button class="btn p sm" style="margin-top:12px">Save</button>');
  p.querySelector('button').onclick=()=>{$$('[data-k]',p).forEach(i=>C.contact[i.dataset.k]=i.value.trim());commit()};
 }
 function listEd(key,fields,blank){return m=>{
- const p=panel(m,'',C[key].map((it,ix)=>`<div class="pn" style="background:#f8fafc" data-ix="${ix}">${fields.map(([k,l])=>inp(k,l,it[k]??'')).join('')}${key==='portfolio'?`<label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" data-demo style="width:auto" ${it.demo?'checked':''}> Mark as Demo</label>`:''}<div style="display:flex;gap:8px;margin-top:12px"><button class="btn p sm" data-save>Save</button><button class="dl" data-del>Delete</button></div></div>`).join('')+'<button class="btn o sm" data-add>＋ Add new</button>');
+ const p=panel(m,'',C[key].map((it,ix)=>`<div class="pn" style="background:#f8fafc" data-ix="${ix}">${fields.map(([k,l])=>inp(k,l,it[k]??'')).join('')}${(key==='portfolio'||key==='reviews')?`<label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" data-demo style="width:auto" ${it.demo?'checked':''}> ${key==='reviews'?'Mark as sample — not a verified review':'Mark as Demo'}</label>`:''}<div style="display:flex;gap:8px;margin-top:12px"><button class="btn p sm" data-save>Save</button><button class="dl" data-del>Delete</button></div></div>`).join('')+'<button class="btn o sm" data-add>＋ Add new</button>');
  p.onclick=e=>{const box=e.target.closest('[data-ix]'),ix=box&&+box.dataset.ix;
   if(e.target.matches('[data-add]')){C[key].push({...blank});commit('Added');drawAdmin()}
   if(e.target.matches('[data-save]')){$$('[data-k]',box).forEach(i=>C[key][ix][i.dataset.k]=i.value);const d=$('[data-demo]',box);if(d)C[key][ix].demo=d.checked;commit()}

@@ -1,0 +1,33 @@
+name: Build uploadable Website Builders BD ZIP
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the website source
+        uses: actions/checkout@v4
+
+      - name: Prepare upload-ready website files
+        run: |
+          mkdir -p site-package/assets
+          cp index.html style.css app.js sw.js manifest.webmanifest README.md site-package/
+          cp -R assets/. site-package/assets/
+          touch site-package/.nojekyll
+          cd site-package
+          zip -qr ../Website-Builders-BD-final.zip .
+
+      - name: Upload final website ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Website-Builders-BD-final
+          path: Website-Builders-BD-final.zip
+          retention-days: 30

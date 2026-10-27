@@ -1539,3 +1539,61 @@ header .nav{
     padding:28px clamp(18px,2.2vw,34px);
   }
 }
+
+
+/* ---- Customer reviews and Bogura map section ---- */
+#reviews,#location{scroll-margin-top:92px}
+.trust-reviews .head p{max-width:720px;margin-inline:auto}
+.review-card{
+  display:flex;flex-direction:column;gap:16px;min-width:0;min-height:245px;
+  padding:22px;border:1px solid var(--line);border-radius:20px;
+  background:linear-gradient(180deg,#fff 0%,#fff 76%,#fffaf5 100%);
+  box-shadow:0 12px 30px -25px rgba(15,23,42,.36);
+  transition:transform .28s ease,box-shadow .28s ease,border-color .28s ease
+}
+.review-card:hover{transform:translateY(-5px);border-color:rgba(249,115,22,.32);box-shadow:0 20px 34px -25px rgba(15,23,42,.35)}
+.review-top{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.review-stars{font-size:17px;letter-spacing:2px;line-height:1;color:#f59e0b;white-space:nowrap}
+.review-mark{display:inline-flex;align-items:center;padding:5px 8px;border-radius:99px;font-size:9px;line-height:1.1;font-weight:900;letter-spacing:.055em;white-space:nowrap}
+.review-mark.sample{background:#fff7ed;color:#c2410c;border:1px solid #fed7aa}
+.review-mark.real{background:#dcfce7;color:#166534;border:1px solid #bbf7d0}
+.review-card blockquote{margin:0;color:#334155;font-size:14px;line-height:1.75;flex:1}
+.review-author{display:flex;align-items:center;gap:10px;border-top:1px solid #f1f5f9;padding-top:14px;min-width:0}
+.review-avatar{display:grid;place-items:center;flex:none;width:38px;height:38px;border-radius:13px;background:linear-gradient(135deg,var(--o),var(--o2));color:#fff;font-size:15px;font-weight:900}
+.review-author>span:last-child{display:grid;gap:3px;min-width:0}
+.review-author b{font-size:13px;color:var(--ink);overflow-wrap:anywhere}
+.review-author small{font-size:11px;color:var(--mut);line-height:1.4}
+.review-empty{grid-column:1/-1;padding:28px;text-align:center;border:1px dashed #cbd5e1;border-radius:18px;background:#fff;color:var(--mut)}
+.location-section{background:linear-gradient(180deg,#f8fafc 0%,#fff 100%)}
+.location-grid{display:grid;grid-template-columns:minmax(250px,.72fr) minmax(0,1.28fr);gap:22px;align-items:stretch}
+.location-card{
+  display:flex;align-items:flex-start;gap:14px;min-width:0;padding:22px;
+  border:1px solid var(--line);border-radius:20px;background:#fff;
+  box-shadow:0 14px 34px -27px rgba(15,23,42,.35)
+}
+.location-card-icon{display:grid;place-items:center;flex:none;width:46px;height:46px;border-radius:14px;background:#ffedd5;font-size:23px}
+.location-card-body{min-width:0}
+.location-card-body .content-meta{display:inline-block;margin-bottom:8px;color:var(--o2);font-size:10px;font-weight:900;letter-spacing:.1em}
+.location-card-body h3{font-size:20px;line-height:1.3;margin:0 0 10px;overflow-wrap:anywhere}
+.location-card-body p{font-size:13px;line-height:1.7;color:var(--mut);margin-bottom:16px}
+.location-card-body .btn{display:inline-flex;max-width:100%;white-space:normal;justify-content:center}
+.location-map{min-width:0;min-height:320px;overflow:hidden;border:1px solid var(--line);border-radius:20px;background:#e2e8f0;box-shadow:0 14px 34px -27px rgba(15,23,42,.35)}
+.location-map iframe{display:block;width:100%;height:100%;min-height:320px;border:0}
+a[href^="tel:"],[data-call]{display:none!important}
+@media(max-width:980px){
+  .location-grid{grid-template-columns:1fr}
+  .location-map,.location-map iframe{min-height:300px}
+}
+@media(max-width:640px){
+  .review-card{min-height:0;padding:18px;border-radius:17px;gap:13px}
+  .review-top{align-items:flex-start}
+  .review-card blockquote{font-size:13px}
+  .location-grid{gap:14px}
+  .location-card{padding:17px;gap:12px;border-radius:17px}
+  .location-card-icon{width:40px;height:40px;font-size:20px;border-radius:12px}
+  .location-card-body h3{font-size:18px}
+  .location-map,.location-map iframe{min-height:260px;border-radius:17px}
+}
+@media(prefers-reduced-motion:reduce){
+  .review-card{transition:none!important}
+}
