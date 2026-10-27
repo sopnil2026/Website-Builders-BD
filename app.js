@@ -166,11 +166,20 @@ function drawPf(cat){
 }
 function drawGallery(){
  const items=C.gallery||[];
- $('#galleryGrid').innerHTML=items.map(it=>{
+ $('#galleryGrid').innerHTML=items.map((it,i)=>{
   const colors=(it.color||'#f97316,#ea580c').split(',');
   const a=/^#[0-9a-f]{6}$/i.test(colors[0]||'')?colors[0]:'#f97316';
   const b=/^#[0-9a-f]{6}$/i.test(colors[1]||'')?colors[1]:a;
-  return '<article class="content-card rv"><div class="content-art" style="background:linear-gradient(135deg,'+a+','+b+')">'+esc(it.t)+'</div><div class="content-body"><span class="content-meta">'+esc(it.c||'Gallery')+'</span><h3>'+esc(it.t)+'</h3><p>'+esc(it.d)+'</p><a class="btn o sm" href="#contact">Ask about this design</a></div></article>';
+  const title=String(it.t||'Gallery design');
+  const initials=title.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'WB';
+  const banner='<div class="gallery-banner" style="--gallery-a:'+a+';--gallery-b:'+b+'">'+
+   '<span class="gallery-glow gallery-glow-a"></span><span class="gallery-glow gallery-glow-b"></span>'+
+   '<div class="gallery-banner-top"><span class="gallery-brand"><i>WB</i><span>'+esc(it.c||'Gallery')+'</span></span><span class="gallery-banner-tag">DESIGN SHOWCASE</span></div>'+
+   '<div class="gallery-banner-main"><div class="gallery-lettermark">'+esc(initials)+'</div>'+
+    '<div class="gallery-browser" aria-hidden="true"><div class="gallery-browser-bar"><span><i></i><i></i><i></i></span><b>'+esc((it.c||'Creative')+' Studio')+'</b><em>↗</em></div>'+
+     '<div class="gallery-browser-body"><small>DIGITAL EXPERIENCE</small><i class="gallery-line wide"></i><i class="gallery-line"></i><i class="gallery-action"></i><div class="gallery-preview-tiles"><i></i><i></i><i></i></div></div></div></div>'+
+   '<div class="gallery-banner-foot"><span>WEBSITE BUILDERS BD</span><span>'+String(i+1).padStart(2,'0')+' <b>/</b> '+String(items.length).padStart(2,'0')+'</span></div></div>';
+  return '<article class="content-card gallery-card rv">'+banner+'<div class="content-body"><div class="gallery-card-meta"><span class="content-meta">'+esc(it.c||'Gallery')+'</span><span class="gallery-index">PROJECT '+String(i+1).padStart(2,'0')+'</span></div><h3>'+esc(title)+'</h3><p>'+esc(it.d||'Explore this design concept and visual direction.')+'</p><a class="btn o sm" href="#contact">Ask about this design <span aria-hidden="true">↗</span></a></div></article>';
  }).join('');
 }
 function drawBlog(){
