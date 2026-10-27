@@ -125,10 +125,10 @@ function render(){
  const acc=l=>l.map(f=>`<div class="fq"><button>${esc(f.q)}</button><div>${esc(f.a)}</div></div>`).join('');
  $('#faqList').innerHTML=acc(C.faq);$('#polList').innerHTML=acc(C.policies);
  $('#cinfo').innerHTML=[
-  ['💬','WhatsApp','Chat with us',ct.whatsapp||'https://wa.me/message/SRU4QQYVDKZLP1','Message us on WhatsApp'],
+  ['<img class="brand-contact-logo" src="assets/whatsapp-logo.webp" alt="">','WhatsApp','Chat with us',ct.whatsapp||'https://wa.me/message/SRU4QQYVDKZLP1','Message us on WhatsApp'],
   ['✉️','Email',ct.email,'mailto:'+ct.email,'We reply as soon as we can'],
-  ['💬','Messenger','Chat with us',ct.messenger,'Fastest way to reach us'],
-  ['✈️','Telegram','Chat with us',ct.telegram,'Message us on Telegram'],
+  ['<img class="brand-contact-logo" src="assets/messenger-logo.webp" alt="">','Messenger','Chat with us',ct.messenger,'Fastest way to reach us'],
+  ['<img class="brand-contact-logo" src="assets/telegram-logo.webp" alt="">','Telegram','Chat with us',ct.telegram,'Message us on Telegram'],
   ['🌐','Our Portfolio Website',ct.portfolio.replace(/^https?:\/\//,''),ct.portfolio,'See a live project'],
   ['📘','Facebook','Website Builders BD',ct.facebook,''],
   ['▶️','YouTube','WebTech25',ct.youtube,''],
@@ -406,7 +406,7 @@ function drawUser(){
  const orders=ls.get(K.o,[]).filter(o=>(o.email||'').toLowerCase()===s.email);
  const isAdmin=s.role==='admin';
  b.innerHTML=`<div class="hello"><h2>Hello, ${esc(s.name)} 👋</h2><p>${esc(s.email)}${isAdmin?' · <b>Admin preview of the user panel</b>':''}</p></div>
- <div class="qa"><a href="#contact" data-closeup>✉ Send a message</a><a href="${esc(ct.messenger)}" target="_blank" rel="noopener">💬 Chat on Messenger</a><a href="#pricing" data-closeup>📦 View packages</a></div>
+ <div class="qa"><a href="#contact" data-closeup>✉ Send a message</a><a href="${esc(ct.messenger)}" target="_blank" rel="noopener"><img class="brand-icon-inline" src="assets/messenger-logo.webp" alt=""> Chat on Messenger</a><a href="#pricing" data-closeup>📦 View packages</a></div>
  <div class="pn" style="margin-top:20px"><h3>How to pay</h3><p class="note">Pay 50% in advance to start and the rest on delivery. bKash: <b>${esc(ct.bkash)}</b> (Send Money). Webmoney: ${esc(ct.webmoney)}. After paying, send the transaction ID to us on Messenger.</p><div class="paybadges" style="margin-top:12px">${(C.payments||[]).map(payBadge).join('')}</div></div>
  <div class="pn"><h3>My requests</h3>${orders.length?`<table><tr><th>Date</th><th>Package</th><th>Message</th></tr>${orders.map(o=>`<tr><td>${esc(o.at.slice(0,10))}</td><td>${esc(o.pkg)}</td><td>${esc(o.msg)}</td></tr>`).join('')}</table>`:'<p class="note">No requests from this browser yet. Use “Send a message” to start your project.</p>'}</div>
  ${isAdmin?'':`<div class="pn"><h3>My profile</h3><label>Name<input id="upName" value="${esc(s.name)}"></label><label style="margin-top:10px">New password (optional, min 6)<input id="upPw" type="password" autocomplete="new-password"></label><button class="btn p sm" id="upSave" style="margin-top:12px">Save profile</button></div>`}`;
