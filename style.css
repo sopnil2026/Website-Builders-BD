@@ -445,3 +445,86 @@ header.sc .pill a.on{color:#fff}
   .nav>.logo span{font-size:8px}
   .burger{width:32px;height:34px;font-size:19px}
 }
+
+
+/* ---- responsive Admin Panel: navigation, statistics and records tables ---- */
+.ad{min-width:0}
+.ad aside{min-width:0}
+.ad main{min-width:0;overflow-wrap:anywhere}
+#adNav{min-width:0}
+.ad aside #adNav button{width:100%;min-width:0;overflow-wrap:anywhere}
+.admin-stat span{display:block;margin-top:4px;font-size:15px;line-height:1.35;color:var(--ink)}
+.admin-stat small{display:block;margin-top:5px;color:var(--mut);font-size:12px;line-height:1.3;font-weight:500}
+.admin-table-wrap{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:12px;background:#fff}
+.admin-table{width:100%;min-width:760px;border-collapse:collapse;font-size:13px;white-space:normal;display:table}
+.admin-table thead th{background:#f8fafc;color:#475569;font-size:12px;letter-spacing:.02em;white-space:nowrap}
+.admin-table th,.admin-table td{padding:12px;border-bottom:1px solid var(--line);vertical-align:top}
+.admin-table tbody tr:last-child td{border-bottom:0}
+.admin-table td{overflow-wrap:anywhere;word-break:normal;white-space:normal}
+.admin-table .message-cell{min-width:220px;max-width:380px;line-height:1.5}
+.admin-table small{color:var(--mut);font-size:12px}
+#admin .pn{min-width:0;max-width:100%;overflow:hidden}
+#admin .pn>h3{font-size:18px;line-height:1.35}
+#admin label{min-width:0}
+#admin input,#admin textarea,#admin select{max-width:100%;min-width:0}
+#admin .sc4 .admin-stat{min-width:0}
+
+/* Make the complete Admin navigation visible at the top on compact laptop/tablet screens. */
+@media(max-width:1280px){
+  .ad{grid-template-columns:minmax(0,1fr)}
+  .ad aside{
+    position:sticky;
+    top:0;
+    z-index:5;
+    height:auto;
+    min-height:0;
+    padding:14px 16px 10px;
+    box-shadow:0 6px 20px rgba(15,23,42,.14);
+  }
+  .ad aside h4{margin:0 0 10px;font-size:17px}
+  .ad aside h4 img{width:34px!important}
+  #adNav{
+    display:flex;
+    flex-wrap:nowrap;
+    gap:6px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    padding:2px 1px 8px;
+    scrollbar-width:thin;
+    -webkit-overflow-scrolling:touch;
+  }
+  .ad aside #adNav button{
+    display:block;
+    flex:0 0 auto;
+    width:auto;
+    max-width:none;
+    white-space:nowrap;
+    padding:9px 12px;
+    margin:0;
+    font-size:13px;
+  }
+  .ad aside>button{display:inline-block!important;width:auto!important;margin:5px 5px 0 0!important;padding:9px 11px!important;font-size:12px}
+  .ad main{padding:22px;min-width:0}
+  .sc4{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:760px){
+  .ad aside{padding:12px 12px 8px}
+  .ad aside h4{font-size:16px}
+  .ad main{padding:16px 12px}
+  #admin .ad main>h2{font-size:23px;margin-bottom:16px}
+  #admin .pn{padding:16px;margin-bottom:14px;border-radius:15px}
+  .sc4{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .sc4 .admin-stat{padding:15px;min-height:104px}
+  .sc4 .admin-stat b{font-size:28px}
+  .admin-table{min-width:700px;font-size:12px}
+  .admin-table th,.admin-table td{padding:10px}
+  #admin .row,#admin .row.f,#admin .pe{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:380px){
+  .ad main{padding:12px 8px}
+  #admin .pn{padding:13px}
+  .sc4{gap:8px}
+  .sc4 .admin-stat{padding:12px;min-height:96px}
+  .sc4 .admin-stat b{font-size:24px}
+  .admin-table{min-width:640px}
+}
