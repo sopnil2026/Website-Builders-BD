@@ -1,0 +1,227 @@
+/* Website Builders BD – static site + client-side login/admin (see README for limits) */
+(function(){
+'use strict';
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const ADMIN_EMAIL='sopnilprodhan13@gmail.com';
+const ADMIN_HASH='e31f6542b54cd689b02cf9055fbeb4a12fa5ffe3909fafc24588e21a7b116728'; // SHA-256 of the admin password (not stored in plain text)
+const K={c:'wbbd_content',u:'wbbd_users',o:'wbbd_orders',a:'wbbd_admin_hash',s:'wbbd_session'};
+const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
+
+const DEFAULT={
+ brand:{h1:'Your Vision.',h2:'Our Code.',h3:'Your Success.',lead:'We design and build fast, modern, mobile-friendly websites that help your business look professional and win more customers.',tagline:'আপনার স্বপ্নের ওয়েবসাইট'},
+ about:{p1:'Website Builders BD is a web design and development studio in Bangladesh. We turn your ideas into clean, fast and easy-to-use websites — from business sites and portfolios to online shops.',p2:'Our mission is simple: <i>make a professional web presence easy, effective and affordable for every business.</i>'},
+ contact:{messenger:'https://m.me/website.builders.bdcom',facebook:'https://www.facebook.com/website.builders.bdcom',youtube:'https://www.youtube.com/@WebTech25',email:'sopnilprodhan13@gmail.com',phone:'01740304436',bkash:'01740304436',webmoney:'Ask on Messenger for account details'},
+ stats:[{n:'50%',l:'Advance to start'},{n:'30 Days',l:'Refund window'},{n:'100%',l:'Mobile responsive'}],
+ services:[
+  {i:'💻',t:'Website Design & Development',d:'Custom, fast and responsive websites for any business.'},
+  {i:'🛒',t:'E-Commerce Websites',d:'Online shops with product pages, cart and order flow.'},
+  {i:'🎨',t:'Portfolio Websites',d:'Show your work beautifully with animated, personal sites.'},
+  {i:'🚀',t:'Landing Pages',d:'High-converting single pages for campaigns and offers.'},
+  {i:'🔍',t:'SEO Setup',d:'Titles, meta tags, sitemap and speed tuning to rank better.'},
+  {i:'🧩',t:'UI/UX Design',d:'Clean layouts and smooth interactions your visitors enjoy.'},
+  {i:'🛠️',t:'Maintenance & Updates',d:'Fixes, content updates and backups after launch.'},
+  {i:'🌐',t:'Domain & Hosting Help',d:'We help you pick, buy and connect your domain and hosting.'},
+  {i:'🖼️',t:'Logo & Branding',d:'Simple, memorable branding that matches your website.'}],
+ packages:[
+  {n:'Basic',price:'৳ 5,000',feat:['1–3 page website','Mobile responsive','Contact form','Messenger button','7 days delivery'],hot:false},
+  {n:'Standard',price:'৳ 12,000',feat:['Up to 8 pages','Custom animations','SEO basics','Admin-editable content','2 free revisions','14 days delivery'],hot:true},
+  {n:'Premium',price:'৳ 25,000',feat:['E-commerce or web app','Login & admin panel','Payment integration','Advanced SEO & speed','Priority support','21 days delivery'],hot:false}],
+ portfolio:[
+  {t:'My Portfolio Website',c:'Portfolio',d:'Our own portfolio website — add the live link in Admin → Portfolio.',url:'',demo:false,color:'#f97316,#ea580c'},
+  {t:'Spice Garden Restaurant',c:'Business',d:'Menu, gallery and table-booking style layout.',url:'',demo:true,color:'#b45309,#78350f'},
+  {t:'Fashion Hub Store',c:'E-Commerce',d:'Product grid, cart and checkout flow.',url:'',demo:true,color:'#db2777,#9d174d'},
+  {t:'Smart Clinic',c:'Business',d:'Doctor profiles and appointment request page.',url:'',demo:true,color:'#0891b2,#155e75'}],
+ faq:[
+  {q:'How long does a website take?',a:'Most websites take 7–21 days depending on the package and how quickly you send content.'},
+  {q:'How does payment work?',a:'You pay 50% in advance by bKash or Webmoney before work starts, and the rest on delivery after you approve the result.'},
+  {q:'What if I am not happy?',a:'If there is a problem we cannot solve within 30 days, we refund your payment. See our refund policy below.'},
+  {q:'Can I edit the website myself later?',a:'Yes. Standard and Premium packages include an easy admin panel so you can update content yourself.'},
+  {q:'Do I need to buy hosting and a domain?',a:'Yes, but we guide you step by step and can set everything up for you.'}],
+ steps:[{t:'Discuss',d:'Tell us your needs on Messenger'},{t:'Advance',d:'Pay 50% via bKash/Webmoney'},{t:'Design',d:'We design & build your site'},{t:'Review',d:'You review and request changes'},{t:'Deliver',d:'Pay the rest, we go live'}],
+ policies:[
+  {q:'Refund Policy',a:'If you tell us about a problem within 30 days and we cannot fix it, we refund the money you paid. The 50% advance is used to start work, so please share your requirements clearly.'},
+  {q:'Privacy Policy',a:'We only use your name, phone and email to respond to your order. We never sell your data.'},
+  {q:'Terms of Service',a:'Work starts after the advance payment. Content you provide must be legal and owned by you. Delivery time depends on timely feedback.'}]
+};
+let C=Object.assign({},DEFAULT,ls.get(K.c,{}));
+const save=()=>ls.set(K.c,C);
+
+/* ---------- utils ---------- */
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('sh');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('sh'),3200)}
+function sha(s){
+ if(window.crypto&&crypto.subtle) return crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)).then(b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''));
+ return Promise.resolve(sha256fb(s));
+}
+function sha256fb(m){ // fallback for non-secure contexts
+ const r=(n,x)=>(x>>>n)|(x<<(32-n)),K2=[];let h=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+ for(let c=2,n=0;n<64;c++){let p=1;for(let i=2;i*i<=c;i++)if(c%i==0){p=0;break}if(p){K2[n++]=(Math.pow(c,1/3)%1*4294967296)|0}}
+ const b=[...new TextEncoder().encode(m)],l=b.length*8;b.push(0x80);while(b.length%64!=56)b.push(0);
+ for(let i=7;i>=0;i--)b.push(i>3?0:(l>>>(i*8))&255);
+ for(let o=0;o<b.length;o+=64){const w=[];for(let i=0;i<16;i++)w[i]=(b[o+i*4]<<24)|(b[o+i*4+1]<<16)|(b[o+i*4+2]<<8)|b[o+i*4+3];
+  for(let i=16;i<64;i++){const s0=r(7,w[i-15])^r(18,w[i-15])^(w[i-15]>>>3),s1=r(17,w[i-2])^r(19,w[i-2])^(w[i-2]>>>10);w[i]=(w[i-16]+s0+w[i-7]+s1)|0}
+  let[a,bb,c,d,e,f,g,hh]=h;
+  for(let i=0;i<64;i++){const S1=r(6,e)^r(11,e)^r(25,e),ch=(e&f)^(~e&g),t1=(hh+S1+ch+K2[i]+w[i])|0,S0=r(2,a)^r(13,a)^r(22,a),mj=(a&bb)^(a&c)^(bb&c),t2=(S0+mj)|0;hh=g;g=f;f=e;e=(d+t1)|0;d=c;c=bb;bb=a;a=(t1+t2)|0}
+  h=[h[0]+a|0,h[1]+bb|0,h[2]+c|0,h[3]+d|0,h[4]+e|0,h[5]+f|0,h[6]+g|0,h[7]+hh|0]}
+ return h.map(x=>(x>>>0).toString(16).padStart(8,'0')).join('');
+}
+const session=()=>{try{return JSON.parse(sessionStorage.getItem(K.s))}catch{return null}};
+
+/* ---------- render public site ---------- */
+function render(){
+ const b=C.brand,ct=C.contact;
+ $('#h-1').textContent=b.h1;$('#h-2').textContent=b.h2;$('#h-3').textContent=b.h3;$('#h-p').textContent=b.lead;$('#a-tag').textContent=b.tagline;
+ $('#a-p1').textContent=C.about.p1;$('#a-p2').innerHTML=C.about.p2;
+ $('#stats').innerHTML=C.stats.map(s=>`<div><b>${esc(s.n)}</b><small>${esc(s.l)}</small></div>`).join('');
+ $('#heroList').innerHTML=C.services.slice(0,5).map(s=>`<a class="li" href="#services"><i>${esc(s.i)}</i>${esc(s.t)}</a>`).join('')+`<a class="li" href="#services" style="color:var(--o2)"><i>＋</i>View all ${C.services.length} services</a>`;
+ $('#svGrid').innerHTML=C.services.map((s,i)=>`<div class="sv rv d${i%3}"><i>${esc(s.i)}</i><h3>${esc(s.t)}</h3><p>${esc(s.d)}</p></div>`).join('');
+ $('#pkGrid').innerHTML=C.packages.map((p,i)=>`<div class="pk rv d${i}${p.hot?' hot':''}">${p.hot?'<span class="pop">MOST POPULAR</span>':''}<h3>${esc(p.n)}</h3><div class="price">${esc(p.price)}</div><small style="color:var(--mut)">One-time · 50% advance</small><ul>${p.feat.map(f=>`<li>${esc(f)}</li>`).join('')}</ul><a class="btn ${p.hot?'p':'o'}" href="#contact" data-pick="${esc(p.n)}">Choose ${esc(p.n)}</a></div>`).join('');
+ $('#pkSel').innerHTML=C.packages.map(p=>`<option>${esc(p.n)} – ${esc(p.price)}</option>`).join('')+'<option>Custom / Not sure</option>';
+ const cats=['All',...new Set(C.portfolio.map(p=>p.c))];
+ $('#flt').innerHTML=cats.map((c,i)=>`<button class="${i?'':'on'}" data-cat="${esc(c)}">${esc(c)}</button>`).join('');
+ drawPf('All');
+ $('#steps').innerHTML=C.steps.map((s,i)=>`<div class="st rv d${i%3}"><b>${i+1}</b><h4>${esc(s.t)}</h4><p>${esc(s.d)}</p></div>`).join('');
+ const acc=l=>l.map(f=>`<div class="fq"><button>${esc(f.q)}</button><div>${esc(f.a)}</div></div>`).join('');
+ $('#faqList').innerHTML=acc(C.faq);$('#polList').innerHTML=acc(C.policies);
+ $('#cinfo').innerHTML=[
+  ['💬','Messenger','Chat with us',ct.messenger],['📘','Facebook','Website Builders BD',ct.facebook],['✉️','Email',ct.email,'mailto:'+ct.email],
+  ['💳','bKash',ct.bkash+' (Send Money)',null],['🪙','Webmoney',ct.webmoney,null],['▶️','YouTube','WebTech25',ct.youtube]
+ ].map(([i,t,s,h])=>`<${h?`a href="${esc(h)}" target="_blank" rel="noopener"`:'div'} class="ci"><i>${i}</i><div><small>${t}</small><b>${esc(s)}</b></div></${h?'a':'div'}>`).join('');
+ $$('[data-msgr]').forEach(a=>a.href=ct.messenger);$$('[data-fb]').forEach(a=>a.href=ct.facebook);$$('[data-yt]').forEach(a=>a.href=ct.youtube);
+ $$('[data-mail]').forEach(a=>a.href='mailto:'+ct.email);$$('[data-tel]').forEach(a=>a.href='tel:+88'+ct.phone.replace(/\D/g,''));
+ $('#yr').textContent=new Date().getFullYear();
+ observe();authUI();
+}
+function drawPf(cat){
+ $('#pfGrid').innerHTML=C.portfolio.filter(p=>cat==='All'||p.c===cat).map((p,i)=>{
+  const [a,b]=(p.color||'#f97316,#ea580c').split(',');const tag=p.url?'a':'div';
+  return `<${tag} class="pf rv in" ${p.url?`href="${esc(p.url)}" target="_blank" rel="noopener"`:''}><div class="th" style="background:linear-gradient(135deg,${esc(a)},${esc(b||a)})">${esc(p.t.split(' ').map(w=>w[0]).slice(0,2).join(''))}</div><div class="bd"><small>${esc(p.c)}${p.demo?' · Demo':''}</small><h3>${esc(p.t)}</h3><p>${esc(p.d)}</p></div></${tag}>`}).join('');
+}
+function observe(){
+ const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}}),{threshold:.12});
+ $$('.rv:not(.in)').forEach(el=>io.observe(el));
+}
+
+/* ---------- page interactions ---------- */
+const hd=$('#hd'),prog=$('#prog'),topb=$('#top');
+function onScroll(){const y=scrollY,h=document.documentElement.scrollHeight-innerHeight;hd.classList.toggle('sc',y>30);prog.style.width=(h>0?y/h*100:0)+'%';topb.classList.toggle('sh',y>500);
+ let cur='home';$$('main section[id]').forEach(s=>{if(s.getBoundingClientRect().top<160)cur=s.id});
+ $$('#pill a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+cur))}
+addEventListener('scroll',onScroll,{passive:true});onScroll();
+topb.onclick=()=>scrollTo({top:0});
+$('#burger').onclick=()=>$('#pill').classList.toggle('op');
+$('#pill').onclick=e=>{if(e.target.tagName==='A')$('#pill').classList.remove('op')};
+document.addEventListener('click',e=>{
+ const fq=e.target.closest('.fq button');if(fq)fq.parentElement.classList.toggle('op');
+ const f=e.target.closest('[data-cat]');if(f){$$('#flt button').forEach(b=>b.classList.remove('on'));f.classList.add('on');drawPf(f.dataset.cat)}
+ const pk=e.target.closest('[data-pick]');if(pk){const o=[...$('#pkSel').options].find(o=>o.text.startsWith(pk.dataset.pick));if(o)$('#pkSel').value=o.value}
+});
+
+/* order form */
+$('#orderForm').addEventListener('submit',e=>{
+ e.preventDefault();const f=Object.fromEntries(new FormData(e.target));
+ const body=`New website order request\n\nName: ${f.name}\nPhone: ${f.phone}\nEmail: ${f.email}\nPackage: ${f.pkg}\n\nProject:\n${f.msg}`;
+ const orders=ls.get(K.o,[]);orders.unshift({...f,at:new Date().toISOString()});ls.set(K.o,orders.slice(0,200));
+ try{navigator.clipboard.writeText(body)}catch{}
+ toast('Request copied! Opening your email app — you can also paste it in Messenger.');
+ location.href=`mailto:${C.contact.email}?subject=${encodeURIComponent('Website order – '+f.pkg)}&body=${encodeURIComponent(body)}`;
+ e.target.reset();
+});
+
+/* ---------- auth ---------- */
+let mode='login';
+const mo=$('#authMo');
+function setMode(m){mode=m;$$('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===m));
+ $('#nmL').style.display=m==='signup'?'grid':'none';$('#authTitle').textContent=m==='signup'?'Create account':'Welcome back';
+ $('#authSubmit').textContent=m==='signup'?'Sign up':'Login';$('#aPass').autocomplete=m==='signup'?'new-password':'current-password';$('#authErr').textContent=''}
+$$('[data-tab]').forEach(b=>b.onclick=()=>setMode(b.dataset.tab));
+$('[data-close]').onclick=()=>mo.classList.remove('sh');
+mo.onclick=e=>{if(e.target===mo)mo.classList.remove('sh')};
+function authUI(){const s=session();const b=$('#authBtn');
+ if(s){b.textContent=s.role==='admin'?'⚙ Admin Panel':'👤 '+(s.name||'Account').split(' ')[0];b.onclick=()=>s.role==='admin'?openAdmin():logoutMenu()}
+ else{b.textContent='Login / Sign up';b.onclick=()=>{setMode('login');mo.classList.add('sh')}}}
+function logoutMenu(){if(confirm('Logout?')){sessionStorage.removeItem(K.s);authUI();toast('Logged out')}}
+$('#authForm').addEventListener('submit',async e=>{
+ e.preventDefault();const em=$('#aEmail').value.trim().toLowerCase(),pw=$('#aPass').value,err=$('#authErr');err.textContent='';
+ const h=await sha(pw);
+ if(mode==='signup'){
+  const nm=$('#aName').value.trim();if(!nm){err.textContent='Please enter your name.';return}
+  if(em===ADMIN_EMAIL){err.textContent='This email is reserved.';return}
+  const us=ls.get(K.u,[]);if(us.some(u=>u.email===em)){err.textContent='Account already exists. Please login.';return}
+  us.push({name:nm,email:em,hash:h,at:new Date().toISOString()});ls.set(K.u,us);
+  sessionStorage.setItem(K.s,JSON.stringify({email:em,name:nm,role:'user'}));mo.classList.remove('sh');authUI();toast('Welcome, '+nm+'!');return}
+ const ah=ls.get(K.a,ADMIN_HASH);
+ if(em===ADMIN_EMAIL){
+  if(h===ah){sessionStorage.setItem(K.s,JSON.stringify({email:em,name:'Admin',role:'admin'}));mo.classList.remove('sh');authUI();openAdmin();return}
+  err.textContent='Wrong email or password.';return}
+ const u=ls.get(K.u,[]).find(u=>u.email===em&&u.hash===h);
+ if(!u){err.textContent='Wrong email or password. No account? Use Sign up.';return}
+ sessionStorage.setItem(K.s,JSON.stringify({email:em,name:u.name,role:'user'}));mo.classList.remove('sh');authUI();toast('Welcome back, '+u.name+'!');
+});
+
+/* ---------- admin ---------- */
+const ADM=['Dashboard','Hero & About','Contact & Links','Services','Packages','Portfolio','FAQ & Policies','Users','Orders','Settings'];
+let tab='Dashboard';
+function openAdmin(){const s=session();if(!s||s.role!=='admin')return;$('#admin').classList.add('sh');document.body.style.overflow='hidden';drawAdmin()}
+function closeAdmin(){$('#admin').classList.remove('sh');document.body.style.overflow=''}
+$('#adExit').onclick=closeAdmin;
+$('#adOut').onclick=()=>{sessionStorage.removeItem(K.s);closeAdmin();authUI();toast('Logged out')};
+function drawAdmin(){
+ $('#adNav').innerHTML=ADM.map(t=>`<button class="${t===tab?'on':''}" data-t="${t}">${t}</button>`).join('');
+ $$('#adNav button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;drawAdmin()});
+ const m=$('#adMain'),F={Dashboard:dash,'Hero & About':heroEd,'Contact & Links':contactEd,Services:listEd('services',[['i','Icon'],['t','Title'],['d','Description']],{i:'⭐',t:'New service',d:''}),
+  Packages:pkEd,Portfolio:listEd('portfolio',[['t','Title'],['c','Category'],['d','Description'],['url','Live link (https://…)'],['color','Colors e.g. #f97316,#ea580c']],{t:'New project',c:'Business',d:'',url:'',demo:true,color:'#f97316,#ea580c'}),
+  'FAQ & Policies':faqEd,Users:usersV,Orders:ordersV,Settings:settingsV};
+ m.innerHTML=`<h2>${tab}</h2>`;F[tab](m);
+}
+const inp=(k,l,v,tag='input')=>`<label>${l}<${tag} data-k="${k}">${tag==='textarea'?esc(v):''}</${tag==='textarea'?'textarea':'input'}></label>`.replace('<input data-k',`<input value="${esc(v)}" data-k`);
+function panel(m,title,html){const d=document.createElement('div');d.className='pn';d.innerHTML=(title?`<h3>${title}</h3>`:'')+html;m.appendChild(d);return d}
+function commit(msg='Saved ✓'){save();render();toast(msg)}
+function dash(m){
+ const u=ls.get(K.u,[]),o=ls.get(K.o,[]);
+ m.insertAdjacentHTML('beforeend',`<div class="sc4"><div><b>${u.length}</b>Registered users</div><div><b>${o.length}</b>Orders (this browser)</div><div><b>${C.services.length}</b>Services</div><div><b>${C.portfolio.length}</b>Portfolio items</div></div>`);
+ panel(m,'Quick guide','<p class="note">Use the left menu to edit your content. Changes show instantly on the website. See Settings to back up your data and for important notes about where data is stored.</p>');
+}
+function heroEd(m){
+ const p=panel(m,'Hero section',['h1','h2','h3'].map((k,i)=>inp(k,'Headline line '+(i+1),C.brand[k])).join('')+inp('lead','Intro text',C.brand.lead,'textarea')+inp('tagline','Bengali tagline',C.brand.tagline)+'<button class="btn p sm" style="margin-top:12px">Save</button>');
+ p.querySelector('button').onclick=()=>{$$('[data-k]',p).forEach(i=>C.brand[i.dataset.k]=i.value);commit()};
+ const q=panel(m,'About section',inp('p1','Paragraph 1',C.about.p1,'textarea')+inp('p2','Paragraph 2 (HTML allowed: <i>, <b>)',C.about.p2,'textarea')+'<button class="btn p sm" style="margin-top:12px">Save</button>');
+ q.querySelector('button').onclick=()=>{$$('[data-k]',q).forEach(i=>C.about[i.dataset.k]=i.value);commit()};
+}
+function contactEd(m){
+ const L={messenger:'Messenger link',facebook:'Facebook page link',youtube:'YouTube link',email:'Email',phone:'Phone (call button)',bkash:'bKash number',webmoney:'Webmoney details'};
+ const p=panel(m,'Contact, social & payment',Object.keys(L).map(k=>inp(k,L[k],C.contact[k])).join('')+'<button class="btn p sm" style="margin-top:12px">Save</button>');
+ p.querySelector('button').onclick=()=>{$$('[data-k]',p).forEach(i=>C.contact[i.dataset.k]=i.value.trim());commit()};
+}
+function listEd(key,fields,blank){return m=>{
+ const p=panel(m,'',C[key].map((it,ix)=>`<div class="pn" style="background:#f8fafc" data-ix="${ix}">${fields.map(([k,l])=>inp(k,l,it[k]??'')).join('')}${key==='portfolio'?`<label style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" data-demo style="width:auto" ${it.demo?'checked':''}> Mark as Demo</label>`:''}<div style="display:flex;gap:8px;margin-top:12px"><button class="btn p sm" data-save>Save</button><button class="dl" data-del>Delete</button></div></div>`).join('')+'<button class="btn o sm" data-add>＋ Add new</button>');
+ p.onclick=e=>{const box=e.target.closest('[data-ix]'),ix=box&&+box.dataset.ix;
+  if(e.target.matches('[data-add]')){C[key].push({...blank});commit('Added');drawAdmin()}
+  if(e.target.matches('[data-save]')){$$('[data-k]',box).forEach(i=>C[key][ix][i.dataset.k]=i.value);const d=$('[data-demo]',box);if(d)C[key][ix].demo=d.checked;commit()}
+  if(e.target.matches('[data-del]')&&confirm('Delete this item?')){C[key].splice(ix,1);commit('Deleted');drawAdmin()}};
+}}
+function pkEd(m){
+ const p=panel(m,'',C.packages.map((it,ix)=>`<div class="pn" style="background:#f8fafc" data-ix="${ix}">${inp('n','Name',it.n)}${inp('price','Price',it.price)}${inp('feat','Features (one per line)',it.feat.join('\n'),'textarea')}<label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-hot style="width:auto" ${it.hot?'checked':''}> Highlight as most popular</label><div style="display:flex;gap:8px;margin-top:12px"><button class="btn p sm" data-save>Save</button><button class="dl" data-del>Delete</button></div></div>`).join('')+'<button class="btn o sm" data-add>＋ Add package</button>');
+ p.onclick=e=>{const box=e.target.closest('[data-ix]'),ix=box&&+box.dataset.ix;
+  if(e.target.matches('[data-add]')){C.packages.push({n:'New',price:'৳ 0',feat:['Feature'],hot:false});commit('Added');drawAdmin()}
+  if(e.target.matches('[data-save]')){const g=k=>$(`[data-k=${k}]`,box).value;C.packages[ix]={n:g('n'),price:g('price'),feat:g('feat').split('\n').map(s=>s.trim()).filter(Boolean),hot:$('[data-hot]',box).checked};commit()}
+  if(e.target.matches('[data-del]')&&confirm('Delete this package?')){C.packages.splice(ix,1);commit('Deleted');drawAdmin()}};
+}
+function faqEd(m){['faq','policies'].forEach(key=>listEd(key,[['q','Question / Title'],['a','Answer']],{q:'New question',a:''})(Object.assign(document.createElement('div'),{appendChild(n){m.appendChild(n);n.querySelector('h3')||n.insertAdjacentHTML('afterbegin',`<h3>${key==='faq'?'FAQ':'Policies'}</h3>`)}})))}
+function usersV(m){const u=ls.get(K.u,[]);
+ const p=panel(m,'Registered users (this browser)',u.length?`<table><tr><th>Name</th><th>Email</th><th>Joined</th><th></th></tr>${u.map((x,i)=>`<tr><td>${esc(x.name)}</td><td>${esc(x.email)}</td><td>${esc(x.at.slice(0,10))}</td><td><button class="mini" data-rm="${i}">Remove</button></td></tr>`).join('')}</table>`:'<p class="note">No users yet.</p>');
+ p.onclick=e=>{if(e.target.dataset.rm!==undefined&&confirm('Remove user?')){u.splice(+e.target.dataset.rm,1);ls.set(K.u,u);drawAdmin()}}}
+function ordersV(m){const o=ls.get(K.o,[]);
+ panel(m,'Order requests (this browser)',o.length?`<table><tr><th>Date</th><th>Name</th><th>Contact</th><th>Package</th><th>Message</th></tr>${o.map(x=>`<tr><td>${esc(x.at.slice(0,10))}</td><td>${esc(x.name)}</td><td>${esc(x.phone)}<br>${esc(x.email)}</td><td>${esc(x.pkg)}</td><td>${esc(x.msg)}</td></tr>`).join('')}</table>`:'<p class="note">No orders recorded here. Real orders arrive by email / Messenger.</p>')}
+function settingsV(m){
+ const p=panel(m,'Change admin password',`<label>New password (min 8 chars)<input type="password" id="np" autocomplete="new-password"></label><button class="btn p sm" style="margin-top:12px" id="cp">Update password</button><p class="note" style="margin-top:8px">Stored as a hash in this browser only.</p>`);
+ $('#cp',p).onclick=async()=>{const v=$('#np',p).value;if(v.length<8)return toast('Use at least 8 characters');ls.set(K.a,await sha(v));$('#np',p).value='';toast('Password updated')};
+ const b=panel(m,'Backup & restore',`<button class="btn o sm" id="ex">⬇ Export content (JSON)</button> <label class="btn o sm" style="display:inline-flex">⬆ Import<input type="file" accept=".json" id="im" hidden></label> <button class="dl" id="rs" style="margin-left:8px">Reset to defaults</button>`);
+ $('#ex',b).onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(C,null,2)],{type:'application/json'}));a.download='wbbd-content.json';a.click()};
+ $('#im',b).onchange=e=>{const r=new FileReader();r.onload=()=>{try{C=Object.assign({},DEFAULT,JSON.parse(r.result));commit('Imported');drawAdmin()}catch{toast('Invalid file')}};r.readAsText(e.target.files[0])};
+ $('#rs',b).onclick=()=>{if(confirm('Reset all content to defaults?')){localStorage.removeItem(K.c);C=Object.assign({},DEFAULT);render();drawAdmin();toast('Reset')}};
+ panel(m,'Important: where your data lives','<p class="note">This site is static (GitHub Pages). Content you edit here and accounts created by visitors are saved in <b>this browser only</b> — other visitors will not see your edits until you export the JSON and paste it into <code>DEFAULT</code> in app.js (or connect a real backend such as Supabase). Visitor logins are for convenience, not strong security.</p>');
+}
+addEventListener('keydown',e=>{if(e.key==='Escape'){mo.classList.remove('sh')}});
+render();
+})();

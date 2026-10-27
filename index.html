@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Website Builders BD – Your Vision. Our Code. Your Success.</title>
+<meta name="description" content="Website Builders BD builds fast, modern, mobile-friendly websites for businesses in Bangladesh. Custom design, e-commerce, portfolios and more.">
+<meta name="theme-color" content="#f97316">
+<link rel="icon" href="assets/logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="prog"></div>
+
+<header id="hd"><div class="wrap nav">
+  <a href="#home" class="logo"><img src="assets/logo.jpg" alt="Website Builders BD logo"><span>Website<br>Builders BD</span></a>
+  <nav class="pill" id="pill">
+    <a href="#home" class="on">Home</a><a href="#services">Services</a><a href="#pricing">Pricing</a><a href="#portfolio">Portfolio</a><a href="#process">Process</a><a href="#faq">FAQ</a><a href="#contact">Contact</a>
+  </nav>
+  <div class="acts">
+    <button class="btn o sm" id="authBtn">Login / Sign up</button>
+    <a class="btn m sm hide" data-msgr target="_blank" rel="noopener">💬 Messenger</a>
+    <a class="btn p sm" href="#contact">Get Quote →</a>
+    <button class="burger" id="burger" aria-label="Menu">☰</button>
+  </div>
+</div></header>
+
+<main>
+<section class="hero" id="home"><div class="wrap">
+  <div>
+    <span class="eyebrow rv">Bangladesh's Web Design Studio</span>
+    <h1 class="rv d1"><span id="h-1">Your Vision.</span><br><span class="grad" id="h-2">Our Code.</span><br><span id="h-3">Your Success.</span></h1>
+    <p class="lead rv d2" id="h-p">We design and build fast, modern, mobile-friendly websites that help your business look professional and win more customers.</p>
+    <div class="cta rv d3"><a class="btn p" href="#contact">Get Free Quote →</a><a class="btn m" data-msgr target="_blank" rel="noopener">💬 Chat on Messenger</a></div>
+    <div class="stats rv d3" id="stats"></div>
+  </div>
+  <div class="rv d2" style="position:relative">
+    <div class="badge"><i>🛡️</i><div><b>Money-back promise</b><br><small id="refundShort">Full refund if we can't deliver</small></div></div>
+    <div class="card3d">
+      <div class="top"><img src="assets/logo.jpg" alt=""><span class="open">● Open</span></div>
+      <div id="heroList"></div>
+    </div>
+  </div>
+</div></section>
+
+<section id="about"><div class="wrap about">
+  <div class="rv"><div class="abox"><img src="assets/logo.jpg" alt="Website Builders BD"><h3>Website Builders BD</h3><p id="a-tag">আপনার স্বপ্নের ওয়েবসাইট</p></div></div>
+  <div class="rv d1">
+    <span class="tag">About Us</span>
+    <h2>Your Trusted <span class="grad">Website</span> Partner</h2><div class="uline"></div>
+    <p style="color:var(--mut);margin-bottom:14px" id="a-p1">Website Builders BD is a web design and development studio in Bangladesh. We turn your ideas into clean, fast and easy-to-use websites — from business sites and portfolios to online shops.</p>
+    <p style="color:var(--mut)" id="a-p2">Our mission is simple: <i>make a professional web presence easy, effective and affordable for every business.</i></p>
+    <div class="chips"><div class="chip">Custom Web Design</div><div class="chip">Mobile Responsive</div><div class="chip">SEO Friendly</div><div class="chip">Fast Delivery</div><div class="chip">Free Revisions</div><div class="chip">Secure Payment</div></div>
+  </div>
+</div></section>
+
+<section class="alt" id="services"><div class="wrap">
+  <div class="head c rv"><span class="tag">What We Do</span><h2>Services Built for <span class="grad">Growth</span></h2><p>Everything you need to launch and grow online, from one dependable team.</p></div>
+  <div class="grid g3" id="svGrid"></div>
+</div></section>
+
+<section id="pricing"><div class="wrap">
+  <div class="head c rv"><span class="tag">Pricing</span><h2>Simple, <span class="grad">Transparent</span> Packages</h2><p>Pay 50% to start, the rest on delivery. Prices are examples — edit them from the admin panel.</p></div>
+  <div class="grid g3" id="pkGrid" style="align-items:center"></div>
+</div></section>
+
+<section class="alt" id="portfolio"><div class="wrap">
+  <div class="head c rv"><span class="tag">Portfolio</span><h2>Our <span class="grad">Work</span></h2><p>A selection of projects. Sample items are marked "Demo" until you replace them with real ones.</p></div>
+  <div class="flt" id="flt"></div>
+  <div class="grid g3" id="pfGrid"></div>
+</div></section>
+
+<section class="dark" id="process"><div class="wrap">
+  <div class="head c rv"><span class="tag">How It Works</span><h2>From Idea to <span class="grad">Launch</span></h2><p>A clear 5-step process, so you always know what happens next.</p></div>
+  <div class="steps" id="steps"></div>
+</div></section>
+
+<section id="faq"><div class="wrap">
+  <div class="head c rv"><span class="tag">FAQ</span><h2>Frequently Asked <span class="grad">Questions</span></h2></div>
+  <div class="faq" id="faqList"></div>
+</div></section>
+
+<section class="alt" id="contact"><div class="wrap">
+  <div class="head c rv"><span class="tag">Contact</span><h2>Let's Build <span class="grad">Your Website</span></h2><p>Tell us what you need. We'll reply with a quote and timeline.</p></div>
+  <div class="cgrid">
+    <div class="cinfo rv" id="cinfo"></div>
+    <form class="box rv d1" id="orderForm">
+      <div class="r2"><label>Your name<input name="name" required></label><label>Phone / bKash<input name="phone" required></label></div>
+      <div class="r2"><label>Email<input name="email" type="email" required></label>
+      <label>Package<select name="pkg" id="pkSel"></select></label></div>
+      <label>Tell us about your project<textarea name="msg" rows="4" required placeholder="Type of business, pages needed, reference sites, deadline..."></textarea></label>
+      <button class="btn p" style="justify-content:center">Send Order Request →</button>
+      <p class="note">Submitting opens an email draft to us and copies your request so you can also paste it in Messenger. We confirm details there, then start after the 50% advance.</p>
+      <div class="pay"><span>bKash</span><span>Webmoney</span></div>
+    </form>
+  </div>
+</div></section>
+
+<section id="policy" style="padding:60px 0"><div class="wrap" style="max-width:860px">
+  <div class="head c rv"><span class="tag">Policies</span><h2>Our Promise</h2></div>
+  <div class="faq" id="polList"></div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <div class="fg">
+    <div><a href="#home" class="logo" style="color:#fff;padding:0"><img src="assets/logo.jpg" alt=""><span>Website<br>Builders BD</span></a><p style="margin-top:14px;font-size:14px">Your Vision | Our Code | Your Success</p></div>
+    <div><h5>Company</h5><a href="#about">About</a><a href="#portfolio">Portfolio</a><a href="#process">Process</a><a href="#faq">FAQ</a></div>
+    <div><h5>Services</h5><a href="#services">Web Design</a><a href="#services">E-Commerce</a><a href="#services">Portfolio Sites</a><a href="#pricing">Pricing</a></div>
+    <div><h5>Connect</h5><a data-msgr target="_blank" rel="noopener">Messenger</a><a data-fb target="_blank" rel="noopener">Facebook</a><a data-yt target="_blank" rel="noopener">YouTube</a><a data-mail>Email</a></div>
+  </div>
+  <div class="cp">© <span id="yr"></span> Website Builders BD. All rights reserved.</div>
+</div></footer>
+
+<div class="fl"><a class="ms" data-msgr target="_blank" rel="noopener" aria-label="Messenger">💬</a><a class="ph" data-tel aria-label="Call">📞</a></div>
+<button id="top" aria-label="Back to top">↑</button>
+<div id="toast"></div>
+
+<!-- Auth modal -->
+<div class="mo" id="authMo"><div class="md">
+  <button class="x" data-close>×</button>
+  <h3 id="authTitle">Welcome back</h3><p class="note">Login to your account or create a new one.</p>
+  <div class="tabs"><button class="on" data-tab="login">Login</button><button data-tab="signup">Sign up</button></div>
+  <form id="authForm" style="display:grid;gap:14px">
+    <label id="nmL" style="display:none">Full name<input id="aName"></label>
+    <label>Email<input id="aEmail" type="email" required autocomplete="username"></label>
+    <label>Password<input id="aPass" type="password" required minlength="6" autocomplete="current-password"></label>
+    <div class="err" id="authErr"></div>
+    <button class="btn p" style="justify-content:center" id="authSubmit">Login</button>
+  </form>
+</div></div>
+
+<!-- Admin -->
+<div id="admin"><div class="ad">
+  <aside><h4><img src="assets/logo.jpg" alt="">Admin Panel</h4><div id="adNav"></div>
+  <button id="adExit" style="margin-top:24px;background:rgba(255,255,255,.08)">← View site</button><button id="adOut" style="background:rgba(220,38,38,.25)">Logout</button></aside>
+  <main id="adMain"></main>
+</div></div>
+
+<script src="app.js"></script>
+</body>
+</html>
