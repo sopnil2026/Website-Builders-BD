@@ -11,7 +11,8 @@ const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{retur
 const DEFAULT={
  brand:{h1:'Your Vision.',h2:'Our Code.',h3:'Your Success.',lead:'We design and build fast, modern, mobile-friendly websites that help your business look professional and win more customers.',tagline:'আপনার স্বপ্নের ওয়েবসাইট'},
  about:{p1:'Website Builders BD is a web design and development studio in Bangladesh. We turn your ideas into clean, fast and easy-to-use websites — from business sites and portfolios to online shops.',p2:'Our mission is simple: <i>make a professional web presence easy, effective and affordable for every business.</i>'},
- contact:{messenger:'https://m.me/website.builders.bdcom',facebook:'https://www.facebook.com/website.builders.bdcom',youtube:'https://www.youtube.com/@WebTech25',email:'sopnilprodhan13@gmail.com',phone:'01740304436',bkash:'01740304436',webmoney:'Ask on Messenger for account details'},
+ contact:{messenger:'https://m.me/website.builders.bdcom',facebook:'https://www.facebook.com/website.builders.bdcom',youtube:'https://www.youtube.com/@WebTech25',portfolio:'https://sopnil2026.github.io/sopnilPortfolio',email:'sopnilprodhan13@gmail.com',phone:'01740304436',hours:'Sat – Thu · 9 AM – 9 PM',bkash:'01740304436',webmoney:'Ask on Messenger for account details'},
+ payments:[{n:'bKash',c:'#e2136e',img:''},{n:'Webmoney',c:'#1d6fb8',img:''}],
  stats:[{n:'50%',l:'Advance to start'},{n:'30 Days',l:'Refund window'},{n:'100%',l:'Mobile responsive'}],
  services:[
   {i:'💻',t:'Website Design & Development',d:'Custom, fast and responsive websites for any business.'},
@@ -28,7 +29,7 @@ const DEFAULT={
   {n:'Standard',price:'৳ 12,000',feat:['Up to 8 pages','Custom animations','SEO basics','Admin-editable content','2 free revisions','14 days delivery'],hot:true},
   {n:'Premium',price:'৳ 25,000',feat:['E-commerce or web app','Login & admin panel','Payment integration','Advanced SEO & speed','Priority support','21 days delivery'],hot:false}],
  portfolio:[
-  {t:'My Portfolio Website',c:'Portfolio',d:'Our own portfolio website — add the live link in Admin → Portfolio.',url:'',demo:false,color:'#f97316,#ea580c'},
+  {t:'My Portfolio Website',c:'Portfolio',d:'Our own animated portfolio website — a live, real project.',url:'https://sopnil2026.github.io/sopnilPortfolio',demo:false,color:'#f97316,#ea580c'},
   {t:'Spice Garden Restaurant',c:'Business',d:'Menu, gallery and table-booking style layout.',url:'',demo:true,color:'#b45309,#78350f'},
   {t:'Fashion Hub Store',c:'E-Commerce',d:'Product grid, cart and checkout flow.',url:'',demo:true,color:'#db2777,#9d174d'},
   {t:'Smart Clinic',c:'Business',d:'Doctor profiles and appointment request page.',url:'',demo:true,color:'#0891b2,#155e75'}],
@@ -44,7 +45,10 @@ const DEFAULT={
   {q:'Privacy Policy',a:'We only use your name, phone and email to respond to your order. We never sell your data.'},
   {q:'Terms of Service',a:'Work starts after the advance payment. Content you provide must be legal and owned by you. Delivery time depends on timely feedback.'}]
 };
-let C=Object.assign({},DEFAULT,ls.get(K.c,{}));
+const stored=ls.get(K.c,{});
+let C=Object.assign({},DEFAULT,stored);
+C.contact=Object.assign({},DEFAULT.contact,stored.contact||{}); // keep new fields for older saved data
+if(!C.contact.portfolio)C.contact.portfolio=DEFAULT.contact.portfolio;
 const save=()=>ls.set(K.c,C);
 
 /* ---------- utils ---------- */
@@ -67,6 +71,9 @@ function sha256fb(m){ // fallback for non-secure contexts
 }
 const session=()=>{try{return JSON.parse(sessionStorage.getItem(K.s))}catch{return null}};
 
+
+function textOn(hex){const h=(hex||'#334155').replace('#','');const n=parseInt(h.length===3?h.replace(/./g,'$&$&'):h,16),r=n>>16&255,g=n>>8&255,b=n&255;return (r*299+g*587+b*114)/1000>170?'#111827':'#fff'}
+function payBadge(p){return p.img?`<span class="pb im" title="${esc(p.n)}"><img src="${esc(p.img)}" alt="${esc(p.n)}"></span>`:`<span class="pb" style="background:${esc(p.c||'#334155')};color:${textOn(p.c)}">${esc(p.n)}</span>`}
 /* ---------- render public site ---------- */
 function render(){
  const b=C.brand,ct=C.contact;
@@ -84,11 +91,20 @@ function render(){
  const acc=l=>l.map(f=>`<div class="fq"><button>${esc(f.q)}</button><div>${esc(f.a)}</div></div>`).join('');
  $('#faqList').innerHTML=acc(C.faq);$('#polList').innerHTML=acc(C.policies);
  $('#cinfo').innerHTML=[
-  ['💬','Messenger','Chat with us',ct.messenger],['📘','Facebook','Website Builders BD',ct.facebook],['✉️','Email',ct.email,'mailto:'+ct.email],
-  ['💳','bKash',ct.bkash+' (Send Money)',null],['🪙','Webmoney',ct.webmoney,null],['▶️','YouTube','WebTech25',ct.youtube]
- ].map(([i,t,s,h])=>`<${h?`a href="${esc(h)}" target="_blank" rel="noopener"`:'div'} class="ci"><i>${i}</i><div><small>${t}</small><b>${esc(s)}</b></div></${h?'a':'div'}>`).join('');
- $$('[data-msgr]').forEach(a=>a.href=ct.messenger);$$('[data-fb]').forEach(a=>a.href=ct.facebook);$$('[data-yt]').forEach(a=>a.href=ct.youtube);
+  ['📞','Phone / bKash',ct.phone,'tel:+88'+ct.phone.replace(/\D/g,''),ct.hours?'Available '+ct.hours:''],
+  ['✉️','Email',ct.email,'mailto:'+ct.email,'We reply as soon as we can'],
+  ['💬','Messenger','Chat with us',ct.messenger,'Fastest way to reach us'],
+  ['🌐','Our Portfolio Website',ct.portfolio.replace(/^https?:\/\//,''),ct.portfolio,'See a live project'],
+  ['📘','Facebook','Website Builders BD',ct.facebook,''],
+  ['▶️','YouTube','WebTech25',ct.youtube,''],
+  ['💳','bKash',ct.bkash+' (Send Money)',null,'Pay 50% advance to start'],
+  ['🪙','Webmoney',ct.webmoney,null,'']
+ ].map(([i,t,s,h,sub])=>`<${h?`a href="${esc(h)}" ${/^tel|^mailto/.test(h)?'':'target="_blank" rel="noopener"'}`:'div'} class="ci"><i>${i}</i><div><small>${t}</small><b>${esc(s)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div></${h?'a':'div'}>`).join('');
+ $$('[data-msgr]').forEach(a=>a.href=ct.messenger);$$('[data-fb]').forEach(a=>a.href=ct.facebook);$$('[data-yt]').forEach(a=>a.href=ct.youtube);$$('[data-pf]').forEach(a=>a.href=ct.portfolio);
  $$('[data-mail]').forEach(a=>a.href='mailto:'+ct.email);$$('[data-tel]').forEach(a=>a.href='tel:+88'+ct.phone.replace(/\D/g,''));
+ $$('[data-t]').forEach(s=>s.textContent=ct[s.dataset.t]||'');
+ $('#ftServices').innerHTML=C.services.slice(0,6).map(s=>`<a href="#services">${esc(s.t)}</a>`).join('');
+ const pays=(C.payments||[]).map(payBadge).join('');$$('[data-pay]').forEach(el=>el.innerHTML=pays);
  $('#yr').textContent=new Date().getFullYear();
  observe();authUI();
 }
@@ -138,7 +154,7 @@ $$('[data-tab]').forEach(b=>b.onclick=()=>setMode(b.dataset.tab));
 $('[data-close]').onclick=()=>mo.classList.remove('sh');
 mo.onclick=e=>{if(e.target===mo)mo.classList.remove('sh')};
 function authUI(){const s=session();const b=$('#authBtn');
- if(s){b.textContent=s.role==='admin'?'⚙ Admin Panel':'👤 '+(s.name||'Account').split(' ')[0];b.onclick=()=>s.role==='admin'?openAdmin():logoutMenu()}
+ if(s){b.textContent=s.role==='admin'?'⚙ Admin Panel':'👤 My Panel';b.onclick=()=>s.role==='admin'?openAdmin():openUser()}
  else{b.textContent='Login / Sign up';b.onclick=()=>{setMode('login');mo.classList.add('sh')}}}
 function logoutMenu(){if(confirm('Logout?')){sessionStorage.removeItem(K.s);authUI();toast('Logged out')}}
 $('#authForm').addEventListener('submit',async e=>{
@@ -149,27 +165,28 @@ $('#authForm').addEventListener('submit',async e=>{
   if(em===ADMIN_EMAIL){err.textContent='This email is reserved.';return}
   const us=ls.get(K.u,[]);if(us.some(u=>u.email===em)){err.textContent='Account already exists. Please login.';return}
   us.push({name:nm,email:em,hash:h,at:new Date().toISOString()});ls.set(K.u,us);
-  sessionStorage.setItem(K.s,JSON.stringify({email:em,name:nm,role:'user'}));mo.classList.remove('sh');authUI();toast('Welcome, '+nm+'!');return}
+  sessionStorage.setItem(K.s,JSON.stringify({email:em,name:nm,role:'user'}));mo.classList.remove('sh');authUI();toast('Welcome, '+nm+'!');openUser();return}
  const ah=ls.get(K.a,ADMIN_HASH);
  if(em===ADMIN_EMAIL){
   if(h===ah){sessionStorage.setItem(K.s,JSON.stringify({email:em,name:'Admin',role:'admin'}));mo.classList.remove('sh');authUI();openAdmin();return}
   err.textContent='Wrong email or password.';return}
  const u=ls.get(K.u,[]).find(u=>u.email===em&&u.hash===h);
  if(!u){err.textContent='Wrong email or password. No account? Use Sign up.';return}
- sessionStorage.setItem(K.s,JSON.stringify({email:em,name:u.name,role:'user'}));mo.classList.remove('sh');authUI();toast('Welcome back, '+u.name+'!');
+ sessionStorage.setItem(K.s,JSON.stringify({email:em,name:u.name,role:'user'}));mo.classList.remove('sh');authUI();toast('Welcome back, '+u.name+'!');openUser();
 });
 
 /* ---------- admin ---------- */
-const ADM=['Dashboard','Hero & About','Contact & Links','Services','Packages','Portfolio','FAQ & Policies','Users','Orders','Settings'];
+const ADM=['Dashboard','Hero & About','Contact & Links','Payment Methods','Services','Packages','Portfolio','FAQ & Policies','Users','Orders','Settings'];
 let tab='Dashboard';
 function openAdmin(){const s=session();if(!s||s.role!=='admin')return;$('#admin').classList.add('sh');document.body.style.overflow='hidden';drawAdmin()}
 function closeAdmin(){$('#admin').classList.remove('sh');document.body.style.overflow=''}
 $('#adExit').onclick=closeAdmin;
+$('#adUser').onclick=()=>{closeAdmin();openUser()};
 $('#adOut').onclick=()=>{sessionStorage.removeItem(K.s);closeAdmin();authUI();toast('Logged out')};
 function drawAdmin(){
  $('#adNav').innerHTML=ADM.map(t=>`<button class="${t===tab?'on':''}" data-t="${t}">${t}</button>`).join('');
  $$('#adNav button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;drawAdmin()});
- const m=$('#adMain'),F={Dashboard:dash,'Hero & About':heroEd,'Contact & Links':contactEd,Services:listEd('services',[['i','Icon'],['t','Title'],['d','Description']],{i:'⭐',t:'New service',d:''}),
+ const m=$('#adMain'),F={Dashboard:dash,'Hero & About':heroEd,'Contact & Links':contactEd,'Payment Methods':payEd,Services:listEd('services',[['i','Icon'],['t','Title'],['d','Description']],{i:'⭐',t:'New service',d:''}),
   Packages:pkEd,Portfolio:listEd('portfolio',[['t','Title'],['c','Category'],['d','Description'],['url','Live link (https://…)'],['color','Colors e.g. #f97316,#ea580c']],{t:'New project',c:'Business',d:'',url:'',demo:true,color:'#f97316,#ea580c'}),
   'FAQ & Policies':faqEd,Users:usersV,Orders:ordersV,Settings:settingsV};
  m.innerHTML=`<h2>${tab}</h2>`;F[tab](m);
@@ -189,7 +206,7 @@ function heroEd(m){
  q.querySelector('button').onclick=()=>{$$('[data-k]',q).forEach(i=>C.about[i.dataset.k]=i.value);commit()};
 }
 function contactEd(m){
- const L={messenger:'Messenger link',facebook:'Facebook page link',youtube:'YouTube link',email:'Email',phone:'Phone (call button)',bkash:'bKash number',webmoney:'Webmoney details'};
+ const L={messenger:'Messenger link',facebook:'Facebook page link',youtube:'YouTube link',portfolio:'Portfolio website link',hours:'Working hours',email:'Email',phone:'Phone (call button)',bkash:'bKash number',webmoney:'Webmoney details'};
  const p=panel(m,'Contact, social & payment',Object.keys(L).map(k=>inp(k,L[k],C.contact[k])).join('')+'<button class="btn p sm" style="margin-top:12px">Save</button>');
  p.querySelector('button').onclick=()=>{$$('[data-k]',p).forEach(i=>C.contact[i.dataset.k]=i.value.trim());commit()};
 }
@@ -221,6 +238,47 @@ function settingsV(m){
  $('#im',b).onchange=e=>{const r=new FileReader();r.onload=()=>{try{C=Object.assign({},DEFAULT,JSON.parse(r.result));commit('Imported');drawAdmin()}catch{toast('Invalid file')}};r.readAsText(e.target.files[0])};
  $('#rs',b).onclick=()=>{if(confirm('Reset all content to defaults?')){localStorage.removeItem(K.c);C=Object.assign({},DEFAULT);render();drawAdmin();toast('Reset')}};
  panel(m,'Important: where your data lives','<p class="note">This site is static (GitHub Pages). Content you edit here and accounts created by visitors are saved in <b>this browser only</b> — other visitors will not see your edits until you export the JSON and paste it into <code>DEFAULT</code> in app.js (or connect a real backend such as Supabase). Visitor logins are for convenience, not strong security.</p>');
+}
+
+/* payment methods editor (admin) */
+const PRESETS=[['Nagad','#ee3124'],['Rocket','#8c3494'],['PayPal','#003087'],['Payoneer','#ff4800'],['Visa','#1a1f71'],['Mastercard','#eb001b'],['American Express','#2e77bc'],['Binance Pay','#f0b90b'],['Cash on Delivery','#16a34a'],['Bank Transfer','#475569']];
+function fileToLogo(file,cb){const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const sc=Math.min(56/im.height,160/im.width),w=Math.max(1,Math.round(im.width*sc)),h=Math.max(1,Math.round(im.height*sc)),c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);cb(c.toDataURL('image/png'))};im.onerror=()=>toast('Could not read that image');im.src=r.result};r.readAsDataURL(file)}
+function payEd(m){
+ const P=C.payments;
+ const p=panel(m,'Payment methods shown on the website',
+ `<p class="note" style="margin-bottom:12px">These badges appear in Pricing, Footer and User Panel. Upload a logo image for any method (PNG/JPG, small is fine), or leave it empty to show a colored name badge. Add only the methods you actually accept.</p>
+ <div class="paybadges" style="margin-bottom:16px">${P.map(payBadge).join('')||'<span class="note">No payment methods yet.</span>'}</div>`+
+ P.map((x,i)=>`<div class="pe" data-ix="${i}"><label>Name<input data-k="n" value="${esc(x.n)}"></label><label>Logo image<input type="file" accept="image/*" data-logo></label><label>Badge color<input type="color" data-k="c" value="${esc(x.c||'#334155')}" style="padding:4px;height:46px"></label><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn p sm" data-save>Save</button>${x.img?'<button class="mini" data-rmlogo>Remove logo</button>':''}<button class="dl" data-del>Delete</button></div></div>`).join('')+
+ `<h3 style="margin-top:20px">Quick add</h3><div class="presets">${PRESETS.map(([n,c])=>`<button data-preset="${esc(n)}|${c}">＋ ${esc(n)}</button>`).join('')}<button data-preset="New method|#334155">＋ Custom</button></div>`);
+ p.onclick=e=>{const row=e.target.closest('[data-ix]'),ix=row&&+row.dataset.ix;
+  if(e.target.dataset.preset){const [n,c]=e.target.dataset.preset.split('|');if(C.payments.some(x=>x.n===n)&&n!=='New method')return toast(n+' is already added');C.payments.push({n,c,img:''});commit('Added');drawAdmin()}
+  if(e.target.matches('[data-save]')){C.payments[ix].n=$('[data-k=n]',row).value.trim()||'Method';C.payments[ix].c=$('[data-k=c]',row).value;commit();drawAdmin()}
+  if(e.target.matches('[data-rmlogo]')){C.payments[ix].img='';commit('Logo removed');drawAdmin()}
+  if(e.target.matches('[data-del]')&&confirm('Delete this payment method?')){C.payments.splice(ix,1);commit('Deleted');drawAdmin()}};
+ p.onchange=e=>{if(e.target.matches('[data-logo]')&&e.target.files[0]){const ix=+e.target.closest('[data-ix]').dataset.ix;fileToLogo(e.target.files[0],d=>{C.payments[ix].img=d;commit('Logo saved');drawAdmin()})}};
+}
+
+/* ---------- user panel ---------- */
+const upEl=$('#userpanel');
+function openUser(){const s=session();if(!s)return;upEl.classList.add('sh');document.body.style.overflow='hidden';$('#upAdmin').style.display=s.role==='admin'?'':'none';drawUser()}
+function closeUser(){upEl.classList.remove('sh');document.body.style.overflow=''}
+$('#upClose').onclick=closeUser;
+$('#upOut').onclick=()=>{sessionStorage.removeItem(K.s);closeUser();authUI();toast('Logged out')};
+$('#upAdmin').onclick=()=>{closeUser();openAdmin()};
+upEl.addEventListener('click',e=>{if(e.target.closest('[data-closeup]'))closeUser()});
+function drawUser(){
+ const s=session();if(!s)return;const ct=C.contact,b=$('#upBody');
+ const orders=ls.get(K.o,[]).filter(o=>(o.email||'').toLowerCase()===s.email);
+ const isAdmin=s.role==='admin';
+ b.innerHTML=`<div class="hello"><h2>Hello, ${esc(s.name)} 👋</h2><p>${esc(s.email)}${isAdmin?' · <b>Admin preview of the user panel</b>':''}</p></div>
+ <div class="qa"><a href="#contact" data-closeup>✉ Send a message</a><a href="${esc(ct.messenger)}" target="_blank" rel="noopener">💬 Chat on Messenger</a><a href="#pricing" data-closeup>📦 View packages</a></div>
+ <div class="pn" style="margin-top:20px"><h3>How to pay</h3><p class="note">Pay 50% in advance to start and the rest on delivery. bKash: <b>${esc(ct.bkash)}</b> (Send Money). Webmoney: ${esc(ct.webmoney)}. After paying, send the transaction ID to us on Messenger.</p><div class="paybadges" style="margin-top:12px">${(C.payments||[]).map(payBadge).join('')}</div></div>
+ <div class="pn"><h3>My requests</h3>${orders.length?`<table><tr><th>Date</th><th>Package</th><th>Message</th></tr>${orders.map(o=>`<tr><td>${esc(o.at.slice(0,10))}</td><td>${esc(o.pkg)}</td><td>${esc(o.msg)}</td></tr>`).join('')}</table>`:'<p class="note">No requests from this browser yet. Use “Send a message” to start your project.</p>'}</div>
+ ${isAdmin?'':`<div class="pn"><h3>My profile</h3><label>Name<input id="upName" value="${esc(s.name)}"></label><label style="margin-top:10px">New password (optional, min 6)<input id="upPw" type="password" autocomplete="new-password"></label><button class="btn p sm" id="upSave" style="margin-top:12px">Save profile</button></div>`}`;
+ const sv=$('#upSave');if(sv)sv.onclick=async()=>{const nm=$('#upName').value.trim(),pw=$('#upPw').value;if(!nm)return toast('Enter your name');
+  const us=ls.get(K.u,[]),u=us.find(x=>x.email===s.email);if(!u)return toast('Account not found');
+  u.name=nm;if(pw){if(pw.length<6)return toast('Password needs 6+ characters');u.hash=await sha(pw)}
+  ls.set(K.u,us);sessionStorage.setItem(K.s,JSON.stringify({...s,name:nm}));authUI();drawUser();toast('Profile saved')};
 }
 addEventListener('keydown',e=>{if(e.key==='Escape'){mo.classList.remove('sh')}});
 render();
