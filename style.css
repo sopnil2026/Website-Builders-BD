@@ -392,3 +392,56 @@ header.sc .nav>.logo span{color:#fff}
     font-size:12px;
   }
 }
+
+
+/* ---- exact small-screen logo/menu + white blurred sticky header fix ---- */
+/* Keep the sticky header light and frosted instead of turning navy when scrolling. */
+header.sc{
+  background:rgba(255,255,255,.88)!important;
+  -webkit-backdrop-filter:blur(14px);
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid rgba(15,23,42,.08);
+  box-shadow:0 8px 30px rgba(15,23,42,.08);
+}
+header.sc .logo,
+header.sc .nav>.logo span{color:var(--ink)!important}
+header.sc .pill{
+  background:rgba(255,255,255,.78);
+  border-color:rgba(15,23,42,.10);
+}
+header.sc .pill a{color:var(--navy2)}
+header.sc .pill a.on{color:#fff}
+
+/* Restore a clearer logo and readable navigation without changing page sections. */
+.nav>.logo img{height:38px;max-width:100px}
+.nav>.logo span{font-size:10px}
+@media(min-width:1281px){
+  header .nav>.logo{flex-basis:88px;width:88px;min-width:88px}
+  header .nav>.logo img{height:40px;max-width:104px}
+  header .pill a,
+  header .pill a.on{
+    font-size:clamp(12px,.98vw,14px);
+    padding-left:clamp(5px,.62vw,9px);
+    padding-right:clamp(5px,.62vw,9px);
+  }
+  header .pill a.on{
+    padding-left:clamp(7px,.78vw,11px);
+    padding-right:clamp(7px,.78vw,11px);
+  }
+}
+
+/* The three-dot trigger stays compact; the opened menu remains a full, easy-to-tap list. */
+.burger{font-size:21px;width:36px;height:38px;line-height:1}
+@media(max-width:640px){
+  .nav>.logo{min-width:74px}
+  .nav>.logo img{height:36px;max-width:92px}
+  .nav>.logo span{font-size:9px;line-height:1.1}
+  .burger{width:34px;height:36px;font-size:20px;border-radius:10px}
+  .acts{gap:6px}
+}
+@media(max-width:340px){
+  .nav>.logo{min-width:68px}
+  .nav>.logo img{height:32px;max-width:82px}
+  .nav>.logo span{font-size:8px}
+  .burger{width:32px;height:34px;font-size:19px}
+}
