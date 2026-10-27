@@ -540,3 +540,116 @@ header.sc .pill a.on{color:#fff}
 .fl .ms,.fl .tg,.fl .wa{background:transparent!important;box-shadow:none!important}
 .fl a img{display:block;width:100%;height:100%;object-fit:contain}
 .fl a:hover{transform:scale(1.06)}
+
+
+/* ---- Achievement statistics strip ---- */
+.trust-metrics{
+  position:relative;
+  padding:0 0 42px;
+  margin-top:-1px;
+  background:linear-gradient(180deg,#fafbff 0%,#fff 100%);
+}
+.trust-metrics-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:0;
+  border-top:1px solid var(--line);
+  padding-top:30px;
+}
+.trust-metric{
+  position:relative;
+  min-width:0;
+  padding:2px 16px 0;
+  text-align:center;
+}
+.trust-metric+.trust-metric:before{
+  content:"";
+  position:absolute;
+  left:0;
+  top:6px;
+  bottom:6px;
+  width:1px;
+  background:var(--line);
+}
+.trust-metric b{
+  display:block;
+  color:var(--o2);
+  font-size:clamp(28px,3.1vw,38px);
+  line-height:1.18;
+  letter-spacing:-.035em;
+  font-weight:900;
+  animation:trust-stat-enter .7s cubic-bezier(.2,.8,.2,1) both;
+}
+.trust-metric:nth-child(2) b{animation-delay:.08s}
+.trust-metric:nth-child(3) b{animation-delay:.16s}
+.trust-metric:nth-child(4) b{animation-delay:.24s}
+.trust-metric span{
+  display:block;
+  margin-top:7px;
+  color:#64748b;
+  font-size:11px;
+  line-height:1.45;
+  font-weight:800;
+  letter-spacing:.075em;
+  text-transform:uppercase;
+}
+@keyframes trust-stat-enter{
+  from{opacity:0;transform:translateY(9px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* ---- Animated real Messenger, Telegram and WhatsApp logos ---- */
+.brand-icon-inline,.brand-social-logo,.brand-contact-logo{
+  transition:transform .25s ease,filter .25s ease;
+}
+a:hover .brand-icon-inline,
+a:hover .brand-social-logo,
+.btn:hover .brand-icon-inline,
+.ci:hover .brand-contact-logo{
+  transform:scale(1.08);
+  filter:drop-shadow(0 3px 5px rgba(15,23,42,.22));
+}
+.fl a{
+  position:relative;
+  overflow:visible;
+  isolation:isolate;
+}
+.fl a:after{
+  content:"";
+  position:absolute;
+  inset:-3px;
+  border:2px solid currentColor;
+  border-radius:50%;
+  opacity:0;
+  pointer-events:none;
+  animation:contact-logo-ring 2.8s ease-out infinite;
+  z-index:-1;
+}
+.fl .ms{color:#1689f8}
+.fl .tg{color:#229ed9}
+.fl .wa{color:#25d366}
+.fl .tg:after{animation-delay:.65s}
+.fl .wa:after{animation-delay:1.3s}
+.fl a img{transition:transform .25s ease,filter .25s ease}
+.fl a:hover img{transform:scale(1.08);filter:drop-shadow(0 5px 8px rgba(15,23,42,.2))}
+@keyframes contact-logo-ring{
+  0%{transform:scale(.88);opacity:.65}
+  75%,100%{transform:scale(1.33);opacity:0}
+}
+@media(max-width:760px){
+  .trust-metrics{padding-bottom:28px}
+  .trust-metrics-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    padding-top:18px;
+  }
+  .trust-metric{padding:15px 8px}
+  .trust-metric+.trust-metric:before{display:none}
+  .trust-metric:nth-child(even){border-left:1px solid var(--line)}
+  .trust-metric:nth-child(n+3){border-top:1px solid var(--line)}
+  .trust-metric b{font-size:clamp(26px,7vw,34px)}
+  .trust-metric span{font-size:10px;letter-spacing:.055em}
+}
+@media(prefers-reduced-motion:reduce){
+  .trust-metric b,.fl a:after{animation:none!important}
+  .brand-icon-inline,.brand-social-logo,.brand-contact-logo,.fl a img{transition:none!important}
+}
