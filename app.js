@@ -5,7 +5,7 @@ const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelect
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ADMIN_EMAIL='sopnilprodhan13@gmail.com';
 const ADMIN_HASH='e31f6542b54cd689b02cf9055fbeb4a12fa5ffe3909fafc24588e21a7b116728'; // SHA-256 of the admin password (not stored in plain text)
-const K={c:'wbbd_content',u:'wbbd_users',o:'wbbd_orders',a:'wbbd_admin_hash_v2',s:'wbbd_session'};
+const K={c:'wbbd_content',u:'wbbd_users',o:'wbbd_orders',m:'wbbd_messages',l:'wbbd_login_events',a:'wbbd_admin_hash_v2',s:'wbbd_session'};
 const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 
 const DEFAULT={
