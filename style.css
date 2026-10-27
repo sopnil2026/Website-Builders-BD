@@ -980,3 +980,102 @@ a:hover .brand-social-logo,
 @media(prefers-reduced-motion:reduce){
   .pf,.pf-monogram,.pf-browser,.pf-card-arrow{transition:none!important}
 }
+
+
+/* ---- header spacing + brand logo size refinement ---- */
+/* Use the navigation pill's full width instead of leaving large empty ends. */
+@media(min-width:1281px){
+  header .nav{
+    gap:6px;
+  }
+  header .nav>.logo{
+    flex:0 0 104px;
+    width:104px;
+    min-width:104px;
+    gap:2px;
+  }
+  header .nav>.logo img{
+    height:50px;
+    max-width:112px;
+  }
+  header .nav>.logo span{
+    font-size:10px;
+    line-height:1.05;
+    white-space:normal;
+    text-align:center;
+  }
+  header .pill{
+    flex:1 1 auto;
+    min-width:0;
+    justify-content:space-between;
+    gap:0;
+    padding:4px;
+  }
+  header .pill a,
+  header .pill a.on{
+    flex:0 1 auto;
+    min-width:0;
+    white-space:nowrap;
+    padding:8px clamp(5px,.55vw,8px);
+    font-size:clamp(11px,.92vw,13px);
+  }
+  header .pill a.on{
+    padding-left:clamp(7px,.7vw,10px);
+    padding-right:clamp(7px,.7vw,10px);
+  }
+  header .acts{
+    gap:6px;
+    margin-left:2px;
+  }
+  header .acts .btn.sm{
+    padding-left:10px;
+    padding-right:10px;
+    font-size:12px;
+  }
+}
+
+/* Larger real brand logos in footer social buttons. */
+.soc a{
+  width:46px;
+  height:46px;
+}
+.brand-social-logo{
+  width:32px;
+  height:32px;
+}
+.brand-icon-inline{
+  width:22px;
+  height:22px;
+}
+
+/* Increase the brand mark without forcing the mobile navigation to overflow. */
+@media(max-width:1280px){
+  .nav>.logo img{
+    height:42px;
+    max-width:104px;
+  }
+  .nav>.logo span{
+    font-size:10px;
+  }
+}
+@media(max-width:640px){
+  .nav>.logo{
+    min-width:72px;
+  }
+  .nav>.logo img{
+    height:36px;
+    max-width:90px;
+  }
+  .nav>.logo span{
+    font-size:9px;
+  }
+}
+@media(max-width:360px){
+  .nav>.logo{
+    min-width:64px;
+  }
+  .nav>.logo img{
+    height:32px;
+    max-width:80px;
+  }
+}
