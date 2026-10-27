@@ -145,8 +145,24 @@ function render(){
 }
 function drawPf(cat){
  $('#pfGrid').innerHTML=C.portfolio.filter(p=>cat==='All'||p.c===cat).map((p,i)=>{
-  const [a,b]=(p.color||'#f97316,#ea580c').split(',');const tag=p.url?'a':'div';
-  return `<${tag} class="pf rv in" ${p.url?`href="${esc(p.url)}" target="_blank" rel="noopener"`:''}><div class="th" style="background:linear-gradient(135deg,${esc(a)},${esc(b||a)})">${esc(p.t.split(' ').map(w=>w[0]).slice(0,2).join(''))}</div><div class="bd"><small>${esc(p.c)}${p.demo?' · Demo':''}</small><h3>${esc(p.t)}</h3><p>${esc(p.d)}</p></div></${tag}>`}).join('');
+  const colors=(p.color||'#f97316,#ea580c').split(',');
+  const a=/^#[0-9a-f]{6}$/i.test(colors[0]||'')?colors[0]:'#f97316';
+  const b=/^#[0-9a-f]{6}$/i.test(colors[1]||'')?colors[1]:a;
+  const title=String(p.t||'Project');
+  const initials=title.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0]).join('').toUpperCase()||'WB';
+  const tag=p.url?'a':'article';
+  const state=p.demo?'demo':(p.url?'live':'concept');
+  const cardClass='pf rv in '+(p.url?'has-live-link':'is-demo');
+  const open='<'+tag+' class="'+cardClass+'" '+(p.url?'href="'+esc(p.url)+'" target="_blank" rel="noopener"':'')+'>';
+  const banner='<div class="th pf-banner" style="--pf-a:'+a+';--pf-b:'+b+'">'+
+   '<span class="pf-banner-glow pf-banner-glow-one"></span><span class="pf-banner-glow pf-banner-glow-two"></span>'+
+   '<div class="pf-banner-top"><span class="pf-banner-brand"><i>WB</i><span>'+esc(p.c||'Portfolio')+'</span></span><span class="pf-banner-status '+state+'">'+(state==='live'?'LIVE PROJECT':state==='demo'?'DEMO PROJECT':'CONCEPT')+'</span></div>'+
+   '<div class="pf-banner-main"><div class="pf-monogram">'+esc(initials)+'</div>'+
+    '<div class="pf-browser" aria-hidden="true"><div class="pf-browser-head"><span><i></i><i></i><i></i></span><b>'+esc((p.c||'Website')+' Studio')+'</b><em>↗</em></div>'+
+     '<div class="pf-browser-content"><span class="pf-browser-kicker">DIGITAL EXPERIENCE</span><span class="pf-browser-title"></span><span class="pf-browser-title short"></span><span class="pf-browser-button"></span><div class="pf-browser-cards"><i></i><i></i><i></i></div></div></div></div>'+
+   '<div class="pf-banner-bottom"><span>SELECTED WORK</span><span class="pf-banner-index">'+String(i+1).padStart(2,'0')+' <b>／</b> '+String(C.portfolio.length).padStart(2,'0')+'</span></div></div>';
+  return open+banner+'<div class="bd"><div class="pf-bd-top"><small>'+esc(p.c||'Portfolio')+(p.demo?' · Demo':'')+'</small><span class="pf-state-pill '+state+'">'+(state==='live'?'Live project':state==='demo'?'Demo project':'Concept preview')+'</span></div><h3>'+esc(title)+'</h3><p>'+esc(p.d||'Explore this project and its design concept.')+'</p><div class="pf-card-foot"><span>'+(p.url?'Explore live website':'Project concept')+'</span><span class="pf-card-arrow">↗</span></div></div></'+tag+'>';
+ }).join('');
 }
 function drawGallery(){
  const items=C.gallery||[];
