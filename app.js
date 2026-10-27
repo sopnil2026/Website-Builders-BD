@@ -117,7 +117,7 @@ function render(){
   ['💳','bKash',ct.bkash+' (Send Money)',null,'Pay 50% advance to start'],
   ['🪙','Webmoney',ct.webmoney,null,'']
  ].map(([i,t,s,h,sub])=>`<${h?`a href="${esc(h)}" ${/^tel|^mailto/.test(h)?'':'target="_blank" rel="noopener"'}`:'div'} class="ci"><i>${i}</i><div><small>${t}</small><b>${esc(s)}</b>${sub?`<small>${esc(sub)}</small>`:''}</div></${h?'a':'div'}>`).join('');
- $('[data-msgr]').forEach(a=>a.href=ct.messenger);$('[data-tg]').forEach(a=>a.href=ct.telegram||'https://t.me/');$('[data-fb]').forEach(a=>a.href=ct.facebook);$$('[data-yt]').forEach(a=>a.href=ct.youtube);$$('[data-pf]').forEach(a=>a.href=ct.portfolio);
+ $$('[data-msgr]').forEach(a=>a.href=ct.messenger);$$('[data-tg]').forEach(a=>a.href=ct.telegram||'https://t.me/');$$('[data-fb]').forEach(a=>a.href=ct.facebook);$$('[data-yt]').forEach(a=>a.href=ct.youtube);$$('[data-pf]').forEach(a=>a.href=ct.portfolio);
  $$('[data-mail]').forEach(a=>a.href='mailto:'+ct.email);$$('[data-tel]').forEach(a=>a.href='tel:+88'+ct.phone.replace(/\D/g,''));
  $$('[data-t]').forEach(s=>s.textContent=ct[s.dataset.t]||'');
  $('#ftServices').innerHTML=C.services.slice(0,6).map(s=>`<a href="#services">${esc(s.t)}</a>`).join('');
