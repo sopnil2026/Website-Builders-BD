@@ -6,6 +6,10 @@
 <title>Website Builders BD – Your Vision. Our Code. Your Success.</title>
 <meta name="description" content="Website Builders BD builds fast, modern, mobile-friendly websites for businesses in Bangladesh. Custom design, e-commerce, portfolios and more.">
 <meta name="theme-color" content="#f97316">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Website Builders BD">
 <link rel="icon" href="assets/logo-mark.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -17,13 +21,13 @@
 <header id="hd"><div class="wrap nav">
   <a href="#home" class="logo"><img src="assets/logo-mark.png" alt="Website Builders BD logo"><span>Website<br>Builders BD</span></a>
   <nav class="pill" id="pill">
-    <a href="#home" class="on">Home</a><a href="#services">Services</a><a href="#pricing">Pricing</a><a href="#portfolio">Portfolio</a><a href="#process">Process</a><a href="#faq">FAQ</a><a href="#contact">Contact</a>
+    <a href="#home" class="on">Home</a><a href="#services">Services</a><a href="#pricing">Pricing</a><a href="#portfolio">Portfolio</a><a href="#gallery">Gallery</a><a href="#blog">Blog</a><a href="#training">Training</a><a href="#program">Our Program</a><a href="#process">Process</a><a href="#faq">FAQ</a><a href="#contact">Contact</a>
   </nav>
   <div class="acts">
     <button class="btn o sm" id="authBtn">Login / Sign up</button>
     <a class="btn m sm hide" data-msgr target="_blank" rel="noopener">💬 Messenger</a>
     <a class="btn p sm" href="#contact">✉ Send Message</a>
-    <button class="burger" id="burger" aria-label="Menu">☰</button>
+    <button class="burger" id="burger" aria-label="Open navigation menu" aria-expanded="false" title="Open menu">⋮</button>
   </div>
 </div></header>
 
@@ -73,6 +77,26 @@
   <div class="grid g3" id="pfGrid"></div>
 </div></section>
 
+<section id="gallery"><div class="wrap">
+  <div class="head c rv"><span class="tag">Gallery</span><h2>Creative <span class="grad">Gallery</span></h2><p>Explore design ideas, previews and visual work from our studio.</p></div>
+  <div class="grid g3" id="galleryGrid"></div>
+</div></section>
+
+<section class="alt" id="blog"><div class="wrap">
+  <div class="head c rv"><span class="tag">Latest Insights</span><h2>From Our <span class="grad">Blog</span></h2><p>Useful ideas to help you build and grow your online presence.</p></div>
+  <div class="grid g3" id="blogGrid"></div>
+</div></section>
+
+<section id="training"><div class="wrap">
+  <div class="head c rv"><span class="tag">Training</span><h2>Learn New <span class="grad">Skills</span></h2><p>Practical learning paths for web design and digital skills.</p></div>
+  <div class="grid g3" id="trainingGrid"></div>
+</div></section>
+
+<section class="dark" id="program"><div class="wrap">
+  <div class="head c rv"><span class="tag">Our Program</span><h2>Programs for <span class="grad">Your Growth</span></h2><p>Structured ways to turn an idea into a useful digital project.</p></div>
+  <div class="grid g3" id="programGrid"></div>
+</div></section>
+
 <section class="dark" id="process"><div class="wrap">
   <div class="head c rv"><span class="tag">How It Works</span><h2>From Idea to <span class="grad">Launch</span></h2><p>A clear 5-step process, so you always know what happens next.</p></div>
   <div class="steps" id="steps"></div>
@@ -114,8 +138,8 @@
     <div class="fg">
       <div class="fb"><a href="#home" class="logo"><img src="assets/logo-mark.png" alt=""><span>Website<br>Builders BD</span></a>
         <p>Your Vision | Our Code | Your Success.<br>আপনার স্বপ্নের ওয়েবসাইট — we build fast, modern websites for businesses in Bangladesh.</p>
-        <div class="soc"><a data-fb target="_blank" rel="noopener" title="Facebook">f</a><a data-msgr target="_blank" rel="noopener" title="Messenger">💬</a><a data-yt target="_blank" rel="noopener" title="YouTube">▶</a><a data-pf target="_blank" rel="noopener" title="Portfolio">🌐</a></div></div>
-      <div><h5>Quick Links</h5><a href="#home">Home</a><a href="#about">About</a><a href="#portfolio">Portfolio</a><a href="#process">Process</a><a href="#faq">FAQ</a><a href="#contact">Contact</a></div>
+        <div class="soc"><a data-fb target="_blank" rel="noopener" title="Facebook">f</a><a data-msgr target="_blank" rel="noopener" title="Messenger">💬</a><a data-tg target="_blank" rel="noopener" title="Telegram">➤</a><a data-yt target="_blank" rel="noopener" title="YouTube">▶</a><a data-pf target="_blank" rel="noopener" title="Portfolio">🌐</a></div></div>
+      <div><h5>Quick Links</h5><a href="#home">Home</a><a href="#about">About</a><a href="#portfolio">Portfolio</a><a href="#gallery">Gallery</a><a href="#blog">Blog</a><a href="#training">Training</a><a href="#program">Our Program</a><a href="#process">Process</a><a href="#faq">FAQ</a><a href="#contact">Contact</a></div>
       <div><h5>Services</h5><div id="ftServices"></div><a href="#pricing">Pricing</a></div>
       <div><h5>Contact</h5><a data-mail>✉ <span data-t="email"></span></a><a data-tel>📞 <span data-t="phone"></span></a><a data-pf target="_blank" rel="noopener">🌐 Our Portfolio Website</a><a data-fb target="_blank" rel="noopener">📘 Facebook Page</a><a data-yt target="_blank" rel="noopener">▶ YouTube Channel</a></div>
     </div>
@@ -124,7 +148,7 @@
   </div>
 </footer>
 
-<div class="fl"><a class="ms" data-msgr target="_blank" rel="noopener" aria-label="Messenger">💬</a><a class="ph" data-tel aria-label="Call">📞</a></div>
+<div class="fl" aria-label="Quick contact"><a class="ms" data-msgr target="_blank" rel="noopener" aria-label="Messenger" title="Messenger">💬</a><a class="tg" data-tg target="_blank" rel="noopener" aria-label="Telegram" title="Telegram">➤</a><a class="ph" data-tel aria-label="Call" title="Call">📞</a></div>
 <button id="top" aria-label="Back to top">↑</button>
 <div id="toast"></div>
 
