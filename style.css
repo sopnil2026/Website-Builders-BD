@@ -71,3 +71,67 @@ header.sc{-webkit-backdrop-filter:blur(12px)}
  .fl{bottom:calc(10px + env(safe-area-inset-bottom,0px))}
  #top{bottom:calc(12px + env(safe-area-inset-bottom,0px))}
 }
+
+
+/* ---- precise header spacing fix from user-marked screenshot ---- */
+@media(min-width:1281px){
+  /* Keep the logo close to the left edge, without changing other sections. */
+  header .wrap{
+    width:100%;
+    max-width:none;
+    margin:0;
+    padding-left:clamp(14px,1.6vw,24px);
+    padding-right:clamp(14px,1.6vw,24px);
+  }
+  header .nav{
+    width:100%;
+    min-width:0;
+    gap:8px;
+    justify-content:space-between;
+    flex-wrap:nowrap;
+  }
+  header .nav>.logo{
+    flex:0 0 76px;
+    width:76px;
+    min-width:76px;
+    margin:0;
+  }
+  /* The 11 navigation labels remain on one line and share available space. */
+  header .pill{
+    display:flex;
+    flex:1 1 auto;
+    width:auto;
+    min-width:0;
+    justify-content:center;
+    gap:0;
+    padding:4px;
+    margin:0;
+  }
+  header .pill a,
+  header .pill a.on{
+    flex:0 1 auto;
+    min-width:0;
+    white-space:nowrap;
+    padding:8px clamp(4px,.58vw,9px);
+    font-size:clamp(11px,.88vw,13px);
+    line-height:1.2;
+    letter-spacing:-.01em;
+  }
+  header .pill a.on{
+    padding-left:clamp(6px,.8vw,11px);
+    padding-right:clamp(6px,.8vw,11px);
+  }
+  /* Reserve enough room for both action buttons; never clip their labels. */
+  header .acts{
+    flex:0 0 auto;
+    min-width:max-content;
+    gap:6px;
+    margin-left:2px;
+    white-space:nowrap;
+  }
+  header .acts .btn.sm{
+    flex:0 0 auto;
+    padding:8px clamp(8px,.75vw,11px);
+    font-size:12px;
+  }
+}
