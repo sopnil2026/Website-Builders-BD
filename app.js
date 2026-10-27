@@ -86,6 +86,23 @@ function sha256fb(m){ // fallback for non-secure contexts
  return h.map(x=>(x>>>0).toString(16).padStart(8,'0')).join('');
 }
 const session=()=>{try{return JSON.parse(sessionStorage.getItem(K.s))}catch{return null}};
+function addLocalRecord(key,item,limit=500){
+ const list=ls.get(key,[]);
+ list.unshift(item);
+ ls.set(key,list.slice(0,limit));
+ return item;
+}
+function recordActivity(action,identity){
+ const s=identity||session()||{};
+ return addLocalRecord(K.l,{
+  id:Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8),
+  action:String(action||'Activity'),
+  name:String(s.name||''),
+  email:String(s.email||'').trim().toLowerCase(),
+  role:String(s.role||'visitor'),
+  at:new Date().toISOString()
+ },1000);
+}
 
 
 function textOn(hex){const h=(hex||'#334155').replace('#','');const n=parseInt(h.length===3?h.replace(/./g,'$&$&'):h,16),r=n>>16&255,g=n>>8&255,b=n&255;return (r*299+g*587+b*114)/1000>170?'#111827':'#fff'}
@@ -183,15 +200,30 @@ document.addEventListener('click',e=>{
 
 /* order form */
 $('#orderForm').addEventListener('submit',e=>{
- e.preventDefault();const f=Object.fromEntries(new FormData(e.target));
- const body=`New website order request\n\nName: ${f.name}\nPhone: ${f.phone}\nEmail: ${f.email}\nPackage: ${f.pkg}\n\nProject:\n${f.msg}`;
- const orders=ls.get(K.o,[]);orders.unshift({...f,at:new Date().toISOString()});ls.set(K.o,orders.slice(0,200));
- try{navigator.clipboard.writeText(body)}catch{}
- toast('Request copied! Opening your email app — you can also paste it in Messenger.');
- location.href=`mailto:${C.contact.email}?subject=${encodeURIComponent('Website order – '+f.pkg)}&body=${encodeURIComponent(body)}`;
+ e.preventDefault();
+ const f=Object.fromEntries(new FormData(e.target));
+ const at=new Date().toISOString();
+ const id=Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8);
+ const order={...f,id,at,status:'New'};
+ addLocalRecord(K.o,order,500);
+ addLocalRecord(K.m,{
+  id,at,name:f.name,phone:f.phone,email:f.email,
+  subject:'Website order — '+f.pkg,type:'Order enquiry',pkg:f.pkg,
+  message:f.msg,status:'New'
+ },1000);
+ recordActivity('Order / message submitted',{name:f.name,email:f.email,role:'visitor'});
+ const body=[
+  'New website order request','',
+  'Name: '+f.name,'Phone: '+f.phone,'Email: '+f.email,
+  'Package: '+f.pkg,'','Project:',f.msg
+ ].join('\n');
+ try{if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(body).catch(()=>{});}catch{}
+ toast('Request saved in this browser. Opening an email draft; press Send in your email app to deliver it.');
+ location.href='mailto:'+C.contact.email+'?subject='+encodeURIComponent('Website order – '+f.pkg)+'&body='+encodeURIComponent(body);
  e.target.reset();
 });
 
+/* ---------- auth ----------
 /* ---------- auth ---------- */
 let mode='login';
 const mo=$('#authMo');
@@ -212,19 +244,22 @@ $('#authForm').addEventListener('submit',async e=>{
   const nm=$('#aName').value.trim();if(!nm){err.textContent='Please enter your name.';return}
   if(em===ADMIN_EMAIL){err.textContent='This email is reserved.';return}
   const us=ls.get(K.u,[]);if(us.some(u=>u.email===em)){err.textContent='Account already exists. Please login.';return}
-  us.push({name:nm,email:em,hash:h,at:new Date().toISOString()});ls.set(K.u,us);
+  us.push({name:nm,email:em,hash:h,at:new Date().toISOString(),lastLogin:'',loginCount:0});ls.set(K.u,us);
+  recordActivity('Account created',{name:nm,email:em,role:'user'});
   setMode('login');$('#aEmail').value=em;$('#aPass').value='';toast('Account created. Please sign in to continue.');return}
  const ah=ls.get(K.a,ADMIN_HASH);
  if(em===ADMIN_EMAIL){
-  if(h===ah){sessionStorage.setItem(K.s,JSON.stringify({email:em,name:'Admin',role:'admin'}));mo.classList.remove('sh');authUI();openAdmin();return}
+  if(h===ah){const now=new Date().toISOString();recordActivity('Admin sign in',{email:em,name:'Admin',role:'admin'});sessionStorage.setItem(K.s,JSON.stringify({email:em,name:'Admin',role:'admin',loginAt:now}));mo.classList.remove('sh');authUI();openAdmin();return}
   err.textContent='Wrong email or password.';return}
- const u=ls.get(K.u,[]).find(u=>u.email===em&&u.hash===h);
+ const users=ls.get(K.u,[]),u=users.find(u=>u.email===em&&u.hash===h);
  if(!u){err.textContent='Wrong email or password. No account? Use Sign up.';return}
- sessionStorage.setItem(K.s,JSON.stringify({email:em,name:u.name,role:'user'}));mo.classList.remove('sh');authUI();toast('Welcome back, '+u.name+'!');openUser();
+ const now=new Date().toISOString();u.lastLogin=now;u.loginCount=Number(u.loginCount||0)+1;ls.set(K.u,users);
+ recordActivity('Sign in',{name:u.name,email:em,role:'user'});
+ sessionStorage.setItem(K.s,JSON.stringify({email:em,name:u.name,role:'user',loginAt:now}));mo.classList.remove('sh');authUI();toast('Welcome back, '+u.name+'!');openUser();
 });
 
 /* ---------- admin ---------- */
-const ADM=['Dashboard','Hero & About','Contact & Links','Payment Methods','Services','Packages','Portfolio','Gallery','Blog','Training','Our Program','FAQ & Policies','Users','Orders','Settings'];
+const ADM=['Dashboard','Hero & About','Contact & Links','Payment Methods','Services','Packages','Portfolio','Gallery','Blog','Training','Our Program','FAQ & Policies','Users','Orders','Messages','Login Activity','Settings'];
 let tab='Dashboard';
 function openAdmin(){const s=session();if(!s||s.role!=='admin')return;$('#admin').classList.add('sh');document.body.style.overflow='hidden';drawAdmin()}
 function closeAdmin(){$('#admin').classList.remove('sh');document.body.style.overflow=''}
@@ -240,16 +275,31 @@ function drawAdmin(){
   Blog:listEd('blog',[['t','Title'],['category','Category'],['date','Date / label'],['d','Summary'],['url','Article link (https://…)']],{t:'New article',category:'Web Development',date:'New post',d:'',url:''}),
   Training:listEd('training',[['t','Title'],['level','Level'],['format','Format'],['d','Description'],['url','Training link (https://…)']],{t:'New training',level:'Beginner',format:'Online',d:'',url:''}),
   'Our Program':listEd('program',[['t','Title'],['d','Description'],['details','Details'],['cta','Button label'],['url','Button link (#contact or https://…)']],{t:'New program',d:'',details:'',cta:'Learn more',url:'#contact'}),
-  'FAQ & Policies':faqEd,Users:usersV,Orders:ordersV,Settings:settingsV};
+  'FAQ & Policies':faqEd,Users:usersV,Orders:ordersV,Messages:messagesV,'Login Activity':activityV,Settings:settingsV};
  m.innerHTML=`<h2>${tab}</h2>`;F[tab](m);
 }
 const inp=(k,l,v,tag='input')=>`<label>${l}<${tag} data-k="${k}">${tag==='textarea'?esc(v):''}</${tag==='textarea'?'textarea':'input'}></label>`.replace('<input data-k',`<input value="${esc(v)}" data-k`);
 function panel(m,title,html){const d=document.createElement('div');d.className='pn';d.innerHTML=(title?`<h3>${title}</h3>`:'')+html;m.appendChild(d);return d}
 function commit(msg='Saved ✓'){save();render();if($('#userpanel').classList.contains('sh'))drawUser();toast(msg)}
 function dash(m){
- const u=ls.get(K.u,[]),o=ls.get(K.o,[]);
- m.insertAdjacentHTML('beforeend',`<div class="sc4"><div><b>${u.length}</b>Registered users</div><div><b>${o.length}</b>Orders (this browser)</div><div><b>${C.services.length}</b>Services</div><div><b>${C.portfolio.length}</b>Portfolio items</div></div>`);
- panel(m,'Quick guide','<p class="note">Use the left menu to edit your content. Changes show instantly on the website. See Settings to back up your data and for important notes about where data is stored.</p>');
+ const users=ls.get(K.u,[]),orders=ls.get(K.o,[]),messages=ls.get(K.m,[]),events=ls.get(K.l,[]);
+ const signins=events.filter(x=>x.action==='Sign in'||x.action==='Admin sign in').length;
+ const cards=[
+  ['Registered users',users.length,'This browser'],
+  ['Order requests',orders.length,'This browser'],
+  ['Messages / enquiries',messages.length,'This browser'],
+  ['Successful sign-ins',signins,'This browser'],
+  ['Services',C.services.length,'Website content'],
+  ['Portfolio items',C.portfolio.length,'Website content']
+ ];
+ m.insertAdjacentHTML('beforeend','<div class="sc4">'+cards.map(x=>'<div class="admin-stat"><b>'+x[1]+'</b><span>'+esc(x[0])+'</span><small>'+esc(x[2])+'</small></div>').join('')+'</div>');
+ const recent=events.slice(0,8);
+ const recentRows=recent.map(x=>'<tr><td>'+esc((x.at||'').replace('T',' ').slice(0,16))+'</td><td>'+esc(x.action||'Activity')+'</td><td>'+esc(x.name||'—')+'</td><td>'+esc(x.email||'—')+'</td><td>'+esc(x.role||'visitor')+'</td></tr>').join('');
+ panel(m,'Recent account activity',recent.length?'<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Date / time</th><th>Activity</th><th>Name</th><th>Email</th><th>Role</th></tr></thead><tbody>'+recentRows+'</tbody></table></div>':'<p class="note">No account activity has been recorded in this browser yet.</p>');
+ const newest=messages.slice(0,5);
+ const messageRows=newest.map(x=>'<tr><td>'+esc((x.at||'').slice(0,10))+'</td><td>'+esc(x.name||'—')+'<br><small>'+esc(x.email||x.phone||'')+'</small></td><td>'+esc(x.subject||x.type||'Website enquiry')+'</td><td>'+esc(x.status||'New')+'</td></tr>').join('');
+ panel(m,'Recent messages and enquiries',newest.length?'<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Date</th><th>Sender</th><th>Subject</th><th>Status</th></tr></thead><tbody>'+messageRows+'</tbody></table></div>':'<p class="note">No messages have been saved from this browser yet.</p>');
+ panel(m,'Data visibility','<p class="note"><b>Important:</b> this site is still static. The lists here include only records saved in this browser. They cannot show logins, contact messages or orders from other visitors or devices. To collect everyone’s activity, this website must be connected to a shared database with server-side authentication. Email drafts are not delivered until the sender presses Send.</p>');
 }
 function heroEd(m){
  const p=panel(m,'Hero section',['h1','h2','h3'].map((k,i)=>inp(k,'Headline line '+(i+1),C.brand[k])).join('')+inp('lead','Intro text',C.brand.lead,'textarea')+inp('tagline','Bengali tagline',C.brand.tagline)+'<button class="btn p sm" style="margin-top:12px">Save</button>');
@@ -277,11 +327,38 @@ function pkEd(m){
   if(e.target.matches('[data-del]')&&confirm('Delete this package?')){C.packages.splice(ix,1);commit('Deleted');drawAdmin()}};
 }
 function faqEd(m){['faq','policies'].forEach(key=>listEd(key,[['q','Question / Title'],['a','Answer']],{q:'New question',a:''})(Object.assign(document.createElement('div'),{appendChild(n){m.appendChild(n);n.querySelector('h3')||n.insertAdjacentHTML('afterbegin',`<h3>${key==='faq'?'FAQ':'Policies'}</h3>`)}})))}
-function usersV(m){const u=ls.get(K.u,[]);
- const p=panel(m,'Registered users (this browser)',u.length?`<table><tr><th>Name</th><th>Email</th><th>Joined</th><th></th></tr>${u.map((x,i)=>`<tr><td>${esc(x.name)}</td><td>${esc(x.email)}</td><td>${esc(x.at.slice(0,10))}</td><td><button class="mini" data-rm="${i}">Remove</button></td></tr>`).join('')}</table>`:'<p class="note">No users yet.</p>');
- p.onclick=e=>{if(e.target.dataset.rm!==undefined&&confirm('Remove user?')){u.splice(+e.target.dataset.rm,1);ls.set(K.u,u);drawAdmin()}}}
-function ordersV(m){const o=ls.get(K.o,[]);
- panel(m,'Order requests (this browser)',o.length?`<table><tr><th>Date</th><th>Name</th><th>Contact</th><th>Package</th><th>Message</th></tr>${o.map(x=>`<tr><td>${esc(x.at.slice(0,10))}</td><td>${esc(x.name)}</td><td>${esc(x.phone)}<br>${esc(x.email)}</td><td>${esc(x.pkg)}</td><td>${esc(x.msg)}</td></tr>`).join('')}</table>`:'<p class="note">No orders recorded here. Real orders arrive by email / Messenger.</p>')}
+function adminTable(headers,rows){
+ return '<div class="admin-table-wrap"><table class="admin-table"><thead><tr>'+headers.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+rows+'</tbody></table></div>';
+}
+function usersV(m){
+ const users=ls.get(K.u,[]);
+ const rows=users.map((u,i)=>'<tr><td>'+esc(u.name||'—')+'</td><td>'+esc(u.email||'')+'</td><td>'+esc((u.at||'').slice(0,10))+'</td><td>'+esc((u.lastLogin||'').replace('T',' ').slice(0,16)||'—')+'</td><td>'+Number(u.loginCount||0)+'</td><td><button class="mini" data-rm-user="'+i+'">Remove</button></td></tr>').join('');
+ const p=panel(m,'Registered users — this browser only',rows?adminTable(['Name','Email','Joined','Last sign-in','Sign-ins','Action'],rows):'<p class="note">No registered accounts are saved in this browser yet.</p>');
+ p.onclick=e=>{const b=e.target.closest('[data-rm-user]');if(!b)return;if(confirm('Remove this locally saved account?')){users.splice(Number(b.dataset.rmUser),1);ls.set(K.u,users);recordActivity('User account removed',{name:'Admin',email:ADMIN_EMAIL,role:'admin'});drawAdmin()}};
+}
+function ordersV(m){
+ const orders=ls.get(K.o,[]);
+ const rows=orders.map((o,i)=>'<tr><td>'+esc((o.at||'').slice(0,10))+'</td><td>'+esc(o.name||'—')+'</td><td>'+esc(o.phone||'')+'<br>'+esc(o.email||'')+'</td><td>'+esc(o.pkg||'—')+'</td><td class="message-cell">'+esc(o.msg||'')+'</td><td>'+esc(o.status||'New')+'</td><td><button class="mini" data-order-status="'+i+'">Mark contacted</button></td></tr>').join('');
+ const p=panel(m,'Order requests — this browser only',rows?adminTable(['Date','Name','Contact','Package','Message','Status','Action'],rows):'<p class="note">No order requests have been stored in this browser. The order form opens an email draft; the visitor still has to press Send.</p>');
+ p.onclick=e=>{const b=e.target.closest('[data-order-status]');if(!b)return;const i=Number(b.dataset.orderStatus);if(!orders[i])return;orders[i].status='Contacted';ls.set(K.o,orders);const messages=ls.get(K.m,[]),msg=messages.find(x=>x.id===orders[i].id);if(msg)msg.status='Contacted';ls.set(K.m,messages);recordActivity('Order marked contacted',{name:'Admin',email:ADMIN_EMAIL,role:'admin'});drawAdmin()};
+}
+function messagesV(m){
+ const messages=ls.get(K.m,[]);
+ const rows=messages.map((x,i)=>'<tr><td>'+esc((x.at||'').slice(0,10))+'</td><td>'+esc(x.name||'—')+'<br><small>'+esc(x.email||'')+'<br>'+esc(x.phone||'')+'</small></td><td>'+esc(x.subject||x.type||'Website enquiry')+'</td><td class="message-cell">'+esc(x.message||x.msg||'')+'</td><td>'+esc(x.status||'New')+'</td><td><button class="mini" data-message-replied="'+i+'">Mark replied</button> <button class="mini" data-message-delete="'+i+'">Delete</button></td></tr>').join('');
+ const p=panel(m,'Messages and enquiries — this browser only',rows?adminTable(['Date','Sender','Subject','Message','Status','Actions'],rows):'<p class="note">No website messages have been recorded in this browser yet. The current form records an enquiry locally, then opens an email draft; it does not intercept Messenger or email messages.</p>');
+ p.onclick=e=>{
+  const reply=e.target.closest('[data-message-replied]');
+  if(reply){const i=Number(reply.dataset.messageReplied);if(!messages[i])return;messages[i].status='Replied';ls.set(K.m,messages);const orders=ls.get(K.o,[]),order=orders.find(x=>x.id===messages[i].id);if(order)order.status='Replied';ls.set(K.o,orders);recordActivity('Message marked replied',{name:'Admin',email:ADMIN_EMAIL,role:'admin'});drawAdmin();return}
+  const del=e.target.closest('[data-message-delete]');
+  if(del&&confirm('Delete this locally saved message?')){messages.splice(Number(del.dataset.messageDelete),1);ls.set(K.m,messages);drawAdmin()}
+ };
+}
+function activityV(m){
+ const events=ls.get(K.l,[]);
+ const rows=events.map(x=>'<tr><td>'+esc((x.at||'').replace('T',' ').slice(0,16))+'</td><td>'+esc(x.action||'Activity')+'</td><td>'+esc(x.name||'—')+'</td><td>'+esc(x.email||'—')+'</td><td>'+esc(x.role||'visitor')+'</td></tr>').join('');
+ const p=panel(m,'Login and activity history — this browser only',rows?adminTable(['Date / time','Activity','Name','Email','Role'],rows):'<p class="note">No login history is recorded yet. New successful sign-ins will appear here after this update is deployed.</p>');
+ if(rows){const b=document.createElement('button');b.className='btn o sm';b.textContent='Clear activity log';b.style.marginTop='14px';p.appendChild(b);b.onclick=()=>{if(confirm('Clear this browser activity log?')){ls.set(K.l,[]);drawAdmin()}}}
+}
 function settingsV(m){
  const p=panel(m,'Change admin password',`<label>New password (min 8 chars)<input type="password" id="np" autocomplete="new-password"></label><button class="btn p sm" style="margin-top:12px" id="cp">Update password</button><p class="note" style="margin-top:8px">Stored as a hash in this browser only.</p>`);
  $('#cp',p).onclick=async()=>{const v=$('#np',p).value;if(v.length<8)return toast('Use at least 8 characters');ls.set(K.a,await sha(v));$('#np',p).value='';toast('Password updated')};
@@ -289,7 +366,12 @@ function settingsV(m){
  $('#ex',b).onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(C,null,2)],{type:'application/json'}));a.download='wbbd-content.json';a.click()};
  $('#im',b).onchange=e=>{const r=new FileReader();r.onload=()=>{try{C=Object.assign({},DEFAULT,JSON.parse(r.result));commit('Imported');drawAdmin()}catch{toast('Invalid file')}};r.readAsText(e.target.files[0])};
  $('#rs',b).onclick=()=>{if(confirm('Reset all content to defaults?')){localStorage.removeItem(K.c);C=Object.assign({},DEFAULT);render();drawAdmin();toast('Reset')}};
- panel(m,'Important: where your data lives','<p class="note">This site is a static GitHub Pages site. Content, accounts and requests are stored in this browser. Changes update the public sections immediately and are shared with other open tabs on this same browser, but they do not automatically sync to other visitors or devices. To publish Admin edits for everyone, connect a shared database and server-side authentication (for example Supabase) before production use. Browser-only visitor logins are not strong security.</p>');
+   const records=panel(m,'Export locally stored admin records','<p class="note">Export registered users, orders, enquiries and activity saved in this browser. Passwords are excluded.</p><button class="btn o sm" id="exportRecords">Export records (JSON)</button>');
+  $('#exportRecords',records).onclick=()=>{
+   const payload={scope:'This browser only',exportedAt:new Date().toISOString(),users:ls.get(K.u,[]).map(u=>({name:u.name,email:u.email,at:u.at,lastLogin:u.lastLogin||'',loginCount:u.loginCount||0})),orders:ls.get(K.o,[]),messages:ls.get(K.m,[]),activity:ls.get(K.l,[])};
+   const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='website-builders-bd-admin-records.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  };
+  panel(m,'Important: where your data lives','<p class="note">This site is a static GitHub Pages site. Content, accounts and requests are stored in this browser. Changes update the public sections immediately and are shared with other open tabs on this same browser, but they do not automatically sync to other visitors or devices. To publish Admin edits for everyone, connect a shared database and server-side authentication (for example Supabase) before production use. Browser-only visitor logins are not strong security.</p>');
 }
 
 /* payment methods editor (admin) */
