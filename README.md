@@ -30,3 +30,7 @@ This is a static GitHub Pages site. Website content, user accounts, orders and a
 
 ## Mobile install
 The site includes a web app manifest and service worker. HTTPS is required for service-worker behavior.
+
+
+## Footer social logos
+The footer uses the supplied Facebook and YouTube icon artwork, saved as transparent WebP assets in `assets/`.

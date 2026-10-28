@@ -166,10 +166,10 @@
     <div class="fg">
       <div class="fb"><a href="#home" class="logo"><img src="assets/logo-mark.png" alt=""><span>Website<br>Builders BD</span></a>
         <p>Your Vision | Our Code | Your Success.<br>আপনার স্বপ্নের ওয়েবসাইট — we build fast, modern websites for businesses in Bangladesh.</p>
-        <div class="soc"><a data-fb target="_blank" rel="noopener" title="Facebook">f</a><a data-msgr target="_blank" rel="noopener" title="Messenger"><img class="brand-social-logo" src="assets/messenger-logo.webp" alt="Messenger"></a><a data-tg target="_blank" rel="noopener" title="Telegram"><img class="brand-social-logo" src="assets/telegram-logo.webp" alt="Telegram"></a><a data-yt target="_blank" rel="noopener" title="YouTube">▶</a><a data-pf target="_blank" rel="noopener" title="Portfolio">🌐</a></div></div>
+        <div class="soc" aria-label="Social links"><a data-fb target="_blank" rel="noopener" title="Facebook" aria-label="Facebook"><img class="brand-social-logo" src="assets/facebook-logo.webp" alt="Facebook"></a><a data-msgr target="_blank" rel="noopener" title="Messenger" aria-label="Messenger"><img class="brand-social-logo" src="assets/messenger-logo.webp" alt="Messenger"></a><a data-tg target="_blank" rel="noopener" title="Telegram" aria-label="Telegram"><img class="brand-social-logo" src="assets/telegram-logo.webp" alt="Telegram"></a><a data-yt target="_blank" rel="noopener" title="YouTube" aria-label="YouTube"><img class="brand-social-logo" src="assets/youtube-logo.webp" alt="YouTube"></a><a data-pf target="_blank" rel="noopener" title="Portfolio" aria-label="Portfolio">🌐</a></div></div>
       <div><h5>Quick Links</h5><a href="#home">Home</a><a href="#about">About</a><a href="#portfolio">Portfolio</a><a href="#gallery">Gallery</a><a href="#reviews">Customer Reviews</a><a href="#blog">Blog</a><a href="#training">Training</a><a href="#program">Our Program</a><a href="#process">Process</a><a href="#faq">FAQ</a><a href="#contact">Contact</a><a href="#location">Location — Bogura</a></div>
       <div><h5>Services</h5><div id="ftServices"></div><a href="#pricing">Pricing</a></div>
-      <div><h5>Contact &amp; Location</h5><a data-mail>✉ <span data-t="email"></span></a><a data-wa target="_blank" rel="noopener" aria-label="WhatsApp"><img class="brand-icon-inline" src="assets/whatsapp-logo.webp" alt=""> WhatsApp</a><a href="#location">📍 <span data-location-text>Bogura, Bangladesh</span></a><a data-map target="_blank" rel="noopener">🗺️ Map &amp; Directions</a><a data-msgr target="_blank" rel="noopener"><img class="brand-icon-inline" src="assets/messenger-logo.webp" alt=""> Messenger</a><a data-tg target="_blank" rel="noopener"><img class="brand-icon-inline" src="assets/telegram-logo.webp" alt=""> Telegram</a><a data-pf target="_blank" rel="noopener">🌐 Our Portfolio Website</a><a data-fb target="_blank" rel="noopener">📘 Facebook Page</a><a data-yt target="_blank" rel="noopener">▶ YouTube Channel</a></div>
+      <div><h5>Contact &amp; Location</h5><a data-mail>✉ <span data-t="email"></span></a><a data-wa target="_blank" rel="noopener" aria-label="WhatsApp"><img class="brand-icon-inline" src="assets/whatsapp-logo.webp" alt=""> WhatsApp</a><a href="#location">📍 <span data-location-text>Bogura, Bangladesh</span></a><a data-map target="_blank" rel="noopener">🗺️ Map &amp; Directions</a><a data-msgr target="_blank" rel="noopener"><img class="brand-icon-inline" src="assets/messenger-logo.webp" alt=""> Messenger</a><a data-tg target="_blank" rel="noopener"><img class="brand-icon-inline" src="assets/telegram-logo.webp" alt=""> Telegram</a><a data-pf target="_blank" rel="noopener">🌐 Our Portfolio Website</a><a data-fb target="_blank" rel="noopener"><img class="brand-icon-inline" src="assets/facebook-logo.webp" alt=""> Facebook Page</a><a data-yt target="_blank" rel="noopener"><img class="brand-icon-inline youtube-footer-icon" src="assets/youtube-logo.webp" alt=""> YouTube Channel</a></div>
     </div>
     <div class="fpay"><b>Payment methods</b><div class="paybadges" data-pay></div></div>
     <div class="cp"><span>© <span id="yr"></span> Website Builders BD. All rights reserved.</span><span><a href="#policy">Refund</a> · <a href="#policy">Privacy</a> · <a href="#policy">Terms</a></span></div>
@@ -190,7 +190,13 @@
     <label id="nmL" style="display:none">Full name<input id="aName"></label>
     <label>Email<input id="aEmail" type="email" required autocomplete="username"></label>
     <label>Password<input id="aPass" type="password" required minlength="6" autocomplete="current-password"></label>
-    <div class="err" id="authErr"></div>
+    <div class="captcha-box" id="captchaBox" aria-describedby="captchaHelp">
+      <div class="captcha-heading"><b>Human verification</b><span>Anti-bot check</span></div>
+      <div class="captcha-challenge"><strong id="captchaQuestion" aria-live="polite">4 + 3 = ?</strong><button type="button" id="captchaRefresh" class="captcha-refresh" aria-label="Generate a new captcha question">↻ Refresh</button></div>
+      <label class="captcha-answer" for="captchaAnswer">Answer<input id="captchaAnswer" type="number" inputmode="numeric" step="1" required autocomplete="off" placeholder="Enter the result"></label>
+      <small class="captcha-help" id="captchaHelp">Solve this quick question before logging in or creating an account.</small>
+    </div>
+    <div class="err" id="authErr" role="alert" aria-live="polite"></div>
     <button class="btn p" style="justify-content:center" id="authSubmit">Login</button>
   </form>
 </div></div>

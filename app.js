@@ -278,9 +278,13 @@ $('#orderForm').addEventListener('submit',e=>{
 /* ---------- auth ---------- */
 let mode='login';
 const mo=$('#authMo');
+let captchaExpected=0;
+function newCaptcha(){const x=2+Math.floor(Math.random()*8),y=1+Math.floor(Math.random()*9);captchaExpected=x+y;const q=$('#captchaQuestion'),a=$('#captchaAnswer');if(q)q.textContent=x+' + '+y+' = ?';if(a)a.value=''}
+$('#captchaRefresh').addEventListener('click',newCaptcha);
+newCaptcha();
 function setMode(m){mode=m;$$('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===m));
  $('#nmL').style.display=m==='signup'?'grid':'none';$('#authTitle').textContent=m==='signup'?'Create account':'Welcome back';
- $('#authSubmit').textContent=m==='signup'?'Sign up':'Login';$('#aPass').autocomplete=m==='signup'?'new-password':'current-password';$('#authErr').textContent=''}
+ $('#authSubmit').textContent=m==='signup'?'Sign up':'Login';$('#aPass').autocomplete=m==='signup'?'new-password':'current-password';$('#authErr').textContent='';newCaptcha()}
 $$('[data-tab]').forEach(b=>b.onclick=()=>setMode(b.dataset.tab));
 $('[data-close]').onclick=()=>mo.classList.remove('sh');
 mo.onclick=e=>{if(e.target===mo)mo.classList.remove('sh')};
@@ -290,6 +294,9 @@ function authUI(){const s=session();const b=$('#authBtn');
 function logoutMenu(){if(confirm('Logout?')){sessionStorage.removeItem(K.s);authUI();toast('Logged out')}}
 $('#authForm').addEventListener('submit',async e=>{
  e.preventDefault();const em=$('#aEmail').value.trim().toLowerCase(),pw=$('#aPass').value,err=$('#authErr');err.textContent='';
+ const answer=$('#captchaAnswer').value;
+ if(answer===''||Number(answer)!==captchaExpected){err.textContent='Human verification failed. Please solve the new question.';newCaptcha();return}
+ newCaptcha();
  const h=await sha(pw);
  if(mode==='signup'){
   const nm=$('#aName').value.trim();if(!nm){err.textContent='Please enter your name.';return}
@@ -345,6 +352,8 @@ function dash(m){
   ['Portfolio items',C.portfolio.length,'Website content']
  ];
  m.insertAdjacentHTML('beforeend','<div class="sc4">'+cards.map(x=>'<div class="admin-stat"><b>'+x[1]+'</b><span>'+esc(x[0])+'</span><small>'+esc(x[2])+'</small></div>').join('')+'</div>');
+ const quick=panel(m,'Quick access','<div class="admin-shortcuts"><button class="btn o sm" data-admin-shortcut="Users">Manage users</button><button class="btn o sm" data-admin-shortcut="Orders">View orders</button><button class="btn o sm" data-admin-shortcut="Messages">View messages</button><button class="btn o sm" data-admin-shortcut="Login Activity">Login activity</button><button class="btn o sm" data-admin-shortcut="Reviews">Customer reviews</button><button class="btn o sm" data-admin-shortcut="Settings">Export / backup</button></div>');
+ $$('[data-admin-shortcut]',quick).forEach(b=>b.onclick=()=>{tab=b.dataset.adminShortcut;drawAdmin()});
  const recent=events.slice(0,8);
  const recentRows=recent.map(x=>'<tr><td>'+esc((x.at||'').replace('T',' ').slice(0,16))+'</td><td>'+esc(x.action||'Activity')+'</td><td>'+esc(x.name||'—')+'</td><td>'+esc(x.email||'—')+'</td><td>'+esc(x.role||'visitor')+'</td></tr>').join('');
  panel(m,'Recent account activity',recent.length?'<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Date / time</th><th>Activity</th><th>Name</th><th>Email</th><th>Role</th></tr></thead><tbody>'+recentRows+'</tbody></table></div>':'<p class="note">No account activity has been recorded in this browser yet.</p>');
@@ -390,26 +399,52 @@ function usersV(m){
 }
 function ordersV(m){
  const orders=ls.get(K.o,[]);
- const rows=orders.map((o,i)=>'<tr><td>'+esc((o.at||'').slice(0,10))+'</td><td>'+esc(o.name||'—')+'</td><td>'+esc(o.phone||'')+'<br>'+esc(o.email||'')+'</td><td>'+esc(o.pkg||'—')+'</td><td class="message-cell">'+esc(o.msg||'')+'</td><td>'+esc(o.status||'New')+'</td><td><button class="mini" data-order-status="'+i+'">Mark contacted</button></td></tr>').join('');
- const p=panel(m,'Order requests — this browser only',rows?adminTable(['Date','Name','Contact','Package','Message','Status','Action'],rows):'<p class="note">No order requests have been stored in this browser. The order form opens an email draft; the visitor still has to press Send.</p>');
- p.onclick=e=>{const b=e.target.closest('[data-order-status]');if(!b)return;const i=Number(b.dataset.orderStatus);if(!orders[i])return;orders[i].status='Contacted';ls.set(K.o,orders);const messages=ls.get(K.m,[]),msg=messages.find(x=>x.id===orders[i].id);if(msg)msg.status='Contacted';ls.set(K.m,messages);recordActivity('Order marked contacted',{name:'Admin',email:ADMIN_EMAIL,role:'admin'});drawAdmin()};
+ const rows=orders.map((o,i)=>'<tr><td>'+esc((o.at||'').slice(0,10))+'</td><td>'+esc(o.name||'—')+'</td><td>'+esc(o.phone||'')+'<br>'+esc(o.email||'')+'</td><td>'+esc(o.pkg||'—')+'</td><td class="message-cell">'+esc(o.msg||'')+'</td><td>'+esc(o.status||'New')+'</td><td><div class="admin-row-actions"><button class="mini" data-order-status="'+i+'">Mark contacted</button><button class="mini danger" data-order-delete="'+i+'">Delete</button></div></td></tr>').join('');
+ const toolbar='<div class="admin-toolbar"><label class="admin-search-label">Search orders<input id="orderSearch" type="search" placeholder="Name, phone, email, package or message"></label><div class="admin-toolbar-actions"><button class="btn o sm" id="exportOrders">Export JSON</button><button class="dl" id="clearOrders" '+(orders.length?'':'disabled')+'>Delete all order records</button></div></div>';
+ const table=rows?adminTable(['Date','Name','Contact','Package','Message','Status','Actions'],rows):'<p class="note">No order requests have been stored in this browser. Form requests are saved here before an email draft opens.</p>';
+ const p=panel(m,'Order requests — saved in this browser',toolbar+'<div id="ordersTable">'+table+'</div><p class="note admin-data-note">Only records saved in this browser are shown. A visitor must still press Send in the email app for an email request to be delivered.</p>');
+ const search=$('#orderSearch',p);
+ search.addEventListener('input',()=>{const q=search.value.trim().toLowerCase();$$('tbody tr',p).forEach(row=>row.hidden=!row.innerText.toLowerCase().includes(q))});
+ $('#exportOrders',p).onclick=()=>downloadAdminJSON('website-builders-bd-orders.json',orders);
+ $('#clearOrders',p).onclick=()=>{if(!orders.length)return;if(confirm('Delete all locally saved order records? This does not delete message records.')){ls.set(K.o,[]);drawAdmin()}};
+ p.onclick=e=>{
+  const status=e.target.closest('[data-order-status]');
+  if(status){const i=Number(status.dataset.orderStatus);if(!orders[i])return;orders[i].status='Contacted';ls.set(K.o,orders);const messages=ls.get(K.m,[]),msg=messages.find(x=>x.id===orders[i].id);if(msg)msg.status='Contacted';ls.set(K.m,messages);recordActivity('Order marked contacted',{name:'Admin',email:ADMIN_EMAIL,role:'admin'});drawAdmin();return}
+  const del=e.target.closest('[data-order-delete]');
+  if(del){const i=Number(del.dataset.orderDelete);if(!orders[i])return;if(!confirm('Delete this order record? Its linked website-enquiry message will also be removed.'))return;const item=orders.splice(i,1)[0];ls.set(K.o,orders);ls.set(K.m,ls.get(K.m,[]).filter(x=>x.id!==item.id));drawAdmin()}
+ }
+}
+function downloadAdminJSON(filename,data){
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;a.click();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function messagesV(m){
  const messages=ls.get(K.m,[]);
- const rows=messages.map((x,i)=>'<tr><td>'+esc((x.at||'').slice(0,10))+'</td><td>'+esc(x.name||'—')+'<br><small>'+esc(x.email||'')+'<br>'+esc(x.phone||'')+'</small></td><td>'+esc(x.subject||x.type||'Website enquiry')+'</td><td class="message-cell">'+esc(x.message||x.msg||'')+'</td><td>'+esc(x.status||'New')+'</td><td><button class="mini" data-message-replied="'+i+'">Mark replied</button> <button class="mini" data-message-delete="'+i+'">Delete</button></td></tr>').join('');
- const p=panel(m,'Messages and enquiries — this browser only',rows?adminTable(['Date','Sender','Subject','Message','Status','Actions'],rows):'<p class="note">No website messages have been recorded in this browser yet. The current form records an enquiry locally, then opens an email draft; it does not intercept Messenger or email messages.</p>');
+ const rows=messages.map((x,i)=>'<tr><td>'+esc((x.at||'').slice(0,10))+'</td><td>'+esc(x.name||'—')+'<br><small>'+esc(x.email||'')+'<br>'+esc(x.phone||'')+'</small></td><td>'+esc(x.subject||x.type||'Website enquiry')+'</td><td class="message-cell">'+esc(x.message||x.msg||'')+'</td><td>'+esc(x.status||'New')+'</td><td><div class="admin-row-actions"><button class="mini" data-message-replied="'+i+'">Mark replied</button><button class="mini danger" data-message-delete="'+i+'">Delete</button></div></td></tr>').join('');
+ const toolbar='<div class="admin-toolbar"><label class="admin-search-label">Search messages<input id="messageSearch" type="search" placeholder="Sender, email, phone, subject or message"></label><div class="admin-toolbar-actions"><button class="btn o sm" id="exportMessages">Export JSON</button><button class="dl" id="clearMessages" '+(messages.length?'':'disabled')+'>Delete all messages</button></div></div>';
+ const table=rows?adminTable(['Date','Sender','Subject','Message','Status','Actions'],rows):'<p class="note">No website messages are saved in this browser yet. This list does not automatically receive Messenger, WhatsApp or email conversations.</p>';
+ const p=panel(m,'Messages and enquiries — saved in this browser',toolbar+'<div id="messagesTable">'+table+'</div><p class="note admin-data-note">This page includes all message records stored in this browser. To see records from other visitors or devices, connect a shared database / backend.</p>');
+ const search=$('#messageSearch',p);
+ search.addEventListener('input',()=>{const q=search.value.trim().toLowerCase();$$('tbody tr',p).forEach(row=>row.hidden=!row.innerText.toLowerCase().includes(q))});
+ $('#exportMessages',p).onclick=()=>downloadAdminJSON('website-builders-bd-messages.json',messages);
+ $('#clearMessages',p).onclick=()=>{if(!messages.length)return;if(confirm('Delete all locally saved messages and enquiries?')){ls.set(K.m,[]);drawAdmin()}};
  p.onclick=e=>{
   const reply=e.target.closest('[data-message-replied]');
   if(reply){const i=Number(reply.dataset.messageReplied);if(!messages[i])return;messages[i].status='Replied';ls.set(K.m,messages);const orders=ls.get(K.o,[]),order=orders.find(x=>x.id===messages[i].id);if(order)order.status='Replied';ls.set(K.o,orders);recordActivity('Message marked replied',{name:'Admin',email:ADMIN_EMAIL,role:'admin'});drawAdmin();return}
   const del=e.target.closest('[data-message-delete]');
-  if(del&&confirm('Delete this locally saved message?')){messages.splice(Number(del.dataset.messageDelete),1);ls.set(K.m,messages);drawAdmin()}
+  if(del){const i=Number(del.dataset.messageDelete);if(!messages[i])return;if(!confirm('Delete this locally saved message?'))return;messages.splice(i,1);ls.set(K.m,messages);drawAdmin()}
  };
 }
 function activityV(m){
  const events=ls.get(K.l,[]);
  const rows=events.map(x=>'<tr><td>'+esc((x.at||'').replace('T',' ').slice(0,16))+'</td><td>'+esc(x.action||'Activity')+'</td><td>'+esc(x.name||'—')+'</td><td>'+esc(x.email||'—')+'</td><td>'+esc(x.role||'visitor')+'</td></tr>').join('');
- const p=panel(m,'Login and activity history — this browser only',rows?adminTable(['Date / time','Activity','Name','Email','Role'],rows):'<p class="note">No login history is recorded yet. New successful sign-ins will appear here after this update is deployed.</p>');
- if(rows){const b=document.createElement('button');b.className='btn o sm';b.textContent='Clear activity log';b.style.marginTop='14px';p.appendChild(b);b.onclick=()=>{if(confirm('Clear this browser activity log?')){ls.set(K.l,[]);drawAdmin()}}}
+ const toolbar='<div class="admin-toolbar"><label class="admin-search-label">Search activity<input id="activitySearch" type="search" placeholder="Activity, name, email or role"></label><div class="admin-toolbar-actions"><button class="btn o sm" id="exportActivity">Export JSON</button><button class="dl" id="clearActivity" '+(events.length?'':'disabled')+'>Clear activity log</button></div></div>';
+ const p=panel(m,'Login and activity history — saved in this browser',toolbar+(rows?adminTable(['Date / time','Activity','Name','Email','Role'],rows):'<p class="note">No login history is saved in this browser yet.</p>'));
+ const search=$('#activitySearch',p);
+ search.addEventListener('input',()=>{const q=search.value.trim().toLowerCase();$$('tbody tr',p).forEach(row=>row.hidden=!row.innerText.toLowerCase().includes(q))});
+ $('#exportActivity',p).onclick=()=>downloadAdminJSON('website-builders-bd-login-activity.json',events);
+ $('#clearActivity',p).onclick=()=>{if(!events.length)return;if(confirm('Clear all activity records saved in this browser?')){ls.set(K.l,[]);drawAdmin()}};
 }
 function settingsV(m){
  const p=panel(m,'Change admin password',`<label>New password (min 8 chars)<input type="password" id="np" autocomplete="new-password"></label><button class="btn p sm" style="margin-top:12px" id="cp">Update password</button><p class="note" style="margin-top:8px">Stored as a hash in this browser only.</p>`);
@@ -418,7 +453,7 @@ function settingsV(m){
  $('#ex',b).onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(C,null,2)],{type:'application/json'}));a.download='wbbd-content.json';a.click()};
  $('#im',b).onchange=e=>{const r=new FileReader();r.onload=()=>{try{C=Object.assign({},DEFAULT,JSON.parse(r.result));commit('Imported');drawAdmin()}catch{toast('Invalid file')}};r.readAsText(e.target.files[0])};
  $('#rs',b).onclick=()=>{if(confirm('Reset all content to defaults?')){localStorage.removeItem(K.c);C=Object.assign({},DEFAULT);render();drawAdmin();toast('Reset')}};
-   const records=panel(m,'Export locally stored admin records','<p class="note">Export registered users, orders, enquiries and activity saved in this browser. Passwords are excluded.</p><button class="btn o sm" id="exportRecords">Export records (JSON)</button>');
+   const records=panel(m,'Export locally stored admin records','<p class="note">Export all registered users, order records, enquiries and activity saved in this browser. Passwords are excluded. This is a local-browser backup, not a central server export.</p><button class="btn o sm" id="exportRecords">Export records (JSON)</button>');
   $('#exportRecords',records).onclick=()=>{
    const payload={scope:'This browser only',exportedAt:new Date().toISOString(),users:ls.get(K.u,[]).map(u=>({name:u.name,email:u.email,at:u.at,lastLogin:u.lastLogin||'',loginCount:u.loginCount||0})),orders:ls.get(K.o,[]),messages:ls.get(K.m,[]),activity:ls.get(K.l,[])};
    const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download='website-builders-bd-admin-records.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
