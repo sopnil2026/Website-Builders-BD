@@ -5,13 +5,14 @@ const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelect
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ADMIN_EMAIL='sopnilprodhan13@gmail.com';
 const ADMIN_HASH='e31f6542b54cd689b02cf9055fbeb4a12fa5ffe3909fafc24588e21a7b116728'; // SHA-256 of the admin password (not stored in plain text)
-const K={c:'wbbd_content',u:'wbbd_users',o:'wbbd_orders',m:'wbbd_messages',l:'wbbd_login_events',a:'wbbd_admin_hash_v2',s:'wbbd_session'};
+const K={p:'wbbd_pay',c:'wbbd_content',u:'wbbd_users',o:'wbbd_orders',m:'wbbd_messages',l:'wbbd_login_events',a:'wbbd_admin_hash_v2',s:'wbbd_session'};
 const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 
 const DEFAULT={
  brand:{h1:'Your Vision.',h2:'Our Code.',h3:'Your Success.',lead:'We design and build fast, modern, mobile-friendly websites that help your business look professional and win more customers.',tagline:'আপনার স্বপ্নের ওয়েবসাইট'},
  about:{p1:'Website Builders BD is a web design and development studio in Bangladesh. We turn your ideas into clean, fast and easy-to-use websites — from business sites and portfolios to online shops.',p2:'Our mission is simple: <i>make a professional web presence easy, effective and affordable for every business.</i>'},
- contact:{messenger:'https://m.me/website.builders.bdcom',whatsapp:'https://wa.me/message/SRU4QQYVDKZLP1',telegram:'https://t.me/WebsiteBuildersBD',facebook:'https://www.facebook.com/website.builders.bdcom',youtube:'https://www.youtube.com/@WebTech25',portfolio:'https://sopnil2026.github.io/sopnilPortfolio',email:'sopnilprodhan13@gmail.com',location:'Bogura, Bangladesh',mapLink:'https://www.google.com/maps/search/?api=1&query=Bogura%2C%20Bangladesh',hours:'Sat – Thu · 9 AM – 9 PM',bkash:'01740304436',webmoney:'Ask on Messenger for account details'},
+ contact:{messenger:'https://m.me/website.builders.bdcom',whatsapp:'https://wa.me/message/SRU4QQYVDKZLP1',telegram:'https://t.me/WebsiteBuildersBD',facebook:'https://www.facebook.com/website.builders.bdcom',youtube:'https://www.youtube.com/@WebTech25',portfolio:'https://sopnil2026.github.io/sopnilPortfolio',email:'sopnilprodhan13@gmail.com',location:'Bogura, Bangladesh',mapLink:'https://www.google.com/maps/search/?api=1&query=Bogura%2C%20Bangladesh',hours:'Sat – Thu · 9 AM – 9 PM',bkash:'01740304436',webmoney:'Ask on Messenger for account details',wmz:''},
+ payCfg:{percent:50,bkashMode:'Send Money',note:'Send the amount from your bKash app, then enter the Transaction ID (TrxID) on the next step.'},
  payments:[{n:'bKash',c:'#e2136e',img:''},{n:'Webmoney',c:'#1d6fb8',img:''}],
  stats:[{n:'50%',l:'Advance to start'},{n:'30 Days',l:'Refund window'},{n:'100%',l:'Mobile responsive'}],
  services:[
@@ -77,6 +78,7 @@ if(!stored.contact||!stored.contact.telegram||stored.contact.telegram==='https:/
 const save=()=>ls.set(K.c,C);
 
 /* ---------- utils ---------- */
+const _pc=()=>{C.payCfg=Object.assign({percent:50,bkashMode:'Send Money',note:'Send the amount from your bKash app, then enter the Transaction ID (TrxID) on the next step.'},C.payCfg||{})};
 function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('sh');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('sh'),3200)}
 function sha(s){
  if(window.crypto&&crypto.subtle) return crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)).then(b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''));
@@ -124,7 +126,7 @@ function render(){
  $('#stats').innerHTML=C.stats.map(s=>`<div><b>${esc(s.n)}</b><small>${esc(s.l)}</small></div>`).join('');
  $('#heroList').innerHTML=C.services.slice(0,5).map(s=>`<a class="li" href="#services"><i>${esc(s.i)}</i>${esc(s.t)}</a>`).join('')+`<a class="li" href="#services" style="color:var(--o2)"><i>＋</i>View all ${C.services.length} services</a>`;
  $('#svGrid').innerHTML=C.services.map((s,i)=>`<div class="sv rv d${i%3}"><i>${esc(s.i)}</i><h3>${esc(s.t)}</h3><p>${esc(s.d)}</p></div>`).join('');
- $('#pkGrid').innerHTML=C.packages.map((p,i)=>`<div class="pk rv d${i}${p.hot?' hot':''}">${p.hot?'<span class="pop">MOST POPULAR</span>':''}<h3>${esc(p.n)}</h3><div class="price">${esc(p.price)}</div><small style="color:var(--mut)">One-time · 50% advance</small><ul>${p.feat.map(f=>`<li>${esc(f)}</li>`).join('')}</ul><a class="btn ${p.hot?'p':'o'}" href="#contact" data-pick="${esc(p.n)}">Choose ${esc(p.n)}</a></div>`).join('');
+ $('#pkGrid').innerHTML=C.packages.map((p,i)=>`<div class="pk rv d${i}${p.hot?' hot':''}">${p.hot?'<span class="pop">MOST POPULAR</span>':''}<h3>${esc(p.n)}</h3><div class="price">${esc(p.price)}</div><small style="color:var(--mut)">One-time · 50% advance</small><ul>${p.feat.map(f=>`<li>${esc(f)}</li>`).join('')}</ul><button class="btn p" style="margin-bottom:10px" data-pay-pkg="${i}">💳 Pay ${(C.payCfg&&C.payCfg.percent)||50}% Advance</button><a class="btn o" href="#contact" data-pick="${esc(p.n)}">Choose ${esc(p.n)}</a></div>`).join('');
  $('#pkSel').innerHTML=C.packages.map(p=>`<option>${esc(p.n)} – ${esc(p.price)}</option>`).join('')+'<option>Custom / Not sure</option>';
  const cats=['All',...new Set(C.portfolio.map(p=>p.c))];
  $('#flt').innerHTML=cats.map((c,i)=>`<button class="${i?'':'on'}" data-cat="${esc(c)}">${esc(c)}</button>`).join('');
@@ -246,6 +248,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('.nav')){$('#pill').c
 document.addEventListener('click',e=>{
  const fq=e.target.closest('.fq button');if(fq)fq.parentElement.classList.toggle('op');
  const f=e.target.closest('[data-cat]');if(f){$$('#flt button').forEach(b=>b.classList.remove('on'));f.classList.add('on');drawPf(f.dataset.cat)}
+ const pp=e.target.closest('[data-pay-pkg]');if(pp)openPay(+pp.dataset.payPkg);
  const pk=e.target.closest('[data-pick]');if(pk){const o=[...$('#pkSel').options].find(o=>o.text.startsWith(pk.dataset.pick));if(o)$('#pkSel').value=o.value}
 });
 
@@ -317,7 +320,7 @@ $('#authForm').addEventListener('submit',async e=>{
 });
 
 /* ---------- admin ---------- */
-const ADM=['Dashboard','Hero & About','Contact & Links','Payment Methods','Services','Packages','Portfolio','Gallery','Reviews','Blog','Training','Our Program','FAQ & Policies','Users','Orders','Messages','Login Activity','Settings'];
+const ADM=['Dashboard','Payments','Hero & About','Contact & Links','Payment Methods','Services','Packages','Portfolio','Gallery','Reviews','Blog','Training','Our Program','FAQ & Policies','Users','Orders','Messages','Login Activity','Settings'];
 let tab='Dashboard';
 function openAdmin(){const s=session();if(!s||s.role!=='admin')return;$('#admin').classList.add('sh');document.body.style.overflow='hidden';drawAdmin()}
 function closeAdmin(){$('#admin').classList.remove('sh');document.body.style.overflow=''}
@@ -327,7 +330,7 @@ $('#adOut').onclick=()=>{sessionStorage.removeItem(K.s);closeAdmin();authUI();to
 function drawAdmin(){
  $('#adNav').innerHTML=ADM.map(t=>`<button class="${t===tab?'on':''}" data-t="${t}">${t}</button>`).join('');
  $$('#adNav button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;drawAdmin()});
- const m=$('#adMain'),F={Dashboard:dash,'Hero & About':heroEd,'Contact & Links':contactEd,'Payment Methods':payEd,Services:listEd('services',[['i','Icon'],['t','Title'],['d','Description']],{i:'⭐',t:'New service',d:''}),
+ const m=$('#adMain'),F={Dashboard:dash,Payments:paymentsV,'Hero & About':heroEd,'Contact & Links':contactEd,'Payment Methods':payEd,Services:listEd('services',[['i','Icon'],['t','Title'],['d','Description']],{i:'⭐',t:'New service',d:''}),
   Packages:pkEd,Portfolio:listEd('portfolio',[['t','Title'],['c','Category'],['d','Description'],['url','Live link (https://…)'],['color','Colors e.g. #f97316,#ea580c']],{t:'New project',c:'Business',d:'',url:'',demo:true,color:'#f97316,#ea580c'}),
   Gallery:listEd('gallery',[['t','Title'],['c','Category'],['d','Description'],['color','Colors e.g. #f97316,#ea580c']],{t:'New gallery item',c:'Web Design',d:'',color:'#f97316,#ea580c'}),
   Reviews:listEd('reviews',[['name','Reviewer name'],['role','Business / project'],['rating','Rating (1–5)'],['quote','Review text']],{name:'Sample client',role:'Sample project',rating:5,quote:'Replace with a verified customer review shared with permission.',demo:true}),
@@ -369,7 +372,7 @@ function heroEd(m){
  q.querySelector('button').onclick=()=>{$$('[data-k]',q).forEach(i=>C.about[i.dataset.k]=i.value);commit()};
 }
 function contactEd(m){
- const L={messenger:'Messenger link',whatsapp:'WhatsApp link (https://wa.me/...)',telegram:'Telegram link (https://t.me/username)',facebook:'Facebook page link',youtube:'YouTube link',portfolio:'Portfolio website link',location:'Service location (e.g. Bogura, Bangladesh)',mapLink:'Google Maps link',hours:'Working hours',email:'Email',bkash:'bKash number',webmoney:'Webmoney details'};
+ const L={messenger:'Messenger link',whatsapp:'WhatsApp link (https://wa.me/...)',telegram:'Telegram link (https://t.me/username)',facebook:'Facebook page link',youtube:'YouTube link',portfolio:'Portfolio website link',location:'Service location (e.g. Bogura, Bangladesh)',mapLink:'Google Maps link',hours:'Working hours',email:'Email',bkash:'bKash number',webmoney:'Webmoney details (shown to customers)',wmz:'Webmoney purse number (e.g. Z123456789012)'};
  const p=panel(m,'Contact, social & payment',Object.keys(L).map(k=>inp(k,L[k],C.contact[k])).join('')+'<button class="btn p sm" style="margin-top:12px">Save</button>');
  p.querySelector('button').onclick=()=>{$$('[data-k]',p).forEach(i=>C.contact[i.dataset.k]=i.value.trim());commit()};
 }
@@ -399,7 +402,7 @@ function usersV(m){
 }
 function ordersV(m){
  const orders=ls.get(K.o,[]);
- const rows=orders.map((o,i)=>'<tr><td>'+esc((o.at||'').slice(0,10))+'</td><td>'+esc(o.name||'—')+'</td><td>'+esc(o.phone||'')+'<br>'+esc(o.email||'')+'</td><td>'+esc(o.pkg||'—')+'</td><td class="message-cell">'+esc(o.msg||'')+'</td><td>'+esc(o.status||'New')+'</td><td><div class="admin-row-actions"><button class="mini" data-order-status="'+i+'">Mark contacted</button><button class="mini danger" data-order-delete="'+i+'">Delete</button></div></td></tr>').join('');
+ const rows=orders.map((o,i)=>'<tr><td>'+esc((o.at||'').slice(0,10))+'</td><td>'+esc(o.name||'—')+'</td><td>'+'<b>'+esc(o.phone||'')+'</b> '+waBtn(o.phone)+'<br>'+esc(o.email||'')+'</td><td>'+esc(o.pkg||'—')+'</td><td class="message-cell">'+esc(o.msg||'')+'</td><td>'+esc(o.status||'New')+'</td><td><div class="admin-row-actions"><button class="mini" data-order-status="'+i+'">Mark contacted</button><button class="mini danger" data-order-delete="'+i+'">Delete</button></div></td></tr>').join('');
  const toolbar='<div class="admin-toolbar"><label class="admin-search-label">Search orders<input id="orderSearch" type="search" placeholder="Name, phone, email, package or message"></label><div class="admin-toolbar-actions"><button class="btn o sm" id="exportOrders">Export JSON</button><button class="dl" id="clearOrders" '+(orders.length?'':'disabled')+'>Delete all order records</button></div></div>';
  const table=rows?adminTable(['Date','Name','Contact','Package','Message','Status','Actions'],rows):'<p class="note">No order requests have been stored in this browser. Form requests are saved here before an email draft opens.</p>';
  const p=panel(m,'Order requests — saved in this browser',toolbar+'<div id="ordersTable">'+table+'</div><p class="note admin-data-note">Only records saved in this browser are shown. A visitor must still press Send in the email app for an email request to be delivered.</p>');
@@ -421,7 +424,7 @@ function downloadAdminJSON(filename,data){
 }
 function messagesV(m){
  const messages=ls.get(K.m,[]);
- const rows=messages.map((x,i)=>'<tr><td>'+esc((x.at||'').slice(0,10))+'</td><td>'+esc(x.name||'—')+'<br><small>'+esc(x.email||'')+'<br>'+esc(x.phone||'')+'</small></td><td>'+esc(x.subject||x.type||'Website enquiry')+'</td><td class="message-cell">'+esc(x.message||x.msg||'')+'</td><td>'+esc(x.status||'New')+'</td><td><div class="admin-row-actions"><button class="mini" data-message-replied="'+i+'">Mark replied</button><button class="mini danger" data-message-delete="'+i+'">Delete</button></div></td></tr>').join('');
+ const rows=messages.map((x,i)=>'<tr><td>'+esc((x.at||'').slice(0,10))+'</td><td>'+esc(x.name||'—')+'<br><small>'+esc(x.email||'')+'<br>'+esc(x.phone||'')+'</small> '+waBtn(x.phone)+'</td><td>'+esc(x.subject||x.type||'Website enquiry')+'</td><td class="message-cell">'+esc(x.message||x.msg||'')+'</td><td>'+esc(x.status||'New')+'</td><td><div class="admin-row-actions"><button class="mini" data-message-replied="'+i+'">Mark replied</button><button class="mini danger" data-message-delete="'+i+'">Delete</button></div></td></tr>').join('');
  const toolbar='<div class="admin-toolbar"><label class="admin-search-label">Search messages<input id="messageSearch" type="search" placeholder="Sender, email, phone, subject or message"></label><div class="admin-toolbar-actions"><button class="btn o sm" id="exportMessages">Export JSON</button><button class="dl" id="clearMessages" '+(messages.length?'':'disabled')+'>Delete all messages</button></div></div>';
  const table=rows?adminTable(['Date','Sender','Subject','Message','Status','Actions'],rows):'<p class="note">No website messages are saved in this browser yet. This list does not automatically receive Messenger, WhatsApp or email conversations.</p>';
  const p=panel(m,'Messages and enquiries — saved in this browser',toolbar+'<div id="messagesTable">'+table+'</div><p class="note admin-data-note">This page includes all message records stored in this browser. To see records from other visitors or devices, connect a shared database / backend.</p>');
@@ -501,7 +504,66 @@ function drawUser(){
   u.name=nm;if(pw){if(pw.length<6)return toast('Password needs 6+ characters');u.hash=await sha(pw)}
   ls.set(K.u,us);sessionStorage.setItem(K.s,JSON.stringify({...s,name:nm}));authUI();drawUser();toast('Profile saved')};
 }
-addEventListener('keydown',e=>{if(e.key==='Escape'){mo.classList.remove('sh');$('#pill').classList.remove('op');$('#burger').setAttribute('aria-expanded','false');}});
+
+/* ---------- advance payment (bKash / Webmoney) — manual verification ---------- */
+function waBtn(n){let d=String(n||'').replace(/\D/g,'');if(!d)return'';if(d.startsWith('01'))d='88'+d;return '<a class="mini" href="https://wa.me/'+d+'" target="_blank" rel="noopener">WhatsApp</a>'}
+const money=n=>'৳ '+Number(n).toLocaleString('en-US');
+const priceNum=p=>parseInt(String(p||'').replace(/[^\d]/g,''),10)||0;
+const trxOk=t=>/^[A-Z0-9]{8,14}$/.test(t);
+const payMo=document.createElement('div');payMo.className='mo';payMo.id='payMo';payMo.innerHTML='<div class="md wide"><button class="x" data-closepay aria-label="Close">×</button><div id="payBody"></div></div>';document.body.appendChild(payMo);
+payMo.addEventListener('click',e=>{if(e.target===payMo||e.target.closest('[data-closepay]'))payMo.classList.remove('sh')});
+let PAY={};
+function openPay(i){
+ _pc();const p=C.packages[i];if(!p)return;const total=priceNum(p.price),adv=Math.round(total*C.payCfg.percent/100),ss=session();
+ PAY={step:1,pkg:p.n,total,adv,method:'bKash',name:ss&&ss.role==='user'?ss.name:'',email:ss&&ss.role==='user'?ss.email:'',wa:''};
+ drawPay();payMo.classList.add('sh');
+}
+function drawPay(){
+ const ct=C.contact,b=$('#payBody'),P=PAY;
+ const head='<h3 style="margin-bottom:4px">Pay '+C.payCfg.percent+'% advance</h3><p class="note" style="margin-bottom:14px">'+esc(P.pkg)+' package · total '+money(P.total)+' · <b>advance '+money(P.adv)+'</b></p>';
+ if(P.step===1){
+  b.innerHTML=head+`<form id="pf1" style="display:grid;gap:12px"><label>Your name *<input name="name" required value="${esc(P.name)}"></label><label>WhatsApp number *<input name="wa" type="tel" required placeholder="01XXXXXXXXX" value="${esc(P.wa)}"></label><label>Email *<input name="email" type="email" required value="${esc(P.email)}"></label>
+  <div><small class="note">Pay with</small><div class="presets" id="pm">${['bKash','Webmoney'].map(n=>`<button type="button" class="${n===P.method?'sel':''}" data-pm="${n}">${n}</button>`).join('')}</div></div>
+  <button class="btn p" style="justify-content:center">Next →</button></form>`;
+  $('#pm').onclick=e=>{const t=e.target.closest('[data-pm]');if(!t)return;P.method=t.dataset.pm;$$('#pm button').forEach(x=>x.classList.toggle('sel',x===t))};
+  $('#pf1').onsubmit=e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.target));Object.assign(P,{name:f.name.trim(),wa:f.wa.trim(),email:f.email.trim().toLowerCase(),step:2});drawPay()};
+ }else if(P.step===2){
+  const bk=P.method==='bKash',dest=bk?ct.bkash:(ct.wmz||ct.webmoney);
+  b.innerHTML=head+`<div class="payc"><small>${bk?'Send Money to this bKash number':'Send to this Webmoney purse'}</small><b>${esc(dest)}</b><button type="button" class="mini" id="cpy">Copy</button></div>
+  <p class="note" style="margin:12px 0"><b>Amount: ${money(P.adv)}</b>${bk?' · Choose: '+esc(C.payCfg.bkashMode):''}<br>${esc(C.payCfg.note)}</p>
+  <form id="pf2" style="display:grid;gap:12px"><label>Transaction ID (TrxID) *<input name="trx" required maxlength="14" placeholder="e.g. 9K7A1B2C3D" style="text-transform:uppercase"></label><label>Number / account you paid from *<input name="from" required placeholder="01XXXXXXXXX"></label><div class="err" id="payErr"></div>
+  <div style="display:flex;gap:10px"><button type="button" class="btn o" id="pback">← Back</button><button class="btn p" style="flex:1;justify-content:center">I have paid — Submit</button></div></form>`;
+  $('#cpy').onclick=()=>{try{navigator.clipboard.writeText(dest).catch(()=>{})}catch{};toast('Copied')};
+  $('#pback').onclick=()=>{P.step=1;drawPay()};
+  $('#pf2').onsubmit=e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.target)),trx=f.trx.trim().toUpperCase(),err=$('#payErr');
+   if(!trxOk(trx)){err.textContent='TrxID should be 8–14 letters/numbers. Please check your payment SMS.';return}
+   const log=ls.get(K.p,[]);if(log.some(x=>x.trx===trx)){err.textContent='This TrxID was already submitted.';return}
+   const rec={id:'P'+Date.now().toString(36).toUpperCase(),at:new Date().toISOString(),name:P.name,wa:P.wa,email:P.email,pkg:P.pkg,total:P.total,amount:P.adv,method:P.method,trx,from:f.from.trim(),status:'pending'};
+   log.unshift(rec);ls.set(K.p,log.slice(0,500));P.rec=rec;P.step=3;
+   P.body='NEW ADVANCE PAYMENT (needs verification)\n\nRef: '+rec.id+'\nName: '+rec.name+'\nWhatsApp: '+rec.wa+'\nEmail: '+rec.email+'\nPackage: '+rec.pkg+' (total '+money(rec.total)+')\nAdvance: '+money(rec.amount)+' via '+rec.method+'\nTrxID: '+rec.trx+'\nPaid from: '+rec.from;
+   try{navigator.clipboard.writeText(P.body).catch(()=>{})}catch{};drawPay()};
+ }else{
+  const r=P.rec;
+  b.innerHTML=`<div style="text-align:center"><div style="font-size:54px">✅</div><h3>Payment details received</h3><p class="note" style="margin:8px 0 14px">Reference <b>${esc(r.id)}</b> · TrxID <b>${esc(r.trx)}</b> · ${money(r.amount)}.<br>We will check it in our ${esc(r.method)} account and confirm with you.</p>
+  <p class="note" style="margin-bottom:12px"><b>Last step:</b> send us this confirmation so we see it right away (the text is already copied).</p>
+  <div style="display:grid;gap:10px"><a class="btn m" href="${esc(ct.messenger)}" target="_blank" rel="noopener" style="justify-content:center">💬 Send on Messenger</a><a class="btn p" href="${esc(ct.whatsapp||'#')}" target="_blank" rel="noopener" style="justify-content:center;background:#25d366">WhatsApp</a><a class="btn o" href="${esc(ct.telegram||'#')}" target="_blank" rel="noopener" style="justify-content:center">✈ Telegram</a><a class="btn o" href="mailto:${esc(ct.email)}?subject=${encodeURIComponent('Advance payment '+r.id)}&body=${encodeURIComponent(P.body||'')}" style="justify-content:center">✉ Email</a></div></div>`;
+ }
+}
+function paymentsV(m){
+ _pc();const L=ls.get(K.p,[]);
+ const pend=L.filter(x=>x.status==='pending').length,tot=L.filter(x=>x.status==='verified').reduce((a,x)=>a+x.amount,0);
+ panel(m,'','<div class="sc4" style="margin:0 0 14px"><div><b>'+pend+'</b>To verify</div><div><b>'+money(tot)+'</b>Verified total</div><div><b>'+L.length+'</b>All submissions</div><div><b>'+C.payCfg.percent+'%</b>Advance rate</div></div><p class="note"><b>How to verify:</b> open your bKash app or SMS, find the TrxID shown below and check the amount and sender number. Press <b>Verify</b> only after you see the money in your account.</p>');
+ const rows=L.map((x,i)=>'<tr><td>'+esc((x.at||'').slice(0,16).replace('T',' '))+'<br><small>'+esc(x.id)+'</small></td><td>'+esc(x.name)+'<br><small>'+esc(x.email)+'</small></td><td><b>'+esc(x.wa)+'</b> '+waBtn(x.wa)+'</td><td>'+esc(x.pkg)+'<br><small>total '+money(x.total)+'</small></td><td><b>'+money(x.amount)+'</b></td><td>'+esc(x.method)+'</td><td><b>'+esc(x.trx)+'</b></td><td>'+esc(x.from)+'</td><td><span class="st-'+esc(x.status)+'">'+esc(x.status)+'</span></td><td><div class="admin-row-actions"><button class="mini" data-pv="'+i+'">Verify</button><button class="mini" data-px="'+i+'">Reject</button><button class="mini danger" data-pd="'+i+'">Delete</button></div></td></tr>').join('');
+ const p=panel(m,'Advance payments submitted on this website — saved in this browser',(rows?adminTable(['Date','Customer','WhatsApp','Package','Advance','Method','TrxID','Paid from','Status','Actions'],rows):'<p class="note">No payments have been submitted in this browser yet.</p>')+'<p class="note admin-data-note">Payments are saved in the browser the customer used, so this list only shows submissions made in this same browser. Every customer also gets a ready message to send to you on Messenger / WhatsApp / Telegram / email, which arrives with the TrxID. A shared database (backend) is needed to see all customers here automatically.</p>');
+ p.onclick=e=>{const d=e.target.dataset;
+  if(d.pv!==undefined){L[+d.pv].status='verified';ls.set(K.p,L);drawAdmin()}
+  if(d.px!==undefined){L[+d.px].status='rejected';ls.set(K.p,L);drawAdmin()}
+  if(d.pd!==undefined&&confirm('Delete this payment record?')){L.splice(+d.pd,1);ls.set(K.p,L);drawAdmin()}};
+ const cfg=panel(m,'Advance payment settings',`<label>Advance percent (%)<input type="number" min="1" max="100" id="pcPct" value="${esc(C.payCfg.percent)}"></label><label>bKash option customers should choose<input id="pcMode" value="${esc(C.payCfg.bkashMode)}"></label><label>Instruction text<textarea id="pcNote">${esc(C.payCfg.note)}</textarea></label><p class="note">bKash number and Webmoney purse are edited in <b>Contact &amp; Links</b>.</p><button class="btn p sm" style="margin-top:10px" id="pcSave">Save</button>`);
+ $('#pcSave',cfg).onclick=()=>{C.payCfg.percent=Math.min(100,Math.max(1,+$('#pcPct',cfg).value||50));C.payCfg.bkashMode=$('#pcMode',cfg).value;C.payCfg.note=$('#pcNote',cfg).value;commit()};
+}
+
+addEventListener('keydown',e=>{if(e.key==='Escape'){mo.classList.remove('sh');const _p=$('#payMo');if(_p)_p.classList.remove('sh');$('#pill').classList.remove('op');$('#burger').setAttribute('aria-expanded','false');}});
 window.addEventListener('storage',e=>{
  if(e.key===K.c&&e.newValue){
   try{

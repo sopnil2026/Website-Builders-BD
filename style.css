@@ -1643,3 +1643,11 @@ a[href^="tel:"],[data-call]{display:none!important}
   .admin-row-actions{min-width:130px}
 }
 @media(prefers-reduced-motion:reduce){.captcha-refresh{transition:none!important}}
+
+/* ===== advance payment ===== */
+.md.wide{max-width:640px;max-height:90vh;max-height:90dvh;overflow-y:auto}
+.payc{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--soft);border:1px dashed var(--o);border-radius:16px;padding:16px}
+.payc small{width:100%;color:var(--mut);font-weight:700}.payc b{font-size:22px;word-break:break-all}
+.presets button.sel{background:var(--o);color:#fff;border-color:var(--o)}
+.st-pending{color:#b45309;font-weight:800}.st-verified{color:#15803d;font-weight:800}.st-rejected{color:#b91c1c;font-weight:800}
+.pk .btn+.btn{margin-top:0}
