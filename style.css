@@ -1651,3 +1651,31 @@ a[href^="tel:"],[data-call]{display:none!important}
 .presets button.sel{background:var(--o);color:#fff;border-color:var(--o)}
 .st-pending{color:#b45309;font-weight:800}.st-verified{color:#15803d;font-weight:800}.st-rejected{color:#b91c1c;font-weight:800}
 .pk .btn+.btn{margin-top:0}
+
+/* ===== payment gating, reject alert, managers ===== */
+.rej-banner{background:#fef2f2;border:2px solid #dc2626;color:#991b1b;border-radius:18px;padding:18px 20px;margin-bottom:16px}
+.rej-banner b{font-size:18px;display:block;margin-bottom:6px}.rej-banner p{margin:4px 0;font-size:14px}
+.mypay{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:#f8fafc;margin-bottom:8px;border-left:4px solid #94a3b8}
+.mypay.st-b-verified{border-color:#16a34a}.mypay.st-b-rejected{border-color:#dc2626;background:#fef2f2}.mypay.st-b-pending{border-color:#f59e0b}
+.rejbox{text-align:center;border-top:8px solid #dc2626;max-width:460px}
+.rejico{width:84px;height:84px;border-radius:50%;background:#dc2626;color:#fff;font-size:46px;font-weight:900;display:grid;place-items:center;margin:0 auto 12px;box-shadow:0 0 0 10px #fee2e2;animation:pop .5s cubic-bezier(.2,.9,.3,1.4)}
+.rejbox h3{font-size:28px;color:#b91c1c;margin-bottom:12px}
+.rejitem{background:#fef2f2;border-radius:12px;padding:12px;margin:8px 0;font-size:14px;text-align:left}
+#pf1 input[readonly]{background:#f1f5f9;color:#64748b}
+.admin-row-actions small{display:block;width:100%;color:var(--mut)}
+@media(max-width:640px){
+ .md.wide,.rejbox{max-width:100%}
+ .mo{padding:12px;align-items:end}
+ .mo .md{border-radius:24px 24px 0 0;max-height:92dvh;overflow-y:auto;padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+ .payc b{font-size:20px}
+ .admin-table td,.admin-table th{padding:8px 6px;font-size:13px}
+ .mypay{flex-direction:column;align-items:flex-start}
+ .rejico{width:70px;height:70px;font-size:38px}
+}
+@media(max-width:640px){
+ #toast{bottom:auto;top:calc(76px + env(safe-area-inset-top));z-index:500;width:max-content;max-width:calc(100vw - 32px);text-align:center}
+ .admin-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+ .admin-table td,.admin-table th{white-space:nowrap}
+ .admin-table td.message-cell{white-space:normal;min-width:180px}
+ #admin .sc4{grid-template-columns:1fr 1fr;gap:10px}#admin .sc4 div{padding:14px}#admin .sc4 b{font-size:22px}
+}

@@ -5,7 +5,7 @@ const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelect
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ADMIN_EMAIL='sopnilprodhan13@gmail.com';
 const ADMIN_HASH='e31f6542b54cd689b02cf9055fbeb4a12fa5ffe3909fafc24588e21a7b116728'; // SHA-256 of the admin password (not stored in plain text)
-const K={p:'wbbd_pay',c:'wbbd_content',u:'wbbd_users',o:'wbbd_orders',m:'wbbd_messages',l:'wbbd_login_events',a:'wbbd_admin_hash_v2',s:'wbbd_session'};
+const K={g:'wbbd_managers',p:'wbbd_pay',c:'wbbd_content',u:'wbbd_users',o:'wbbd_orders',m:'wbbd_messages',l:'wbbd_login_events',a:'wbbd_admin_hash_v2',s:'wbbd_session'};
 const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 
 const DEFAULT={
@@ -289,10 +289,11 @@ function setMode(m){mode=m;$$('[data-tab]').forEach(b=>b.classList.toggle('on',b
  $('#nmL').style.display=m==='signup'?'grid':'none';$('#authTitle').textContent=m==='signup'?'Create account':'Welcome back';
  $('#authSubmit').textContent=m==='signup'?'Sign up':'Login';$('#aPass').autocomplete=m==='signup'?'new-password':'current-password';$('#authErr').textContent='';newCaptcha()}
 $$('[data-tab]').forEach(b=>b.onclick=()=>setMode(b.dataset.tab));
-$('[data-close]').onclick=()=>mo.classList.remove('sh');
-mo.onclick=e=>{if(e.target===mo)mo.classList.remove('sh')};
+let pendingPay=null;
+$('[data-close]').onclick=()=>{mo.classList.remove('sh');pendingPay=null};
+mo.onclick=e=>{if(e.target===mo){mo.classList.remove('sh');pendingPay=null}};
 function authUI(){const s=session();const b=$('#authBtn');
- if(s){b.textContent=s.role==='admin'?'⚙ Admin Panel':'👤 My Panel';b.onclick=()=>s.role==='admin'?openAdmin():openUser()}
+ if(s){b.textContent=s.role==='admin'?'⚙ Admin Panel':s.role==='manager'?'🧑‍💼 Manager Panel':'👤 My Panel';b.onclick=()=>(s.role==='admin'||s.role==='manager')?openAdmin():openUser()}
  else{b.textContent='Login / Sign up';b.onclick=()=>{setMode('login');mo.classList.add('sh')}}}
 function logoutMenu(){if(confirm('Logout?')){sessionStorage.removeItem(K.s);authUI();toast('Logged out')}}
 $('#authForm').addEventListener('submit',async e=>{
@@ -303,7 +304,7 @@ $('#authForm').addEventListener('submit',async e=>{
  const h=await sha(pw);
  if(mode==='signup'){
   const nm=$('#aName').value.trim();if(!nm){err.textContent='Please enter your name.';return}
-  if(em===ADMIN_EMAIL){err.textContent='This email is reserved.';return}
+  if(em===ADMIN_EMAIL||ls.get(K.g,[]).some(x=>x.email===em)){err.textContent='This email is reserved.';return}
   const us=ls.get(K.u,[]);if(us.some(u=>u.email===em)){err.textContent='Account already exists. Please login.';return}
   us.push({name:nm,email:em,hash:h,at:new Date().toISOString(),lastLogin:'',loginCount:0});ls.set(K.u,us);
   recordActivity('Account created',{name:nm,email:em,role:'user'});
@@ -312,25 +313,29 @@ $('#authForm').addEventListener('submit',async e=>{
  if(em===ADMIN_EMAIL){
   if(h===ah){const now=new Date().toISOString();recordActivity('Admin sign in',{email:em,name:'Admin',role:'admin'});sessionStorage.setItem(K.s,JSON.stringify({email:em,name:'Admin',role:'admin',loginAt:now}));mo.classList.remove('sh');authUI();openAdmin();return}
   err.textContent='Wrong email or password.';return}
+ const mgr=ls.get(K.g,[]).find(x=>x.email===em&&x.hash===h);
+ if(mgr){const now=new Date().toISOString();recordActivity('Manager sign in',{email:em,name:mgr.name,role:'manager'});sessionStorage.setItem(K.s,JSON.stringify({email:em,name:mgr.name,role:'manager',loginAt:now}));mo.classList.remove('sh');authUI();openAdmin();return}
  const users=ls.get(K.u,[]),u=users.find(u=>u.email===em&&u.hash===h);
  if(!u){err.textContent='Wrong email or password. No account? Use Sign up.';return}
  const now=new Date().toISOString();u.lastLogin=now;u.loginCount=Number(u.loginCount||0)+1;ls.set(K.u,users);
  recordActivity('Sign in',{name:u.name,email:em,role:'user'});
- sessionStorage.setItem(K.s,JSON.stringify({email:em,name:u.name,role:'user',loginAt:now}));mo.classList.remove('sh');authUI();toast('Welcome back, '+u.name+'!');openUser();
+ sessionStorage.setItem(K.s,JSON.stringify({email:em,name:u.name,role:'user',loginAt:now}));mo.classList.remove('sh');authUI();toast('Welcome back, '+u.name+'!');if(pendingPay!==null){const pi=pendingPay;pendingPay=null;openPay(pi)}else{openUser();showRejectAlert()}
 });
 
 /* ---------- admin ---------- */
-const ADM=['Dashboard','Payments','Hero & About','Contact & Links','Payment Methods','Services','Packages','Portfolio','Gallery','Reviews','Blog','Training','Our Program','FAQ & Policies','Users','Orders','Messages','Login Activity','Settings'];
+const ADM=['Dashboard','Payments','Managers','Hero & About','Contact & Links','Payment Methods','Services','Packages','Portfolio','Gallery','Reviews','Blog','Training','Our Program','FAQ & Policies','Users','Orders','Messages','Login Activity','Settings'];
 let tab='Dashboard';
-function openAdmin(){const s=session();if(!s||s.role!=='admin')return;$('#admin').classList.add('sh');document.body.style.overflow='hidden';drawAdmin()}
+const MGR_TABS=['Payments','Orders','Messages'];
+const roleTabs=()=>{const s=session();return s&&s.role==='manager'?MGR_TABS:ADM};
+function openAdmin(){const s=session();if(!s||(s.role!=='admin'&&s.role!=='manager'))return;const mg=s.role==='manager';$('#admin aside h4').lastChild.textContent=mg?'Manager Panel':'Admin Panel';$('#adUser').style.display=mg?'none':'';if(!roleTabs().includes(tab))tab=roleTabs()[0];$('#admin').classList.add('sh');document.body.style.overflow='hidden';drawAdmin()}
 function closeAdmin(){$('#admin').classList.remove('sh');document.body.style.overflow=''}
 $('#adExit').onclick=closeAdmin;
 $('#adUser').onclick=()=>{closeAdmin();openUser()};
 $('#adOut').onclick=()=>{sessionStorage.removeItem(K.s);closeAdmin();authUI();toast('Logged out')};
 function drawAdmin(){
- $('#adNav').innerHTML=ADM.map(t=>`<button class="${t===tab?'on':''}" data-t="${t}">${t}</button>`).join('');
+ $('#adNav').innerHTML=roleTabs().map(t=>`<button class="${t===tab?'on':''}" data-t="${t}">${t}</button>`).join('');
  $$('#adNav button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;drawAdmin()});
- const m=$('#adMain'),F={Dashboard:dash,Payments:paymentsV,'Hero & About':heroEd,'Contact & Links':contactEd,'Payment Methods':payEd,Services:listEd('services',[['i','Icon'],['t','Title'],['d','Description']],{i:'⭐',t:'New service',d:''}),
+ const m=$('#adMain'),F={Dashboard:dash,Payments:paymentsV,Managers:managersV,'Hero & About':heroEd,'Contact & Links':contactEd,'Payment Methods':payEd,Services:listEd('services',[['i','Icon'],['t','Title'],['d','Description']],{i:'⭐',t:'New service',d:''}),
   Packages:pkEd,Portfolio:listEd('portfolio',[['t','Title'],['c','Category'],['d','Description'],['url','Live link (https://…)'],['color','Colors e.g. #f97316,#ea580c']],{t:'New project',c:'Business',d:'',url:'',demo:true,color:'#f97316,#ea580c'}),
   Gallery:listEd('gallery',[['t','Title'],['c','Category'],['d','Description'],['color','Colors e.g. #f97316,#ea580c']],{t:'New gallery item',c:'Web Design',d:'',color:'#f97316,#ea580c'}),
   Reviews:listEd('reviews',[['name','Reviewer name'],['role','Business / project'],['rating','Rating (1–5)'],['quote','Review text']],{name:'Sample client',role:'Sample project',rating:5,quote:'Replace with a verified customer review shared with permission.',demo:true}),
@@ -338,6 +343,7 @@ function drawAdmin(){
   Training:listEd('training',[['t','Title'],['level','Level'],['format','Format'],['d','Description'],['url','Training link (https://…)']],{t:'New training',level:'Beginner',format:'Online',d:'',url:''}),
   'Our Program':listEd('program',[['t','Title'],['d','Description'],['details','Details'],['cta','Button label'],['url','Button link (#contact or https://…)']],{t:'New program',d:'',details:'',cta:'Learn more',url:'#contact'}),
   'FAQ & Policies':faqEd,Users:usersV,Orders:ordersV,Messages:messagesV,'Login Activity':activityV,Settings:settingsV};
+ if(!roleTabs().includes(tab))tab=roleTabs()[0];
  m.innerHTML=`<h2>${tab}</h2>`;F[tab](m);
 }
 const inp=(k,l,v,tag='input')=>`<label>${l}<${tag} data-k="${k}">${tag==='textarea'?esc(v):''}</${tag==='textarea'?'textarea':'input'}></label>`.replace('<input data-k',`<input value="${esc(v)}" data-k`);
@@ -484,17 +490,34 @@ function payEd(m){
 
 /* ---------- user panel ---------- */
 const upEl=$('#userpanel');
-function openUser(){const s=session();if(!s)return;upEl.classList.add('sh');document.body.style.overflow='hidden';$('#upAdmin').style.display=s.role==='admin'?'':'none';drawUser()}
+function openUser(){const s=session();if(!s||s.role==='manager')return;upEl.classList.add('sh');document.body.style.overflow='hidden';$('#upAdmin').style.display=s.role==='admin'?'':'none';drawUser()}
 function closeUser(){upEl.classList.remove('sh');document.body.style.overflow=''}
 $('#upClose').onclick=closeUser;
 $('#upOut').onclick=()=>{sessionStorage.removeItem(K.s);closeUser();authUI();toast('Logged out')};
 $('#upAdmin').onclick=()=>{closeUser();openAdmin()};
 upEl.addEventListener('click',e=>{if(e.target.closest('[data-closeup]'))closeUser()});
+function myPayHTML(s){
+ const L=ls.get(K.p,[]).filter(x=>(x.account||x.email)===s.email);if(!L.length)return'';
+ const rej=L.filter(x=>x.status==='rejected');
+ const alert=rej.length?'<div class="rej-banner" role="alert"><b>⚠ Payment rejected</b>'+rej.map(x=>'<p>TrxID <b>'+esc(x.trx)+'</b> · '+money(x.amount)+(x.reason?' — '+esc(x.reason):'')+'</p>').join('')+'<p>Please pay again with the correct details, or contact us.</p></div>':'';
+ return alert+'<div class="pn"><h3>My payments</h3>'+L.map(x=>'<div class="mypay st-b-'+esc(x.status)+'"><div><b>'+esc(x.pkg)+'</b> · '+money(x.amount)+'<br><small>TrxID '+esc(x.trx)+' · '+esc((x.at||'').slice(0,10))+'</small>'+(x.status==='rejected'&&x.reason?'<br><small>Reason: '+esc(x.reason)+'</small>':'')+'</div><span class="st-'+esc(x.status)+'">'+(x.status==='pending'?'Checking…':esc(x.status))+'</span></div>').join('')+'</div>';
+}
+function showRejectAlert(){
+ const s=session();if(!s||s.role!=='user')return;const L=ls.get(K.p,[]);
+ const rej=L.filter(x=>(x.account||x.email)===s.email&&x.status==='rejected'&&!x.seen);if(!rej.length)return;
+ let el=$('#rejMo');if(!el){el=document.createElement('div');el.className='mo';el.id='rejMo';document.body.appendChild(el)}
+ const ct=C.contact;
+ el.innerHTML='<div class="md rejbox" role="alertdialog" aria-modal="true"><div class="rejico">✕</div><h3>Payment Rejected</h3>'+rej.map(x=>'<div class="rejitem"><b>'+esc(x.pkg)+' · '+money(x.amount)+'</b><br>TrxID: '+esc(x.trx)+(x.reason?'<br>Reason: <b>'+esc(x.reason)+'</b>':'')+'</div>').join('')+'<p class="note" style="margin:12px 0">The details you submitted could not be verified. Please pay again with the correct information, or contact us.</p><div style="display:grid;gap:10px"><button class="btn p" id="rejAgain" style="justify-content:center">Submit payment again</button><a class="btn m" href="'+esc(ct.messenger)+'" target="_blank" rel="noopener" style="justify-content:center">💬 Contact us</a><button class="btn o" id="rejOk" style="justify-content:center">I understand</button></div></div>';
+ el.classList.add('sh');
+ const done=()=>{const A=ls.get(K.p,[]);A.forEach(x=>{if((x.account||x.email)===s.email&&x.status==='rejected')x.seen=true});ls.set(K.p,A);el.classList.remove('sh');if(upEl.classList.contains('sh'))drawUser()};
+ $('#rejOk',el).onclick=done;$('#rejAgain',el).onclick=()=>{done();closeUser();const i=Math.max(0,C.packages.findIndex(p=>p.n===rej[0].pkg));$('#pricing').scrollIntoView();openPay(i)};
+}
 function drawUser(){
  const s=session();if(!s)return;const ct=C.contact,b=$('#upBody');
  const orders=ls.get(K.o,[]).filter(o=>(o.email||'').toLowerCase()===s.email);
  const isAdmin=s.role==='admin';
  b.innerHTML=`<div class="hello"><h2>Hello, ${esc(s.name)} 👋</h2><p>${esc(s.email)}${isAdmin?' · <b>Admin preview of the user panel</b>':''}</p></div>
+ ${isAdmin?'':myPayHTML(s)}
  <div class="qa"><a href="#contact" data-closeup>✉ Send a message</a><a href="${esc(ct.messenger)}" target="_blank" rel="noopener"><img class="brand-icon-inline" src="assets/messenger-logo.webp" alt=""> Chat on Messenger</a><a href="#pricing" data-closeup>📦 View packages</a></div>
  <div class="pn" style="margin-top:20px"><h3>How to pay</h3><p class="note">Pay 50% in advance to start and the rest on delivery. bKash: <b>${esc(ct.bkash)}</b> (Send Money). Webmoney: ${esc(ct.webmoney)}. After paying, send the transaction ID to us on Messenger.</p><div class="paybadges" style="margin-top:12px">${(C.payments||[]).map(payBadge).join('')}</div></div>
  <div class="pn"><h3>My requests</h3>${orders.length?`<table><tr><th>Date</th><th>Package</th><th>Message</th></tr>${orders.map(o=>`<tr><td>${esc(o.at.slice(0,10))}</td><td>${esc(o.pkg)}</td><td>${esc(o.msg)}</td></tr>`).join('')}</table>`:'<p class="note">No requests from this browser yet. Use “Send a message” to start your project.</p>'}</div>
@@ -505,8 +528,26 @@ function drawUser(){
   ls.set(K.u,us);sessionStorage.setItem(K.s,JSON.stringify({...s,name:nm}));authUI();drawUser();toast('Profile saved')};
 }
 
+
+/* ---------- managers (admin only) ---------- */
+function managersV(m){
+ const sx=session();if(!sx||sx.role!=='admin'){m.insertAdjacentHTML('beforeend','<p class="note">Only the admin can manage managers.</p>');return}
+ const G=ls.get(K.g,[]);
+ const add=panel(m,'Add a manager','<p class="note" style="margin-bottom:10px">Managers can <b>verify / reject payments</b> and <b>read orders and messages</b>. They cannot edit the website, settings, users or other managers.</p><label>Name<input id="mgN" autocomplete="off"></label><label>Email (their login)<input id="mgE" type="email" autocomplete="off"></label><label>Password (min 8)<input id="mgP" type="password" autocomplete="new-password"></label><div class="err" id="mgErr"></div><button class="btn p sm" id="mgAdd" style="margin-top:10px">Add manager</button>');
+ $('#mgAdd',add).onclick=async()=>{const n=$('#mgN',add).value.trim(),e=$('#mgE',add).value.trim().toLowerCase(),p=$('#mgP',add).value,er=$('#mgErr',add);er.textContent='';
+  if(!n||!e||!/^\S+@\S+\.\S+$/.test(e)){er.textContent='Enter a name and a valid email.';return}
+  if(p.length<8){er.textContent='Password needs at least 8 characters.';return}
+  if(e===ADMIN_EMAIL||G.some(x=>x.email===e)||ls.get(K.u,[]).some(x=>x.email===e)){er.textContent='This email is already in use.';return}
+  G.push({name:n,email:e,hash:await sha(p),at:new Date().toISOString()});ls.set(K.g,G);toast('Manager added');drawAdmin()};
+ const rows=G.map((x,i)=>'<tr><td>'+esc(x.name)+'</td><td>'+esc(x.email)+'</td><td>'+esc((x.at||'').slice(0,10))+'</td><td><div class="admin-row-actions"><button class="mini" data-gp="'+i+'">Reset password</button><button class="mini danger" data-gd="'+i+'">Remove</button></div></td></tr>').join('');
+ const p=panel(m,'Your managers',(rows?adminTable(['Name','Email','Added','Actions'],rows):'<p class="note">No managers yet.</p>')+'<p class="note admin-data-note">Manager accounts are stored in this browser, like all other data. A manager can only sign in on a browser where this list exists, and sees only that browser\'s records. For managers on their own phones, a shared database (backend) is required.</p>');
+ p.onclick=async e=>{const d=e.target.dataset;
+  if(d.gp!==undefined){const np=prompt('New password for '+G[+d.gp].name+' (min 8 characters)');if(!np)return;if(np.length<8)return toast('Password needs at least 8 characters');G[+d.gp].hash=await sha(np);ls.set(K.g,G);toast('Password updated')}
+  if(d.gd!==undefined&&confirm('Remove this manager?')){G.splice(+d.gd,1);ls.set(K.g,G);drawAdmin()}};
+}
+
 /* ---------- advance payment (bKash / Webmoney) — manual verification ---------- */
-function waBtn(n){let d=String(n||'').replace(/\D/g,'');if(!d)return'';if(d.startsWith('01'))d='88'+d;return '<a class="mini" href="https://wa.me/'+d+'" target="_blank" rel="noopener">WhatsApp</a>'}
+function waBtn(n,text,label){let d=String(n||'').replace(/\D/g,'');if(!d)return'';if(d.startsWith('01'))d='88'+d;return '<a class="mini" href="https://wa.me/'+d+(text?'?text='+encodeURIComponent(text):'')+'" target="_blank" rel="noopener">'+(label||'WhatsApp')+'</a>'}
 const money=n=>'৳ '+Number(n).toLocaleString('en-US');
 const priceNum=p=>parseInt(String(p||'').replace(/[^\d]/g,''),10)||0;
 const trxOk=t=>/^[A-Z0-9]{8,14}$/.test(t);
@@ -514,15 +555,18 @@ const payMo=document.createElement('div');payMo.className='mo';payMo.id='payMo';
 payMo.addEventListener('click',e=>{if(e.target===payMo||e.target.closest('[data-closepay]'))payMo.classList.remove('sh')});
 let PAY={};
 function openPay(i){
- _pc();const p=C.packages[i];if(!p)return;const total=priceNum(p.price),adv=Math.round(total*C.payCfg.percent/100),ss=session();
- PAY={step:1,pkg:p.n,total,adv,method:'bKash',name:ss&&ss.role==='user'?ss.name:'',email:ss&&ss.role==='user'?ss.email:'',wa:''};
+ _pc();const p=C.packages[i];if(!p)return;const ss=session();
+ if(!ss){pendingPay=i;setMode('login');mo.classList.add('sh');toast('Please login (or sign up) first to pay');return}
+ if(ss.role!=='user'){toast('Payments are made from a customer account. Use a customer login.');return}
+ const total=priceNum(p.price),adv=Math.round(total*C.payCfg.percent/100);
+ PAY={step:1,pkg:p.n,total,adv,method:'bKash',name:ss.name,email:ss.email,wa:''};
  drawPay();payMo.classList.add('sh');
 }
 function drawPay(){
  const ct=C.contact,b=$('#payBody'),P=PAY;
  const head='<h3 style="margin-bottom:4px">Pay '+C.payCfg.percent+'% advance</h3><p class="note" style="margin-bottom:14px">'+esc(P.pkg)+' package · total '+money(P.total)+' · <b>advance '+money(P.adv)+'</b></p>';
  if(P.step===1){
-  b.innerHTML=head+`<form id="pf1" style="display:grid;gap:12px"><label>Your name *<input name="name" required value="${esc(P.name)}"></label><label>WhatsApp number *<input name="wa" type="tel" required placeholder="01XXXXXXXXX" value="${esc(P.wa)}"></label><label>Email *<input name="email" type="email" required value="${esc(P.email)}"></label>
+  b.innerHTML=head+`<form id="pf1" style="display:grid;gap:12px"><label>Your name *<input name="name" required value="${esc(P.name)}"></label><label>WhatsApp number *<input name="wa" type="tel" required placeholder="01XXXXXXXXX" value="${esc(P.wa)}"></label><label>Account email<input name="email" type="email" readonly value="${esc(P.email)}"></label>
   <div><small class="note">Pay with</small><div class="presets" id="pm">${['bKash','Webmoney'].map(n=>`<button type="button" class="${n===P.method?'sel':''}" data-pm="${n}">${n}</button>`).join('')}</div></div>
   <button class="btn p" style="justify-content:center">Next →</button></form>`;
   $('#pm').onclick=e=>{const t=e.target.closest('[data-pm]');if(!t)return;P.method=t.dataset.pm;$$('#pm button').forEach(x=>x.classList.toggle('sel',x===t))};
@@ -538,7 +582,7 @@ function drawPay(){
   $('#pf2').onsubmit=e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.target)),trx=f.trx.trim().toUpperCase(),err=$('#payErr');
    if(!trxOk(trx)){err.textContent='TrxID should be 8–14 letters/numbers. Please check your payment SMS.';return}
    const log=ls.get(K.p,[]);if(log.some(x=>x.trx===trx)){err.textContent='This TrxID was already submitted.';return}
-   const rec={id:'P'+Date.now().toString(36).toUpperCase(),at:new Date().toISOString(),name:P.name,wa:P.wa,email:P.email,pkg:P.pkg,total:P.total,amount:P.adv,method:P.method,trx,from:f.from.trim(),status:'pending'};
+   const rec={id:'P'+Date.now().toString(36).toUpperCase(),at:new Date().toISOString(),account:P.email,name:P.name,wa:P.wa,email:P.email,pkg:P.pkg,total:P.total,amount:P.adv,method:P.method,trx,from:f.from.trim(),status:'pending'};
    log.unshift(rec);ls.set(K.p,log.slice(0,500));P.rec=rec;P.step=3;
    P.body='NEW ADVANCE PAYMENT (needs verification)\n\nRef: '+rec.id+'\nName: '+rec.name+'\nWhatsApp: '+rec.wa+'\nEmail: '+rec.email+'\nPackage: '+rec.pkg+' (total '+money(rec.total)+')\nAdvance: '+money(rec.amount)+' via '+rec.method+'\nTrxID: '+rec.trx+'\nPaid from: '+rec.from;
    try{navigator.clipboard.writeText(P.body).catch(()=>{})}catch{};drawPay()};
@@ -549,16 +593,19 @@ function drawPay(){
   <div style="display:grid;gap:10px"><a class="btn m" href="${esc(ct.messenger)}" target="_blank" rel="noopener" style="justify-content:center">💬 Send on Messenger</a><a class="btn p" href="${esc(ct.whatsapp||'#')}" target="_blank" rel="noopener" style="justify-content:center;background:#25d366">WhatsApp</a><a class="btn o" href="${esc(ct.telegram||'#')}" target="_blank" rel="noopener" style="justify-content:center">✈ Telegram</a><a class="btn o" href="mailto:${esc(ct.email)}?subject=${encodeURIComponent('Advance payment '+r.id)}&body=${encodeURIComponent(P.body||'')}" style="justify-content:center">✉ Email</a></div></div>`;
  }
 }
+const rejText=x=>'Hello '+x.name+', your advance payment (TrxID '+x.trx+', '+money(x.amount)+') could not be verified'+(x.reason?': '+x.reason:'')+'. Please login to Website Builders BD and submit the correct payment details, or contact us. — Website Builders BD';
+const rejMail=x=>'mailto:'+encodeURIComponent(x.email)+'?subject='+encodeURIComponent('Payment rejected – '+x.id)+'&body='+encodeURIComponent(rejText(x));
 function paymentsV(m){
- _pc();const L=ls.get(K.p,[]);
+ _pc();const L=ls.get(K.p,[]),sx=session(),isAdm=!sx||sx.role==='admin';
  const pend=L.filter(x=>x.status==='pending').length,tot=L.filter(x=>x.status==='verified').reduce((a,x)=>a+x.amount,0);
  panel(m,'','<div class="sc4" style="margin:0 0 14px"><div><b>'+pend+'</b>To verify</div><div><b>'+money(tot)+'</b>Verified total</div><div><b>'+L.length+'</b>All submissions</div><div><b>'+C.payCfg.percent+'%</b>Advance rate</div></div><p class="note"><b>How to verify:</b> open your bKash app or SMS, find the TrxID shown below and check the amount and sender number. Press <b>Verify</b> only after you see the money in your account.</p>');
- const rows=L.map((x,i)=>'<tr><td>'+esc((x.at||'').slice(0,16).replace('T',' '))+'<br><small>'+esc(x.id)+'</small></td><td>'+esc(x.name)+'<br><small>'+esc(x.email)+'</small></td><td><b>'+esc(x.wa)+'</b> '+waBtn(x.wa)+'</td><td>'+esc(x.pkg)+'<br><small>total '+money(x.total)+'</small></td><td><b>'+money(x.amount)+'</b></td><td>'+esc(x.method)+'</td><td><b>'+esc(x.trx)+'</b></td><td>'+esc(x.from)+'</td><td><span class="st-'+esc(x.status)+'">'+esc(x.status)+'</span></td><td><div class="admin-row-actions"><button class="mini" data-pv="'+i+'">Verify</button><button class="mini" data-px="'+i+'">Reject</button><button class="mini danger" data-pd="'+i+'">Delete</button></div></td></tr>').join('');
+ const rows=L.map((x,i)=>'<tr><td>'+esc((x.at||'').slice(0,16).replace('T',' '))+'<br><small>'+esc(x.id)+'</small></td><td>'+esc(x.name)+'<br><small>'+esc(x.email)+'</small></td><td><b>'+esc(x.wa)+'</b> '+waBtn(x.wa)+'</td><td>'+esc(x.pkg)+'<br><small>total '+money(x.total)+'</small></td><td><b>'+money(x.amount)+'</b></td><td>'+esc(x.method)+'</td><td><b>'+esc(x.trx)+'</b></td><td>'+esc(x.from)+'</td><td><span class="st-'+esc(x.status)+'">'+esc(x.status)+'</span></td><td><div class="admin-row-actions"><button class="mini" data-pv="'+i+'">Verify</button><button class="mini" data-px="'+i+'">Reject</button>'+(x.status==='rejected'?'<a class="mini" href="'+rejMail(x)+'">Email customer</a>'+waBtn(x.wa,rejText(x),'WhatsApp customer'):'')+(isAdm?'<button class="mini danger" data-pd="'+i+'">Delete</button>':'')+'</div>'+(x.reason?'<small>Reason: '+esc(x.reason)+'</small>':'')+(x.by?'<small>By '+esc(x.by)+'</small>':'')+'</td></tr>').join('');
  const p=panel(m,'Advance payments submitted on this website — saved in this browser',(rows?adminTable(['Date','Customer','WhatsApp','Package','Advance','Method','TrxID','Paid from','Status','Actions'],rows):'<p class="note">No payments have been submitted in this browser yet.</p>')+'<p class="note admin-data-note">Payments are saved in the browser the customer used, so this list only shows submissions made in this same browser. Every customer also gets a ready message to send to you on Messenger / WhatsApp / Telegram / email, which arrives with the TrxID. A shared database (backend) is needed to see all customers here automatically.</p>');
  p.onclick=e=>{const d=e.target.dataset;
-  if(d.pv!==undefined){L[+d.pv].status='verified';ls.set(K.p,L);drawAdmin()}
-  if(d.px!==undefined){L[+d.px].status='rejected';ls.set(K.p,L);drawAdmin()}
-  if(d.pd!==undefined&&confirm('Delete this payment record?')){L.splice(+d.pd,1);ls.set(K.p,L);drawAdmin()}};
+  if(d.pv!==undefined){const r=L[+d.pv];r.status='verified';r.reason='';r.by=sx.name;r.seen=false;r.vseen=false;ls.set(K.p,L);drawAdmin()}
+  if(d.px!==undefined){const why=prompt('Why is this payment rejected? (the customer will see this)','TrxID or amount did not match our bKash record');if(why===null)return;const r=L[+d.px];r.status='rejected';r.reason=why.trim();r.by=sx.name;r.seen=false;ls.set(K.p,L);drawAdmin();toast('Rejected. Use "Email customer" or "WhatsApp customer" to notify them.')}
+  if(d.pd!==undefined&&isAdm&&confirm('Delete this payment record?')){L.splice(+d.pd,1);ls.set(K.p,L);drawAdmin()}};
+ if(!isAdm)return;
  const cfg=panel(m,'Advance payment settings',`<label>Advance percent (%)<input type="number" min="1" max="100" id="pcPct" value="${esc(C.payCfg.percent)}"></label><label>bKash option customers should choose<input id="pcMode" value="${esc(C.payCfg.bkashMode)}"></label><label>Instruction text<textarea id="pcNote">${esc(C.payCfg.note)}</textarea></label><p class="note">bKash number and Webmoney purse are edited in <b>Contact &amp; Links</b>.</p><button class="btn p sm" style="margin-top:10px" id="pcSave">Save</button>`);
  $('#pcSave',cfg).onclick=()=>{C.payCfg.percent=Math.min(100,Math.max(1,+$('#pcPct',cfg).value||50));C.payCfg.bkashMode=$('#pcMode',cfg).value;C.payCfg.note=$('#pcNote',cfg).value;commit()};
 }
