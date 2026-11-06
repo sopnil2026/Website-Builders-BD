@@ -45,6 +45,7 @@ jobs:
         run: |
           cd central-server
           zip -qr ../Central-OTP-Backend.zip . -x ".env" ".env.*" "node_modules/*"
+          zip -q ../Central-OTP-Backend.zip .env.example
 
       - name: Upload website and backend packages
         uses: actions/upload-artifact@v4
