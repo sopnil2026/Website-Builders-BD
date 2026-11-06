@@ -14,6 +14,7 @@ const DEFAULT={
  contact:{messenger:'https://m.me/website.builders.bdcom',whatsapp:'https://wa.me/message/SRU4QQYVDKZLP1',telegram:'https://t.me/WebsiteBuildersBD',facebook:'https://www.facebook.com/website.builders.bdcom',youtube:'https://www.youtube.com/@WebTech25',portfolio:'https://sopnil2026.github.io/sopnilPortfolio',email:'sopnilprodhan13@gmail.com',location:'Bogura, Bangladesh',mapLink:'https://www.google.com/maps/search/?api=1&query=Bogura%2C%20Bangladesh',hours:'Sat – Thu · 9 AM – 9 PM',bkash:'01740304436',webmoney:'Ask on Messenger for account details',wmz:''},
  payCfg:{percent:50,bkashMode:'Send Money',note:'Send the amount from your bKash app, then enter the Transaction ID (TrxID) on the next step.'},
  payments:[{n:'bKash',c:'#e2136e',img:''},{n:'Webmoney',c:'#1d6fb8',img:''}],
+ trust:[{n:'10+',l:'Websites Delivered'},{n:'9+',l:'Happy Clients'},{n:'2+',l:'Years Experience'},{n:'100%',l:'Client Satisfaction'}],
  stats:[{n:'50%',l:'Advance to start'},{n:'30 Days',l:'Refund window'},{n:'100%',l:'Mobile responsive'}],
  services:[
   {i:'💻',t:'Website Design & Development',d:'Custom, fast and responsive websites for any business.'},
@@ -75,7 +76,7 @@ if(!C.contact.mapLink)C.contact.mapLink=DEFAULT.contact.mapLink;
 if(!Array.isArray(C.reviews))C.reviews=DEFAULT.reviews.map(r=>({...r}));
 if(!C.contact.portfolio)C.contact.portfolio=DEFAULT.contact.portfolio;
 if(!stored.contact||!stored.contact.telegram||stored.contact.telegram==='https://t.me/'||stored.contact.telegram==='https://t.me')C.contact.telegram=DEFAULT.contact.telegram;
-const save=()=>ls.set(K.c,C);
+const save=()=>{ls.set(K.c,C);pushContent()};
 
 /* ---------- utils ---------- */
 const _pc=()=>{C.payCfg=Object.assign({percent:50,bkashMode:'Send Money',note:'Send the amount from your bKash app, then enter the Transaction ID (TrxID) on the next step.'},C.payCfg||{})};
@@ -123,6 +124,7 @@ function render(){
  const b=C.brand,ct=C.contact;
  $('#h-1').textContent=b.h1;$('#h-2').textContent=b.h2;$('#h-3').textContent=b.h3;$('#h-p').textContent=b.lead;$('#a-tag').textContent=b.tagline;
  $('#a-p1').textContent=C.about.p1;$('#a-p2').innerHTML=C.about.p2;
+ $('#trustGrid').innerHTML=(C.trust||DEFAULT.trust).map(t=>`<div class="trust-metric"><b>${esc(t.n)}</b><span>${esc(t.l)}</span></div>`).join('');
  $('#stats').innerHTML=C.stats.map(s=>`<div><b>${esc(s.n)}</b><small>${esc(s.l)}</small></div>`).join('');
  $('#heroList').innerHTML=C.services.slice(0,5).map(s=>`<a class="li" href="#services"><i>${esc(s.i)}</i>${esc(s.t)}</a>`).join('')+`<a class="li" href="#services" style="color:var(--o2)"><i>＋</i>View all ${C.services.length} services</a>`;
  $('#svGrid').innerHTML=C.services.map((s,i)=>`<div class="sv rv d${i%3}"><i>${esc(s.i)}</i><h3>${esc(s.t)}</h3><p>${esc(s.d)}</p></div>`).join('');
@@ -266,6 +268,7 @@ $('#orderForm').addEventListener('submit',e=>{
   message:f.msg,status:'New'
  },1000);
  recordActivity('Order / message submitted',{name:f.name,email:f.email,role:'visitor'});
+ sbSendMessage({id,name:f.name||'',phone:f.phone||'',email:f.email||'',company:f.company||'',service:f.service||'',pkg:f.pkg||'',budget:f.budget||'',subject:'Website order — '+(f.pkg||''),type:'Order enquiry',message:f.msg||''});
  const body=[
   'New website order request','',
   'Name: '+f.name,'Phone: '+f.phone,'Email: '+f.email,
@@ -295,12 +298,13 @@ mo.onclick=e=>{if(e.target===mo){mo.classList.remove('sh');pendingPay=null}};
 function authUI(){const s=session();const b=$('#authBtn');
  if(s){b.textContent=s.role==='admin'?'⚙ Admin Panel':s.role==='manager'?'🧑‍💼 Manager Panel':'👤 My Panel';b.onclick=()=>(s.role==='admin'||s.role==='manager')?openAdmin():openUser()}
  else{b.textContent='Login / Sign up';b.onclick=()=>{setMode('login');mo.classList.add('sh')}}}
-function logoutMenu(){if(confirm('Logout?')){sessionStorage.removeItem(K.s);authUI();toast('Logged out')}}
+function logoutMenu(){if(confirm('Logout?')){doLogout();authUI();toast('Logged out')}}
 $('#authForm').addEventListener('submit',async e=>{
  e.preventDefault();const em=$('#aEmail').value.trim().toLowerCase(),pw=$('#aPass').value,err=$('#authErr');err.textContent='';
  const answer=$('#captchaAnswer').value;
  if(answer===''||Number(answer)!==captchaExpected){err.textContent='Human verification failed. Please solve the new question.';newCaptcha();return}
  newCaptcha();
+ if(SB_READY){await sbAuthSubmit(em,pw,err);return}
  const h=await sha(pw);
  if(mode==='signup'){
   const nm=$('#aName').value.trim();if(!nm){err.textContent='Please enter your name.';return}
@@ -331,7 +335,7 @@ function openAdmin(){const s=session();if(!s||(s.role!=='admin'&&s.role!=='manag
 function closeAdmin(){$('#admin').classList.remove('sh');document.body.style.overflow=''}
 $('#adExit').onclick=closeAdmin;
 $('#adUser').onclick=()=>{closeAdmin();openUser()};
-$('#adOut').onclick=()=>{sessionStorage.removeItem(K.s);closeAdmin();authUI();toast('Logged out')};
+$('#adOut').onclick=()=>{doLogout();closeAdmin();authUI();toast('Logged out')};
 function drawAdmin(){
  $('#adNav').innerHTML=roleTabs().map(t=>`<button class="${t===tab?'on':''}" data-t="${t}">${t}</button>`).join('');
  $$('#adNav button').forEach(b=>b.onclick=()=>{tab=b.dataset.t;drawAdmin()});
@@ -342,8 +346,10 @@ function drawAdmin(){
   Blog:listEd('blog',[['t','Title'],['category','Category'],['date','Date / label'],['d','Summary'],['url','Article link (https://…)']],{t:'New article',category:'Web Development',date:'New post',d:'',url:''}),
   Training:listEd('training',[['t','Title'],['level','Level'],['format','Format'],['d','Description'],['url','Training link (https://…)']],{t:'New training',level:'Beginner',format:'Online',d:'',url:''}),
   'Our Program':listEd('program',[['t','Title'],['d','Description'],['details','Details'],['cta','Button label'],['url','Button link (#contact or https://…)']],{t:'New program',d:'',details:'',cta:'Learn more',url:'#contact'}),
-  'FAQ & Policies':faqEd,Users:usersV,Orders:ordersV,Messages:messagesV,'Login Activity':activityV,Settings:settingsV};
+  'FAQ & Policies':faqEd,Users:(SB_READY?sbUsersV:usersV),Orders:ordersV,Messages:messagesV,'Login Activity':activityV,Settings:settingsV};
  if(!roleTabs().includes(tab))tab=roleTabs()[0];
+ const pre=SB_READY?({Dashboard:()=>Promise.all([syncPayments(),syncMessages()]),Payments:syncPayments,Orders:syncMessages,Messages:syncMessages})[tab]:null;
+ if(pre){const t0=tab;m.innerHTML=`<h2>${tab}</h2><p class="note">Loading…</p>`;pre().catch(()=>{}).then(()=>{if(tab!==t0)return;m.innerHTML=`<h2>${tab}</h2>`;F[tab](m)});return}
  m.innerHTML=`<h2>${tab}</h2>`;F[tab](m);
 }
 const inp=(k,l,v,tag='input')=>`<label>${l}<${tag} data-k="${k}">${tag==='textarea'?esc(v):''}</${tag==='textarea'?'textarea':'input'}></label>`.replace('<input data-k',`<input value="${esc(v)}" data-k`);
@@ -371,7 +377,12 @@ function dash(m){
  panel(m,'Recent messages and enquiries',newest.length?'<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Date</th><th>Sender</th><th>Subject</th><th>Status</th></tr></thead><tbody>'+messageRows+'</tbody></table></div>':'<p class="note">No messages have been saved from this browser yet.</p>');
  panel(m,'Data visibility','<p class="note"><b>Important:</b> this site is still static. The lists here include only records saved in this browser. They cannot show logins, contact messages or orders from other visitors or devices. To collect everyone’s activity, this website must be connected to a shared database with server-side authentication. Email drafts are not delivered until the sender presses Send.</p>');
 }
-function heroEd(m){
+function trustEd(m){
+ const T=C.trust||DEFAULT.trust;
+ const p=panel(m,'Achievement numbers (shown under the hero)','<p class="note" style="margin-bottom:10px">Only show numbers that are true and that you can prove. Set the value to match your real work.</p>'+T.map((t,i)=>`<div class="r2" data-ti="${i}" style="margin-bottom:8px"><label>Number<input data-k="n" value="${esc(t.n)}"></label><label>Label<input data-k="l" value="${esc(t.l)}"></label></div>`).join('')+'<button class="btn p sm" style="margin-top:8px">Save numbers</button>');
+ p.querySelector('button').onclick=()=>{C.trust=$$('[data-ti]',p).map(r=>({n:$('[data-k=n]',r).value.trim(),l:$('[data-k=l]',r).value.trim()})).filter(t=>t.n||t.l);commit()};
+}
+function heroEd(m){trustEd(m);
  const p=panel(m,'Hero section',['h1','h2','h3'].map((k,i)=>inp(k,'Headline line '+(i+1),C.brand[k])).join('')+inp('lead','Intro text',C.brand.lead,'textarea')+inp('tagline','Bengali tagline',C.brand.tagline)+'<button class="btn p sm" style="margin-top:12px">Save</button>');
  p.querySelector('button').onclick=()=>{$$('[data-k]',p).forEach(i=>C.brand[i.dataset.k]=i.value);commit()};
  const q=panel(m,'About section',inp('p1','Paragraph 1',C.about.p1,'textarea')+inp('p2','Paragraph 2 (HTML allowed: <i>, <b>)',C.about.p2,'textarea')+'<button class="btn p sm" style="margin-top:12px">Save</button>');
@@ -415,12 +426,12 @@ function ordersV(m){
  const search=$('#orderSearch',p);
  search.addEventListener('input',()=>{const q=search.value.trim().toLowerCase();$$('tbody tr',p).forEach(row=>row.hidden=!row.innerText.toLowerCase().includes(q))});
  $('#exportOrders',p).onclick=()=>downloadAdminJSON('website-builders-bd-orders.json',orders);
- $('#clearOrders',p).onclick=()=>{if(!orders.length)return;if(confirm('Delete all locally saved order records? This does not delete message records.')){ls.set(K.o,[]);drawAdmin()}};
+ $('#clearOrders',p).onclick=()=>{if(!orders.length)return;if(confirm('Delete all locally saved order records? This does not delete message records.')){sbMsgClear('Order enquiry');ls.set(K.o,[]);drawAdmin()}};
  p.onclick=e=>{
   const status=e.target.closest('[data-order-status]');
-  if(status){const i=Number(status.dataset.orderStatus);if(!orders[i])return;orders[i].status='Contacted';ls.set(K.o,orders);const messages=ls.get(K.m,[]),msg=messages.find(x=>x.id===orders[i].id);if(msg)msg.status='Contacted';ls.set(K.m,messages);recordActivity('Order marked contacted',{name:'Admin',email:ADMIN_EMAIL,role:'admin'});drawAdmin();return}
+  if(status){const i=Number(status.dataset.orderStatus);if(!orders[i])return;orders[i].status='Contacted';sbMsgStatus(orders[i].id,'Contacted');ls.set(K.o,orders);const messages=ls.get(K.m,[]),msg=messages.find(x=>x.id===orders[i].id);if(msg)msg.status='Contacted';ls.set(K.m,messages);recordActivity('Order marked contacted',{name:'Admin',email:ADMIN_EMAIL,role:'admin'});drawAdmin();return}
   const del=e.target.closest('[data-order-delete]');
-  if(del){const i=Number(del.dataset.orderDelete);if(!orders[i])return;if(!confirm('Delete this order record? Its linked website-enquiry message will also be removed.'))return;const item=orders.splice(i,1)[0];ls.set(K.o,orders);ls.set(K.m,ls.get(K.m,[]).filter(x=>x.id!==item.id));drawAdmin()}
+  if(del){const i=Number(del.dataset.orderDelete);if(!orders[i])return;if(!confirm('Delete this order record? Its linked website-enquiry message will also be removed.'))return;const item=orders.splice(i,1)[0];sbMsgDelete(item.id);ls.set(K.o,orders);ls.set(K.m,ls.get(K.m,[]).filter(x=>x.id!==item.id));drawAdmin()}
  }
 }
 function downloadAdminJSON(filename,data){
@@ -437,12 +448,12 @@ function messagesV(m){
  const search=$('#messageSearch',p);
  search.addEventListener('input',()=>{const q=search.value.trim().toLowerCase();$$('tbody tr',p).forEach(row=>row.hidden=!row.innerText.toLowerCase().includes(q))});
  $('#exportMessages',p).onclick=()=>downloadAdminJSON('website-builders-bd-messages.json',messages);
- $('#clearMessages',p).onclick=()=>{if(!messages.length)return;if(confirm('Delete all locally saved messages and enquiries?')){ls.set(K.m,[]);drawAdmin()}};
+ $('#clearMessages',p).onclick=()=>{if(!messages.length)return;if(confirm('Delete all locally saved messages and enquiries?')){sbMsgClear();ls.set(K.m,[]);drawAdmin()}};
  p.onclick=e=>{
   const reply=e.target.closest('[data-message-replied]');
-  if(reply){const i=Number(reply.dataset.messageReplied);if(!messages[i])return;messages[i].status='Replied';ls.set(K.m,messages);const orders=ls.get(K.o,[]),order=orders.find(x=>x.id===messages[i].id);if(order)order.status='Replied';ls.set(K.o,orders);recordActivity('Message marked replied',{name:'Admin',email:ADMIN_EMAIL,role:'admin'});drawAdmin();return}
+  if(reply){const i=Number(reply.dataset.messageReplied);if(!messages[i])return;messages[i].status='Replied';sbMsgStatus(messages[i].id,'Replied');ls.set(K.m,messages);const orders=ls.get(K.o,[]),order=orders.find(x=>x.id===messages[i].id);if(order)order.status='Replied';ls.set(K.o,orders);recordActivity('Message marked replied',{name:'Admin',email:ADMIN_EMAIL,role:'admin'});drawAdmin();return}
   const del=e.target.closest('[data-message-delete]');
-  if(del){const i=Number(del.dataset.messageDelete);if(!messages[i])return;if(!confirm('Delete this locally saved message?'))return;messages.splice(i,1);ls.set(K.m,messages);drawAdmin()}
+  if(del){const i=Number(del.dataset.messageDelete);if(!messages[i])return;if(!confirm('Delete this locally saved message?'))return;sbMsgDelete(messages[i].id);messages.splice(i,1);ls.set(K.m,messages);drawAdmin()}
  };
 }
 function activityV(m){
@@ -455,9 +466,9 @@ function activityV(m){
  $('#exportActivity',p).onclick=()=>downloadAdminJSON('website-builders-bd-login-activity.json',events);
  $('#clearActivity',p).onclick=()=>{if(!events.length)return;if(confirm('Clear all activity records saved in this browser?')){ls.set(K.l,[]);drawAdmin()}};
 }
-function settingsV(m){
- const p=panel(m,'Change admin password',`<label>New password (min 8 chars)<input type="password" id="np" autocomplete="new-password"></label><button class="btn p sm" style="margin-top:12px" id="cp">Update password</button><p class="note" style="margin-top:8px">Stored as a hash in this browser only.</p>`);
- $('#cp',p).onclick=async()=>{const v=$('#np',p).value;if(v.length<8)return toast('Use at least 8 characters');ls.set(K.a,await sha(v));$('#np',p).value='';toast('Password updated')};
+function settingsV(m){backendPanel(m);
+ const p=panel(m,SB_READY?'Change your password':'Change admin password',`<label>New password (min 8 chars)<input type="password" id="np" autocomplete="new-password"></label><button class="btn p sm" style="margin-top:12px" id="cp">Update password</button><p class="note" style="margin-top:8px">Stored as a hash in this browser only.</p>`);
+ $('#cp',p).onclick=async()=>{const v=$('#np',p).value;if(v.length<8)return toast('Use at least 8 characters');if(SB_READY){const {error}=await SB.auth.updateUser({password:v});$('#np',p).value='';return toast(error?'Could not update: '+error.message:'Password updated')}ls.set(K.a,await sha(v));$('#np',p).value='';toast('Password updated')};
  const b=panel(m,'Backup & restore',`<button class="btn o sm" id="ex">⬇ Export content (JSON)</button> <label class="btn o sm" style="display:inline-flex">⬆ Import<input type="file" accept=".json" id="im" hidden></label> <button class="dl" id="rs" style="margin-left:8px">Reset to defaults</button>`);
  $('#ex',b).onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(C,null,2)],{type:'application/json'}));a.download='wbbd-content.json';a.click()};
  $('#im',b).onchange=e=>{const r=new FileReader();r.onload=()=>{try{C=Object.assign({},DEFAULT,JSON.parse(r.result));commit('Imported');drawAdmin()}catch{toast('Invalid file')}};r.readAsText(e.target.files[0])};
@@ -490,10 +501,10 @@ function payEd(m){
 
 /* ---------- user panel ---------- */
 const upEl=$('#userpanel');
-function openUser(){const s=session();if(!s||s.role==='manager')return;upEl.classList.add('sh');document.body.style.overflow='hidden';$('#upAdmin').style.display=s.role==='admin'?'':'none';drawUser()}
+function openUser(){const s=session();if(!s||s.role==='manager')return;if(SB_READY)syncPayments().then(()=>{if(upEl.classList.contains('sh'))drawUser()});upEl.classList.add('sh');document.body.style.overflow='hidden';$('#upAdmin').style.display=s.role==='admin'?'':'none';drawUser()}
 function closeUser(){upEl.classList.remove('sh');document.body.style.overflow=''}
 $('#upClose').onclick=closeUser;
-$('#upOut').onclick=()=>{sessionStorage.removeItem(K.s);closeUser();authUI();toast('Logged out')};
+$('#upOut').onclick=()=>{doLogout();closeUser();authUI();toast('Logged out')};
 $('#upAdmin').onclick=()=>{closeUser();openAdmin()};
 upEl.addEventListener('click',e=>{if(e.target.closest('[data-closeup]'))closeUser()});
 function myPayHTML(s){
@@ -502,14 +513,14 @@ function myPayHTML(s){
  const alert=rej.length?'<div class="rej-banner" role="alert"><b>⚠ Payment rejected</b>'+rej.map(x=>'<p>TrxID <b>'+esc(x.trx)+'</b> · '+money(x.amount)+(x.reason?' — '+esc(x.reason):'')+'</p>').join('')+'<p>Please pay again with the correct details, or contact us.</p></div>':'';
  return alert+'<div class="pn"><h3>My payments</h3>'+L.map(x=>'<div class="mypay st-b-'+esc(x.status)+'"><div><b>'+esc(x.pkg)+'</b> · '+money(x.amount)+'<br><small>TrxID '+esc(x.trx)+' · '+esc((x.at||'').slice(0,10))+'</small>'+(x.status==='rejected'&&x.reason?'<br><small>Reason: '+esc(x.reason)+'</small>':'')+'</div><span class="st-'+esc(x.status)+'">'+(x.status==='pending'?'Checking…':esc(x.status))+'</span></div>').join('')+'</div>';
 }
-function showRejectAlert(){
- const s=session();if(!s||s.role!=='user')return;const L=ls.get(K.p,[]);
+async function showRejectAlert(){
+ const s=session();if(!s||s.role!=='user')return;if(SB_READY)await syncPayments();const L=ls.get(K.p,[]);
  const rej=L.filter(x=>(x.account||x.email)===s.email&&x.status==='rejected'&&!x.seen);if(!rej.length)return;
  let el=$('#rejMo');if(!el){el=document.createElement('div');el.className='mo';el.id='rejMo';document.body.appendChild(el)}
  const ct=C.contact;
  el.innerHTML='<div class="md rejbox" role="alertdialog" aria-modal="true"><div class="rejico">✕</div><h3>Payment Rejected</h3>'+rej.map(x=>'<div class="rejitem"><b>'+esc(x.pkg)+' · '+money(x.amount)+'</b><br>TrxID: '+esc(x.trx)+(x.reason?'<br>Reason: <b>'+esc(x.reason)+'</b>':'')+'</div>').join('')+'<p class="note" style="margin:12px 0">The details you submitted could not be verified. Please pay again with the correct information, or contact us.</p><div style="display:grid;gap:10px"><button class="btn p" id="rejAgain" style="justify-content:center">Submit payment again</button><a class="btn m" href="'+esc(ct.messenger)+'" target="_blank" rel="noopener" style="justify-content:center">💬 Contact us</a><button class="btn o" id="rejOk" style="justify-content:center">I understand</button></div></div>';
  el.classList.add('sh');
- const done=()=>{const A=ls.get(K.p,[]);A.forEach(x=>{if((x.account||x.email)===s.email&&x.status==='rejected')x.seen=true});ls.set(K.p,A);el.classList.remove('sh');if(upEl.classList.contains('sh'))drawUser()};
+ const done=()=>{if(SB_READY)SB.rpc('mark_rejections_seen').then(()=>{},()=>{});const A=ls.get(K.p,[]);A.forEach(x=>{if((x.account||x.email)===s.email&&x.status==='rejected')x.seen=true});ls.set(K.p,A);el.classList.remove('sh');if(upEl.classList.contains('sh'))drawUser()};
  $('#rejOk',el).onclick=done;$('#rejAgain',el).onclick=()=>{done();closeUser();const i=Math.max(0,C.packages.findIndex(p=>p.n===rej[0].pkg));$('#pricing').scrollIntoView();openPay(i)};
 }
 function drawUser(){
@@ -530,7 +541,7 @@ function drawUser(){
 
 
 /* ---------- managers (admin only) ---------- */
-function managersV(m){
+function managersV(m){if(SB_READY)return sbManagersV(m);
  const sx=session();if(!sx||sx.role!=='admin'){m.insertAdjacentHTML('beforeend','<p class="note">Only the admin can manage managers.</p>');return}
  const G=ls.get(K.g,[]);
  const add=panel(m,'Add a manager','<p class="note" style="margin-bottom:10px">Managers can <b>verify / reject payments</b> and <b>read orders and messages</b>. They cannot edit the website, settings, users or other managers.</p><label>Name<input id="mgN" autocomplete="off"></label><label>Email (their login)<input id="mgE" type="email" autocomplete="off"></label><label>Password (min 8)<input id="mgP" type="password" autocomplete="new-password"></label><div class="err" id="mgErr"></div><button class="btn p sm" id="mgAdd" style="margin-top:10px">Add manager</button>');
@@ -579,10 +590,12 @@ function drawPay(){
   <div style="display:flex;gap:10px"><button type="button" class="btn o" id="pback">← Back</button><button class="btn p" style="flex:1;justify-content:center">I have paid — Submit</button></div></form>`;
   $('#cpy').onclick=()=>{try{navigator.clipboard.writeText(dest).catch(()=>{})}catch{};toast('Copied')};
   $('#pback').onclick=()=>{P.step=1;drawPay()};
-  $('#pf2').onsubmit=e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.target)),trx=f.trx.trim().toUpperCase(),err=$('#payErr');
+  $('#pf2').onsubmit=async e=>{e.preventDefault();const f=Object.fromEntries(new FormData(e.target)),trx=f.trx.trim().toUpperCase(),err=$('#payErr');
    if(!trxOk(trx)){err.textContent='TrxID should be 8–14 letters/numbers. Please check your payment SMS.';return}
    const log=ls.get(K.p,[]);if(log.some(x=>x.trx===trx)){err.textContent='This TrxID was already submitted.';return}
    const rec={id:'P'+Date.now().toString(36).toUpperCase(),at:new Date().toISOString(),account:P.email,name:P.name,wa:P.wa,email:P.email,pkg:P.pkg,total:P.total,amount:P.adv,method:P.method,trx,from:f.from.trim(),status:'pending'};
+   if(SB_READY){const sub=$('#pf2 .btn.p');sub.disabled=true;let ie=null;try{ie=(await SB.from('payments').insert({id:rec.id,account:rec.account,name:rec.name,wa:rec.wa,email:rec.email,pkg:rec.pkg,total:rec.total,amount:rec.amount,method:rec.method,trx:rec.trx,paid_from:rec.from})).error}catch(x){ie={code:'net'}}
+    sub.disabled=false;if(ie){err.textContent=ie.code==='23505'?'This TrxID was already submitted.':(ie.code==='42501'||ie.code==='PGRST301'?'Your login expired. Please login again.':'Could not send your payment details. Check your internet and try again.');return}}
    log.unshift(rec);ls.set(K.p,log.slice(0,500));P.rec=rec;P.step=3;
    P.body='NEW ADVANCE PAYMENT (needs verification)\n\nRef: '+rec.id+'\nName: '+rec.name+'\nWhatsApp: '+rec.wa+'\nEmail: '+rec.email+'\nPackage: '+rec.pkg+' (total '+money(rec.total)+')\nAdvance: '+money(rec.amount)+' via '+rec.method+'\nTrxID: '+rec.trx+'\nPaid from: '+rec.from;
    try{navigator.clipboard.writeText(P.body).catch(()=>{})}catch{};drawPay()};
@@ -602,9 +615,9 @@ function paymentsV(m){
  const rows=L.map((x,i)=>'<tr><td>'+esc((x.at||'').slice(0,16).replace('T',' '))+'<br><small>'+esc(x.id)+'</small></td><td>'+esc(x.name)+'<br><small>'+esc(x.email)+'</small></td><td><b>'+esc(x.wa)+'</b> '+waBtn(x.wa)+'</td><td>'+esc(x.pkg)+'<br><small>total '+money(x.total)+'</small></td><td><b>'+money(x.amount)+'</b></td><td>'+esc(x.method)+'</td><td><b>'+esc(x.trx)+'</b></td><td>'+esc(x.from)+'</td><td><span class="st-'+esc(x.status)+'">'+esc(x.status)+'</span></td><td><div class="admin-row-actions"><button class="mini" data-pv="'+i+'">Verify</button><button class="mini" data-px="'+i+'">Reject</button>'+(x.status==='rejected'?'<a class="mini" href="'+rejMail(x)+'">Email customer</a>'+waBtn(x.wa,rejText(x),'WhatsApp customer'):'')+(isAdm?'<button class="mini danger" data-pd="'+i+'">Delete</button>':'')+'</div>'+(x.reason?'<small>Reason: '+esc(x.reason)+'</small>':'')+(x.by?'<small>By '+esc(x.by)+'</small>':'')+'</td></tr>').join('');
  const p=panel(m,'Advance payments submitted on this website — saved in this browser',(rows?adminTable(['Date','Customer','WhatsApp','Package','Advance','Method','TrxID','Paid from','Status','Actions'],rows):'<p class="note">No payments have been submitted in this browser yet.</p>')+'<p class="note admin-data-note">Payments are saved in the browser the customer used, so this list only shows submissions made in this same browser. Every customer also gets a ready message to send to you on Messenger / WhatsApp / Telegram / email, which arrives with the TrxID. A shared database (backend) is needed to see all customers here automatically.</p>');
  p.onclick=e=>{const d=e.target.dataset;
-  if(d.pv!==undefined){const r=L[+d.pv];r.status='verified';r.reason='';r.by=sx.name;r.seen=false;r.vseen=false;ls.set(K.p,L);drawAdmin()}
-  if(d.px!==undefined){const why=prompt('Why is this payment rejected? (the customer will see this)','TrxID or amount did not match our bKash record');if(why===null)return;const r=L[+d.px];r.status='rejected';r.reason=why.trim();r.by=sx.name;r.seen=false;ls.set(K.p,L);drawAdmin();toast('Rejected. Use "Email customer" or "WhatsApp customer" to notify them.')}
-  if(d.pd!==undefined&&isAdm&&confirm('Delete this payment record?')){L.splice(+d.pd,1);ls.set(K.p,L);drawAdmin()}};
+  if(d.pv!==undefined){reviewPay(L[+d.pv],'verified','',sx.name)}
+  if(d.px!==undefined){const why=prompt('Why is this payment rejected? (the customer will see this)','TrxID or amount did not match our bKash record');if(why===null)return;reviewPay(L[+d.px],'rejected',why.trim(),sx.name).then(ok=>{if(ok)toast('Rejected. The customer sees an alert at their next login. You can also use "Email customer" or "WhatsApp customer".')})}
+  if(d.pd!==undefined&&isAdm&&confirm('Delete this payment record?')){deletePay(L[+d.pd],+d.pd,L)}};
  if(!isAdm)return;
  const cfg=panel(m,'Advance payment settings',`<label>Advance percent (%)<input type="number" min="1" max="100" id="pcPct" value="${esc(C.payCfg.percent)}"></label><label>bKash option customers should choose<input id="pcMode" value="${esc(C.payCfg.bkashMode)}"></label><label>Instruction text<textarea id="pcNote">${esc(C.payCfg.note)}</textarea></label><p class="note">bKash number and Webmoney purse are edited in <b>Contact &amp; Links</b>.</p><button class="btn p sm" style="margin-top:10px" id="pcSave">Save</button>`);
  $('#pcSave',cfg).onclick=()=>{C.payCfg.percent=Math.min(100,Math.max(1,+$('#pcPct',cfg).value||50));C.payCfg.bkashMode=$('#pcMode',cfg).value;C.payCfg.note=$('#pcNote',cfg).value;commit()};
@@ -625,5 +638,122 @@ window.addEventListener('storage',e=>{
  }
 });
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));}
+/* ---------- Supabase backend (shared database + real logins) ---------- */
+const SUPA_URL='https://khwcsytjkmzqacyhthmq.supabase.co';
+const SUPA_KEY='sb_publishable_YCx1YzRzbX6YrIPeWQKkdg_Pd4aVulu'; // public "publishable" key — safe in the browser; access is limited by database row-level security
+let SB=null,SB_READY=false,_pushT=null;
+const isAdminNow=()=>{const s=session();return !!s&&s.role==='admin'};
+const isStaffNow=()=>{const s=session();return !!s&&(s.role==='admin'||s.role==='manager')};
+function doLogout(){sessionStorage.removeItem(K.s);if(SB_READY)SB.auth.signOut().catch(()=>{})}
+function niceAuthErr(e){const m=String(e&&e.message||'').toLowerCase();
+ if(m.includes('invalid login'))return 'Wrong email or password. No account? Use Sign up.';
+ if(m.includes('not confirmed'))return 'Please confirm your email first (check your inbox and spam folder).';
+ if(m.includes('already registered')||m.includes('already been registered'))return 'Account already exists. Please login.';
+ if(m.includes('rate limit')||e&&e.status===429)return 'Too many attempts. Please wait a few minutes and try again.';
+ if(m.includes('password'))return 'Password must be at least 6 characters.';
+ return 'Something went wrong. Please try again.'}
+function setSession(p){sessionStorage.setItem(K.s,JSON.stringify({email:p.email,name:p.name||p.email,role:p.role,uid:p.id,loginAt:new Date().toISOString()}))}
+async function sbLoadProfile(user){
+ const {data,error}=await SB.from('profiles').select('id,email,name,role').eq('id',user.id).maybeSingle();
+ return error?null:data}
+async function sbAuthSubmit(em,pw,err){
+ try{
+  if(mode==='signup'){
+   const nm=$('#aName').value.trim();if(!nm){err.textContent='Please enter your name.';return}
+   const {data,error}=await SB.auth.signUp({email:em,password:pw,options:{data:{name:nm}}});
+   if(error){err.textContent=niceAuthErr(error);return}
+   const auto=!!data.session;if(auto)await SB.auth.signOut();
+   recordActivity('Account created',{name:nm,email:em,role:'user'});
+   setMode('login');$('#aEmail').value=em;$('#aPass').value='';
+   toast(auto?'Account created. Please sign in to continue.':'Account created. Check your email to confirm, then sign in.');return}
+  const {data,error}=await SB.auth.signInWithPassword({email:em,password:pw});
+  if(error){err.textContent=niceAuthErr(error);return}
+  const prof=await sbLoadProfile(data.user);
+  if(!prof){await SB.auth.signOut();err.textContent='Your account is not fully set up yet. Please contact us.';return}
+  setSession(prof);mo.classList.remove('sh');authUI();
+  recordActivity(prof.role==='admin'?'Admin sign in':prof.role==='manager'?'Manager sign in':'Sign in',{name:prof.name,email:prof.email,role:prof.role});
+  if(prof.role==='admin'||prof.role==='manager'){pendingPay=null;openAdmin();return}
+  toast('Welcome back, '+prof.name+'!');
+  if(pendingPay!==null){const pi=pendingPay;pendingPay=null;openPay(pi)}else{openUser();showRejectAlert()}
+ }catch(x){err.textContent='Network problem. Please check your internet and try again.'}}
+
+/* shared website content */
+function applyContent(remote){C=Object.assign({},DEFAULT,remote);C.contact=Object.assign({},DEFAULT.contact,remote.contact||{});_pc()}
+function pushContent(now){
+ if(!SB_READY||!isAdminNow())return;clearTimeout(_pushT);
+ const go=async()=>{try{const {error}=await SB.from('site_content').upsert({id:1,data:C,updated_at:new Date().toISOString()});if(error)toast('Saved here, but could not publish to all visitors: '+error.message);else if(now)toast('Published to all visitors ✓')}catch{toast('Could not publish (no connection)')}};
+ if(now)return go();_pushT=setTimeout(go,700)}
+
+/* data sync (RLS decides what each account can see) */
+const payFromDB=r=>({id:r.id,at:r.created_at,account:r.account,name:r.name,wa:r.wa,email:r.email,pkg:r.pkg,total:r.total,amount:r.amount,method:r.method,trx:r.trx,from:r.paid_from,status:r.status,reason:r.reason,by:r.reviewed_by,seen:r.seen});
+async function syncPayments(){
+ if(!SB_READY||!session())return;
+ const {data,error}=await SB.from('payments').select('*').order('created_at',{ascending:false}).limit(1000);
+ if(error){toast('Could not load payments');return}ls.set(K.p,data.map(payFromDB))}
+async function syncMessages(){
+ if(!SB_READY||!isStaffNow())return;
+ const {data,error}=await SB.from('messages').select('*').order('created_at',{ascending:false}).limit(1000);
+ if(error){toast('Could not load messages');return}
+ const m=data.map(r=>({id:r.id,at:r.created_at,name:r.name,phone:r.phone,email:r.email,subject:r.subject,type:r.type,pkg:r.pkg,message:r.message,status:r.status}));
+ ls.set(K.m,m);ls.set(K.o,m.filter(x=>x.type==='Order enquiry').map(x=>({...x,msg:x.message})))}
+async function sbSendMessage(row){if(!SB_READY)return;try{await SB.from('messages').insert(row)}catch{}}
+async function sbMsgStatus(id,status){if(!SB_READY)return;try{const {error}=await SB.from('messages').update({status}).eq('id',id);if(error)toast('Could not update status')}catch{}}
+async function sbMsgDelete(id){if(!SB_READY)return;try{const {error}=await SB.from('messages').delete().eq('id',id);if(error)toast('Only the admin can delete messages')}catch{}}
+async function sbMsgClear(type){if(!SB_READY)return;try{let q=SB.from('messages').delete();q=type?q.eq('type',type):q.neq('id','');const {error}=await q;if(error)toast('Only the admin can delete messages')}catch{}}
+async function reviewPay(r,status,reason,by){
+ if(!r)return false;
+ if(SB_READY){let error=null;try{error=(await SB.from('payments').update({status,reason,reviewed_by:by,seen:false}).eq('id',r.id)).error}catch(x){error={message:'no connection'}}
+  if(error){toast('Could not save: '+error.message);return false}}
+ Object.assign(r,{status,reason,by,seen:false});
+ const L=ls.get(K.p,[]),i=L.findIndex(x=>x.id===r.id);if(i>-1)L[i]=r;ls.set(K.p,L);drawAdmin();return true}
+async function deletePay(r,i,L){
+ if(SB_READY){let error=null;try{error=(await SB.from('payments').delete().eq('id',r.id)).error}catch(x){error={message:'no connection'}}
+  if(error){toast('Only the admin can delete: '+error.message);return}}
+ L.splice(i,1);ls.set(K.p,L);drawAdmin()}
+
+/* admin: users and managers from the database */
+async function sbUsersV(m){
+ m.insertAdjacentHTML('beforeend','<p class="note">Loading…</p>');
+ const {data,error}=await SB.from('profiles').select('*').order('created_at',{ascending:false});
+ m.innerHTML='<h2>Users</h2>';
+ if(error){m.insertAdjacentHTML('beforeend','<p class="note">Could not load users.</p>');return}
+ const rows=data.map(u=>'<tr><td>'+esc(u.name||'—')+'</td><td>'+esc(u.email)+'</td><td>'+esc(u.role)+'</td><td>'+esc((u.created_at||'').slice(0,10))+'</td></tr>').join('');
+ panel(m,'All accounts ('+data.length+')',adminTable(['Name','Email','Role','Joined'],rows)+'<p class="note admin-data-note">Accounts live in your Supabase database. To delete an account, use Supabase → Authentication → Users.</p>')}
+async function sbManagersV(m){
+ const sx=session();if(!sx||sx.role!=='admin'){m.insertAdjacentHTML('beforeend','<p class="note">Only the admin can manage managers.</p>');return}
+ m.insertAdjacentHTML('beforeend','<p class="note">Loading…</p>');
+ const {data,error}=await SB.from('profiles').select('*').in('role',['manager','admin']).order('created_at');
+ m.innerHTML='<h2>Managers</h2>';if(error){m.insertAdjacentHTML('beforeend','<p class="note">Could not load managers.</p>');return}
+ const add=panel(m,'Make someone a manager','<p class="note" style="margin-bottom:10px">Ask the person to <b>Sign up</b> on the website first. Then enter their email here. Managers can verify / reject payments and read orders and messages. They cannot edit the website, settings or other accounts.</p><label>Their account email<input id="mgE" type="email" autocomplete="off"></label><div class="err" id="mgErr"></div><button class="btn p sm" id="mgAdd" style="margin-top:10px">Make manager</button>');
+ $('#mgAdd',add).onclick=async()=>{const e=$('#mgE',add).value.trim().toLowerCase(),er=$('#mgErr',add);er.textContent='';
+  if(!/^\S+@\S+\.\S+$/.test(e)){er.textContent='Enter a valid email.';return}
+  const {data:f,error:fe}=await SB.from('profiles').select('id,role').eq('email',e).maybeSingle();
+  if(fe||!f){er.textContent='No account with this email. Ask them to sign up first.';return}
+  if(f.role==='admin'){er.textContent='This account is the admin already.';return}
+  const {error:ue}=await SB.from('profiles').update({role:'manager'}).eq('id',f.id);
+  if(ue){er.textContent='Could not change role: '+ue.message;return}toast('Manager added');drawAdmin()};
+ const rows=data.map(x=>'<tr><td>'+esc(x.name)+'</td><td>'+esc(x.email)+'</td><td>'+esc(x.role)+'</td><td>'+(x.role==='manager'?'<button class="mini danger" data-dm="'+esc(x.id)+'">Remove manager</button>':'—')+'</td></tr>').join('');
+ const p=panel(m,'Admin and managers',adminTable(['Name','Email','Role','Action'],rows));
+ p.onclick=async e=>{const id=e.target.dataset.dm;if(!id||!confirm('Remove this manager? Their account stays as a normal customer.'))return;
+  const {error:ue}=await SB.from('profiles').update({role:'user'}).eq('id',id);if(ue)return toast('Could not change role');drawAdmin()}}
+function backendPanel(m){
+ const on=SB_READY;
+ const p=panel(m,'Database & publishing',`<p class="note"><b>Database:</b> ${on?'<span class="st-verified">connected</span> — payments, messages, logins and website content are shared.':'<span class="st-pending">not connected</span> — this browser is using local mode.'}</p>${on&&isAdminNow()?'<p class="note" style="margin-top:8px">Changes you save are published to all visitors automatically. Use the button if you want to push everything now.</p><button class="btn p sm" id="pubNow" style="margin-top:10px">Publish current content to all visitors</button>':''}`);
+ const b=$('#pubNow',p);if(b)b.onclick=()=>pushContent(true)}
+async function initBackend(){
+ if(!window.supabase||!window.supabase.createClient)return;
+ try{
+  SB=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+  const r=await Promise.race([SB.from('site_content').select('data').eq('id',1).maybeSingle(),new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000))]);
+  if(r.error){SB=null;return}                       // tables not created yet, or offline: stay in local mode
+  SB_READY=true;
+  if(r.data&&r.data.data&&Object.keys(r.data.data).length){applyContent(r.data.data);render()}
+  const {data:{session:ss}}=await SB.auth.getSession();
+  if(ss){const prof=await sbLoadProfile(ss.user);if(prof)setSession(prof);else sessionStorage.removeItem(K.s)}
+  else sessionStorage.removeItem(K.s);              // no real login => no admin/manager/customer UI
+  authUI()
+ }catch(e){SB=null;SB_READY=false}}
+
 render();
+initBackend();
 })();

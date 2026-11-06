@@ -35,6 +35,12 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created after insert on auth.users
   for each row execute function public.handle_new_user();
 
+
+-- accounts created before this script ran get a profile too
+insert into public.profiles (id, email, name)
+select u.id, lower(u.email), coalesce(nullif(u.raw_user_meta_data->>'name',''), split_part(u.email,'@',1))
+from auth.users u on conflict (id) do nothing;
+
 alter table public.profiles enable row level security;
 drop policy if exists profiles_select on public.profiles;
 drop policy if exists profiles_update_own on public.profiles;
