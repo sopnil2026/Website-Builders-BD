@@ -1679,3 +1679,26 @@ a[href^="tel:"],[data-call]{display:none!important}
  .admin-table td.message-cell{white-space:normal;min-width:180px}
  #admin .sc4{grid-template-columns:1fr 1fr;gap:10px}#admin .sc4 div{padding:14px}#admin .sc4 b{font-size:22px}
 }
+
+/* ===== Pricing: secondary button on the dark featured card ===== */
+.pk.hot .btn.o{background:#fff;color:var(--navy);border-color:#fff}
+.pk.hot .btn.o:hover{background:var(--soft);color:var(--o2);border-color:var(--o)}
+
+/* ===== Separate pages: page banner, breadcrumbs, explore cards ===== */
+.pghead{padding:150px 0 56px;text-align:center;position:relative;overflow:hidden;
+ background:radial-gradient(circle at 88% 0,#ffedd5 0,transparent 42%),radial-gradient(circle at 6% 100%,#e0e7ff 0,transparent 38%),linear-gradient(#fff,#fafbff)}
+.pghead .crumbs{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;font-size:14px;color:var(--mut);margin-bottom:14px}
+.pghead .crumbs a{color:var(--o2);font-weight:600}.pghead .crumbs b{color:var(--navy);font-weight:700}
+.pghead h1{font-size:clamp(34px,5.4vw,56px);line-height:1.1;letter-spacing:-.02em;margin:10px 0 14px}
+.pghead p{color:var(--mut);font-size:18px;max-width:640px;margin:0 auto}
+.pghead+section{padding-top:56px}
+a.sv.ex{display:block;color:inherit;text-decoration:none}
+a.sv.ex em{display:inline-block;margin-top:14px;font-style:normal;font-weight:700;color:var(--o2)}
+a.sv.ex:hover em{text-decoration:underline}
+.cta-band{margin-top:0;background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;border-radius:28px;padding:40px;display:flex;gap:24px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.cta-band h3{font-size:26px;margin-bottom:6px}.cta-band p{color:#cbd5e1}
+.cta-band .cta{margin:0}
+.pk-note{text-align:center;color:var(--mut);margin-top:26px;font-size:15px}.pk-note a{color:var(--o2);font-weight:700}
+@media(max-width:640px){.pghead{padding:112px 0 36px}.pghead p{font-size:16px}.pghead+section{padding-top:36px}.cta-band{padding:26px 20px}}
+.exg{display:grid;gap:22px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+[id]{scroll-margin-top:96px}

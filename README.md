@@ -34,3 +34,15 @@ The site includes a web app manifest and service worker. HTTPS is required for s
 
 ## Footer social logos
 The footer uses the supplied Facebook and YouTube icon artwork, saved as transparent WebP assets in `assets/`.
+
+## Pages
+Every page is its own HTML file (`index`, `services`, `pricing`, `portfolio`, `gallery`, `blog`, `training`, `program`, `process`, `faq`, `contact`).
+They are generated from `tools/partials` and `tools/sections` with `python3 tools/build_pages.py`. All text, prices, reviews, blog posts etc. are edited in the Admin Panel, not in these files.
+
+## Making an account the admin (one time, Supabase → SQL Editor)
+1. Sign up on the website with the admin email.
+2. Run:
+```sql
+update public.profiles set role = 'admin' where email = 'sopnilprodhan13@gmail.com';
+```
+There is no admin password in the website code. The password is the one chosen at sign-up and is managed by Supabase (Authentication → Users to reset it).

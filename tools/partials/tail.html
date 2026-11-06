@@ -1,0 +1,42 @@
+<div class="fl" aria-label="Quick contact"><a class="ms" data-msgr target="_blank" rel="noopener" aria-label="Messenger" title="Messenger"><img src="assets/messenger-logo.webp" alt="Messenger"></a><a class="tg" data-tg target="_blank" rel="noopener" aria-label="Telegram" title="Telegram"><img src="assets/telegram-logo.webp" alt="Telegram"></a><a class="wa" data-wa target="_blank" rel="noopener" aria-label="WhatsApp" title="WhatsApp"><img src="assets/whatsapp-logo.webp" alt="WhatsApp"></a></div>
+<button id="top" aria-label="Back to top">↑</button>
+<div id="toast"></div>
+
+<!-- Auth modal -->
+<div class="mo" id="authMo"><div class="md">
+  <button class="x" data-close>×</button>
+  <img src="assets/logo.png" alt="" style="width:130px;margin:0 auto 10px">
+  <h3 id="authTitle" style="text-align:center">Welcome back</h3><p class="note" style="text-align:center">Login to your account or create a new one.</p>
+  <div class="tabs"><button class="on" data-tab="login">Login</button><button data-tab="signup">Sign up</button></div>
+  <form id="authForm" style="display:grid;gap:14px">
+    <label id="nmL" style="display:none">Full name<input id="aName"></label>
+    <label>Email<input id="aEmail" type="email" required autocomplete="username"></label>
+    <label>Password<input id="aPass" type="password" required minlength="6" autocomplete="current-password"></label>
+    <div class="captcha-box" id="captchaBox" aria-describedby="captchaHelp">
+      <div class="captcha-heading"><b>Human verification</b><span>Anti-bot check</span></div>
+      <div class="captcha-challenge"><strong id="captchaQuestion" aria-live="polite">4 + 3 = ?</strong><button type="button" id="captchaRefresh" class="captcha-refresh" aria-label="Generate a new captcha question">↻ Refresh</button></div>
+      <label class="captcha-answer" for="captchaAnswer">Answer<input id="captchaAnswer" type="number" inputmode="numeric" step="1" required autocomplete="off" placeholder="Enter the result"></label>
+      <small class="captcha-help" id="captchaHelp">Solve this quick question before logging in or creating an account.</small>
+    </div>
+    <div class="err" id="authErr" role="alert" aria-live="polite"></div>
+    <button class="btn p" style="justify-content:center" id="authSubmit">Login</button>
+  </form>
+</div></div>
+
+<!-- Admin -->
+<div id="admin"><div class="ad">
+  <aside><h4><img src="assets/logo-mark.png" alt="" style="width:56px;border-radius:0">Admin Panel</h4><div id="adNav"></div>
+  <button id="adUser" style="margin-top:24px;background:rgba(249,115,22,.25)">👤 Open User Panel</button><button id="adExit" style="background:rgba(255,255,255,.08)">← View site</button><button id="adOut" style="background:rgba(220,38,38,.25)">Logout</button></aside>
+  <main id="adMain"></main>
+</div></div>
+
+<!-- User panel -->
+<div id="userpanel"><div class="up">
+  <div class="uphead"><a href="index.html" class="logo" id="upLogo"><img src="assets/logo-mark.png" alt=""><span>User Panel</span></a>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn o sm" id="upAdmin" style="display:none">⚙ Back to Admin</button><button class="btn o sm" id="upClose">← View site</button><button class="btn p sm" id="upOut">Logout</button></div></div>
+  <div id="upBody"></div>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js" crossorigin="anonymous"></script>
+<script src="app.js"></script>
+</body>

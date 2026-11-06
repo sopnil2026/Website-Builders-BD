@@ -1,10 +1,15 @@
 /* Website Builders BD – static site + client-side login/admin (see README for limits) */
 (function(){
 'use strict';
-const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+/* Every page of the site has its own HTML file. Page-content containers that a page does not have are replaced
+   by a detached element, so the shared code can fill them without errors. */
+const OPTIONAL=/^#(h-1|h-2|h-3|h-p|a-tag|a-p1|a-p2|trustGrid|stats|heroList|svGrid|pkGrid|pkSel|flt|pfGrid|galleryGrid|reviewGrid|blogGrid|trainingGrid|programGrid|steps|faqList|polList|cinfo|orderForm|ftServices|locationMap|exploreGrid)$/;
+const $=(s,r=document)=>r.querySelector(s)||(OPTIONAL.test(s)?document.createElement('div'):null), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const PAGE=document.body.dataset.page||'home';
+const PAGEURL={home:'index.html',about:'index.html#about',reviews:'index.html#reviews',services:'services.html',pricing:'pricing.html',portfolio:'portfolio.html',gallery:'gallery.html',blog:'blog.html',training:'training.html',program:'program.html',process:'process.html',faq:'faq.html',policy:'faq.html#policy',contact:'contact.html',location:'contact.html#location'};
+const pg=u=>{const m=/^#([a-z]+)$/.exec(String(u||''));return m&&PAGEURL[m[1]]?PAGEURL[m[1]]:u};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const ADMIN_EMAIL='sopnilprodhan13@gmail.com';
-const ADMIN_HASH='e31f6542b54cd689b02cf9055fbeb4a12fa5ffe3909fafc24588e21a7b116728'; // SHA-256 of the admin password (not stored in plain text)
 const K={g:'wbbd_managers',p:'wbbd_pay',c:'wbbd_content',u:'wbbd_users',o:'wbbd_orders',m:'wbbd_messages',l:'wbbd_login_events',a:'wbbd_admin_hash_v2',s:'wbbd_session'};
 const ls={get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch{}}};
 
@@ -52,9 +57,9 @@ const DEFAULT={
   {t:'JavaScript Essentials',level:'Beginner to Intermediate',format:'Hands-on practice',d:'Learn core JavaScript ideas and use them to make a website interactive.',url:''},
   {t:'Build and Publish a Website',level:'Project-based',format:'Guided project',d:'Practice taking a project from local files to a live website.',url:''}],
  program:[
-  {t:'Website Launch Program',d:'Plan, build and publish a professional website for your idea or business.',details:'A guided path from requirements to launch.',cta:'Start a Project',url:'#contact'},
-  {t:'Web Skills Starter Program',d:'A clear starting path for people learning HTML, CSS and JavaScript.',details:'Practice with small, real projects.',cta:'Ask About Training',url:'#contact'},
-  {t:'Business Growth Program',d:'Improve your online presentation with a website, portfolio and useful content.',details:'Focus on a reliable, mobile-friendly digital presence.',cta:'Get a Quote',url:'#contact'}],
+  {t:'Website Launch Program',d:'Plan, build and publish a professional website for your idea or business.',details:'A guided path from requirements to launch.',cta:'Start a Project',url:'contact.html'},
+  {t:'Web Skills Starter Program',d:'A clear starting path for people learning HTML, CSS and JavaScript.',details:'Practice with small, real projects.',cta:'Ask About Training',url:'contact.html'},
+  {t:'Business Growth Program',d:'Improve your online presentation with a website, portfolio and useful content.',details:'Focus on a reliable, mobile-friendly digital presence.',cta:'Get a Quote',url:'contact.html'}],
  faq:[
   {q:'How long does a website take?',a:'Most websites take 7–21 days depending on the package and how quickly you send content.'},
   {q:'How does payment work?',a:'You pay 50% in advance by bKash or Webmoney before work starts, and the rest on delivery after you approve the result.'},
@@ -126,10 +131,11 @@ function render(){
  $('#a-p1').textContent=C.about.p1;$('#a-p2').innerHTML=C.about.p2;
  $('#trustGrid').innerHTML=(C.trust||DEFAULT.trust).map(t=>`<div class="trust-metric"><b>${esc(t.n)}</b><span>${esc(t.l)}</span></div>`).join('');
  $('#stats').innerHTML=C.stats.map(s=>`<div><b>${esc(s.n)}</b><small>${esc(s.l)}</small></div>`).join('');
- $('#heroList').innerHTML=C.services.slice(0,5).map(s=>`<a class="li" href="#services"><i>${esc(s.i)}</i>${esc(s.t)}</a>`).join('')+`<a class="li" href="#services" style="color:var(--o2)"><i>＋</i>View all ${C.services.length} services</a>`;
+ $('#heroList').innerHTML=C.services.slice(0,5).map(s=>`<a class="li" href="services.html"><i>${esc(s.i)}</i>${esc(s.t)}</a>`).join('')+`<a class="li" href="services.html" style="color:var(--o2)"><i>＋</i>View all ${C.services.length} services</a>`;
  $('#svGrid').innerHTML=C.services.map((s,i)=>`<div class="sv rv d${i%3}"><i>${esc(s.i)}</i><h3>${esc(s.t)}</h3><p>${esc(s.d)}</p></div>`).join('');
- $('#pkGrid').innerHTML=C.packages.map((p,i)=>`<div class="pk rv d${i}${p.hot?' hot':''}">${p.hot?'<span class="pop">MOST POPULAR</span>':''}<h3>${esc(p.n)}</h3><div class="price">${esc(p.price)}</div><small style="color:var(--mut)">One-time · 50% advance</small><ul>${p.feat.map(f=>`<li>${esc(f)}</li>`).join('')}</ul><button class="btn p" style="margin-bottom:10px" data-pay-pkg="${i}">💳 Pay ${(C.payCfg&&C.payCfg.percent)||50}% Advance</button><a class="btn o" href="#contact" data-pick="${esc(p.n)}">Choose ${esc(p.n)}</a></div>`).join('');
+ $('#pkGrid').innerHTML=C.packages.map((p,i)=>`<div class="pk rv d${i}${p.hot?' hot':''}">${p.hot?'<span class="pop">MOST POPULAR</span>':''}<h3>${esc(p.n)}</h3><div class="price">${esc(p.price)}</div><small style="color:var(--mut)">One-time · 50% advance</small><ul>${p.feat.map(f=>`<li>${esc(f)}</li>`).join('')}</ul><button class="btn p" style="margin-bottom:10px" data-pay-pkg="${i}">💳 Pay ${(C.payCfg&&C.payCfg.percent)||50}% Advance</button><a class="btn o" href="contact.html?pkg=${encodeURIComponent(p.n)}#orderForm">Choose ${esc(p.n)}</a></div>`).join('');
  $('#pkSel').innerHTML=C.packages.map(p=>`<option>${esc(p.n)} – ${esc(p.price)}</option>`).join('')+'<option>Custom / Not sure</option>';
+ {const w=new URLSearchParams(location.search).get('pkg');if(w){const o=[...$('#pkSel').options].find(o=>o.text.startsWith(w));if(o)$('#pkSel').value=o.value}}
  const cats=['All',...new Set(C.portfolio.map(p=>p.c))];
  $('#flt').innerHTML=cats.map((c,i)=>`<button class="${i?'':'on'}" data-cat="${esc(c)}">${esc(c)}</button>`).join('');
  drawPf('All');drawGallery();drawReviews();drawBlog();drawTraining();drawProgram();
@@ -157,7 +163,7 @@ function render(){
   $$('[data-location-text]').forEach(el=>el.textContent=mapQuery);
   $$('a[href^="tel:"],[data-call]').forEach(el=>el.remove());
  $$('[data-t]').forEach(s=>s.textContent=ct[s.dataset.t]||'');
- $('#ftServices').innerHTML=C.services.slice(0,6).map(s=>`<a href="#services">${esc(s.t)}</a>`).join('');
+ $('#ftServices').innerHTML=C.services.slice(0,6).map(s=>`<a href="services.html">${esc(s.t)}</a>`).join('');
  const pays=(C.payments||[]).map(payBadge).join('');$$('[data-pay]').forEach(el=>el.innerHTML=pays);
  $('#yr').textContent=new Date().getFullYear();
  observe();authUI();
@@ -214,21 +220,21 @@ function drawReviews(){
 function drawBlog(){
  $('#blogGrid').innerHTML=(C.blog||[]).map(it=>{
   const hasLink=!!it.url&&/^https?:\/\//i.test(it.url);
-  const href=hasLink?esc(it.url):'#contact';
+  const href=hasLink?esc(pg(it.url)):'contact.html';
   return '<article class="content-card rv"><div class="content-body"><span class="content-meta">'+esc(it.category||'Blog')+' · '+esc(it.date||'Latest')+'</span><h3>'+esc(it.t)+'</h3><p>'+esc(it.d)+'</p><a class="btn o sm" href="'+href+'" '+(hasLink?'target="_blank" rel="noopener"':'')+'>'+(hasLink?'Read article':'Discuss this topic')+' →</a></div></article>';
  }).join('');
 }
 function drawTraining(){
  $('#trainingGrid').innerHTML=(C.training||[]).map(it=>{
   const hasLink=!!it.url&&/^https?:\/\//i.test(it.url);
-  const href=hasLink?esc(it.url):'#contact';
+  const href=hasLink?esc(pg(it.url)):'contact.html';
   return '<article class="content-card rv"><div class="content-body"><span class="content-meta">'+esc(it.level||'Training')+' · '+esc(it.format||'Course')+'</span><h3>'+esc(it.t)+'</h3><p>'+esc(it.d)+'</p><a class="btn o sm" href="'+href+'" '+(hasLink?'target="_blank" rel="noopener"':'')+'>'+(hasLink?'Open training':'Ask about training')+' →</a></div></article>';
  }).join('');
 }
 function drawProgram(){
  $('#programGrid').innerHTML=(C.program||[]).map(it=>{
-  const raw=String(it.url||'#contact');
-  const href=/^(https?:\/\/|#[A-Za-z][\w-]*)/i.test(raw)?esc(raw):'#contact';
+  const raw=pg(String(it.url||'contact.html'));
+  const href=/^(https?:\/\/|#[A-Za-z][\w-]*|[\w-]+\.html)/i.test(raw)?esc(raw):'contact.html';
   return '<article class="content-card rv"><div class="content-body"><span class="content-meta">Website Builders BD</span><h3>'+esc(it.t)+'</h3><p>'+esc(it.d)+'</p><p>'+esc(it.details||'')+'</p><a class="btn p sm" href="'+href+'">'+esc(it.cta||'Learn more')+' →</a></div></article>';
  }).join('');
 }
@@ -240,9 +246,9 @@ function observe(){
 /* ---------- page interactions ---------- */
 const hd=$('#hd'),prog=$('#prog'),topb=$('#top');
 function onScroll(){const y=scrollY,h=document.documentElement.scrollHeight-innerHeight;hd.classList.toggle('sc',y>30);prog.style.width=(h>0?y/h*100:0)+'%';topb.classList.toggle('sh',y>500);
- let cur='home';$$('main section[id]').forEach(s=>{if(s.getBoundingClientRect().top<160)cur=s.id});
- $$('#pill a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+cur))}
+ }
 addEventListener('scroll',onScroll,{passive:true});onScroll();
+$$('#pill a').forEach(a=>a.classList.toggle('on',a.dataset.p===PAGE));
 topb.onclick=()=>scrollTo({top:0});
 $('#burger').onclick=()=>{const opened=$('#pill').classList.toggle('op');$('#burger').setAttribute('aria-expanded',String(opened));};
 $('#pill').onclick=e=>{if(e.target.closest('a')){$('#pill').classList.remove('op');$('#burger').setAttribute('aria-expanded','false');}};
@@ -251,7 +257,6 @@ document.addEventListener('click',e=>{
  const fq=e.target.closest('.fq button');if(fq)fq.parentElement.classList.toggle('op');
  const f=e.target.closest('[data-cat]');if(f){$$('#flt button').forEach(b=>b.classList.remove('on'));f.classList.add('on');drawPf(f.dataset.cat)}
  const pp=e.target.closest('[data-pay-pkg]');if(pp)openPay(+pp.dataset.payPkg);
- const pk=e.target.closest('[data-pick]');if(pk){const o=[...$('#pkSel').options].find(o=>o.text.startsWith(pk.dataset.pick));if(o)$('#pkSel').value=o.value}
 });
 
 /* order form */
@@ -304,26 +309,11 @@ $('#authForm').addEventListener('submit',async e=>{
  const answer=$('#captchaAnswer').value;
  if(answer===''||Number(answer)!==captchaExpected){err.textContent='Human verification failed. Please solve the new question.';newCaptcha();return}
  newCaptcha();
- if(SB_READY){await sbAuthSubmit(em,pw,err);return}
- const h=await sha(pw);
- if(mode==='signup'){
-  const nm=$('#aName').value.trim();if(!nm){err.textContent='Please enter your name.';return}
-  if(em===ADMIN_EMAIL||ls.get(K.g,[]).some(x=>x.email===em)){err.textContent='This email is reserved.';return}
-  const us=ls.get(K.u,[]);if(us.some(u=>u.email===em)){err.textContent='Account already exists. Please login.';return}
-  us.push({name:nm,email:em,hash:h,at:new Date().toISOString(),lastLogin:'',loginCount:0});ls.set(K.u,us);
-  recordActivity('Account created',{name:nm,email:em,role:'user'});
-  setMode('login');$('#aEmail').value=em;$('#aPass').value='';toast('Account created. Please sign in to continue.');return}
- const ah=ls.get(K.a,ADMIN_HASH);
- if(em===ADMIN_EMAIL){
-  if(h===ah){const now=new Date().toISOString();recordActivity('Admin sign in',{email:em,name:'Admin',role:'admin'});sessionStorage.setItem(K.s,JSON.stringify({email:em,name:'Admin',role:'admin',loginAt:now}));mo.classList.remove('sh');authUI();openAdmin();return}
-  err.textContent='Wrong email or password.';return}
- const mgr=ls.get(K.g,[]).find(x=>x.email===em&&x.hash===h);
- if(mgr){const now=new Date().toISOString();recordActivity('Manager sign in',{email:em,name:mgr.name,role:'manager'});sessionStorage.setItem(K.s,JSON.stringify({email:em,name:mgr.name,role:'manager',loginAt:now}));mo.classList.remove('sh');authUI();openAdmin();return}
- const users=ls.get(K.u,[]),u=users.find(u=>u.email===em&&u.hash===h);
- if(!u){err.textContent='Wrong email or password. No account? Use Sign up.';return}
- const now=new Date().toISOString();u.lastLogin=now;u.loginCount=Number(u.loginCount||0)+1;ls.set(K.u,users);
- recordActivity('Sign in',{name:u.name,email:em,role:'user'});
- sessionStorage.setItem(K.s,JSON.stringify({email:em,name:u.name,role:'user',loginAt:now}));mo.classList.remove('sh');authUI();toast('Welcome back, '+u.name+'!');if(pendingPay!==null){const pi=pendingPay;pendingPay=null;openPay(pi)}else{openUser();showRejectAlert()}
+ const btn=$('#authSubmit');btn.disabled=true;
+ try{await BACKEND;
+  if(!SB_READY){err.textContent='Cannot reach the server right now. Check your internet connection and try again.';return}
+  await sbAuthSubmit(em,pw,err)}
+ finally{btn.disabled=false}
 });
 
 /* ---------- admin ---------- */
@@ -349,33 +339,35 @@ function drawAdmin(){
   'FAQ & Policies':faqEd,Users:(SB_READY?sbUsersV:usersV),Orders:ordersV,Messages:messagesV,'Login Activity':activityV,Settings:settingsV};
  if(!roleTabs().includes(tab))tab=roleTabs()[0];
  const pre=SB_READY?({Dashboard:()=>Promise.all([syncPayments(),syncMessages()]),Payments:syncPayments,Orders:syncMessages,Messages:syncMessages})[tab]:null;
- if(pre){const t0=tab;m.innerHTML=`<h2>${tab}</h2><p class="note">Loading…</p>`;pre().catch(()=>{}).then(()=>{if(tab!==t0)return;m.innerHTML=`<h2>${tab}</h2>`;F[tab](m)});return}
- m.innerHTML=`<h2>${tab}</h2>`;F[tab](m);
+ const run=()=>{try{const r=F[tab](m);if(r&&r.catch)r.catch(x=>fail(x))}catch(x){fail(x)}};
+ const fail=x=>{console.error(x);m.insertAdjacentHTML('beforeend','<div class="pn"><h3>Something went wrong</h3><p class="note">This tab could not be shown ('+esc(x&&x.message||'unknown error')+'). Reload the page and try again.</p></div>')};
+ if(pre){const t0=tab;m.innerHTML=`<h2>${tab}</h2><p class="note">Loading…</p>`;pre().catch(()=>{}).then(()=>{if(tab!==t0)return;m.innerHTML=`<h2>${tab}</h2>`;run()});return}
+ m.innerHTML=`<h2>${tab}</h2>`;run();
 }
 const inp=(k,l,v,tag='input')=>`<label>${l}<${tag} data-k="${k}">${tag==='textarea'?esc(v):''}</${tag==='textarea'?'textarea':'input'}></label>`.replace('<input data-k',`<input value="${esc(v)}" data-k`);
 function panel(m,title,html){const d=document.createElement('div');d.className='pn';d.innerHTML=(title?`<h3>${title}</h3>`:'')+html;m.appendChild(d);return d}
 function commit(msg='Saved ✓'){save();render();if($('#userpanel').classList.contains('sh'))drawUser();toast(msg)}
 function dash(m){
- const users=ls.get(K.u,[]),orders=ls.get(K.o,[]),messages=ls.get(K.m,[]),events=ls.get(K.l,[]);
- const signins=events.filter(x=>x.action==='Sign in'||x.action==='Admin sign in').length;
+ const pays=ls.get(K.p,[]),messages=ls.get(K.m,[]),orders=ls.get(K.o,[]),events=ls.get(K.l,[]);
+ const pend=pays.filter(x=>x.status==='pending').length,ver=pays.filter(x=>x.status==='verified').length;
+ const live=SB_READY?'Live database':'This browser';
  const cards=[
-  ['Registered users',users.length,'This browser'],
-  ['Order requests',orders.length,'This browser'],
-  ['Messages / enquiries',messages.length,'This browser'],
-  ['Successful sign-ins',signins,'This browser'],
+  ['Pending payments',pend,live],
+  ['Verified payments',ver,live],
+  ['Order requests',orders.length,live],
+  ['Messages / enquiries',messages.length,live],
   ['Services',C.services.length,'Website content'],
   ['Portfolio items',C.portfolio.length,'Website content']
  ];
  m.insertAdjacentHTML('beforeend','<div class="sc4">'+cards.map(x=>'<div class="admin-stat"><b>'+x[1]+'</b><span>'+esc(x[0])+'</span><small>'+esc(x[2])+'</small></div>').join('')+'</div>');
- const quick=panel(m,'Quick access','<div class="admin-shortcuts"><button class="btn o sm" data-admin-shortcut="Users">Manage users</button><button class="btn o sm" data-admin-shortcut="Orders">View orders</button><button class="btn o sm" data-admin-shortcut="Messages">View messages</button><button class="btn o sm" data-admin-shortcut="Login Activity">Login activity</button><button class="btn o sm" data-admin-shortcut="Reviews">Customer reviews</button><button class="btn o sm" data-admin-shortcut="Settings">Export / backup</button></div>');
- $$('[data-admin-shortcut]',quick).forEach(b=>b.onclick=()=>{tab=b.dataset.adminShortcut;drawAdmin()});
- const recent=events.slice(0,8);
- const recentRows=recent.map(x=>'<tr><td>'+esc((x.at||'').replace('T',' ').slice(0,16))+'</td><td>'+esc(x.action||'Activity')+'</td><td>'+esc(x.name||'—')+'</td><td>'+esc(x.email||'—')+'</td><td>'+esc(x.role||'visitor')+'</td></tr>').join('');
- panel(m,'Recent account activity',recent.length?'<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Date / time</th><th>Activity</th><th>Name</th><th>Email</th><th>Role</th></tr></thead><tbody>'+recentRows+'</tbody></table></div>':'<p class="note">No account activity has been recorded in this browser yet.</p>');
+ panel(m,'Quick access','<div class="admin-shortcuts"><button class="btn o sm" data-admin-shortcut="Payments">Review payments</button><button class="btn o sm" data-admin-shortcut="Orders">View orders</button><button class="btn o sm" data-admin-shortcut="Messages">View messages</button><button class="btn o sm" data-admin-shortcut="Users">Manage users</button><button class="btn o sm" data-admin-shortcut="Packages">Edit packages</button><button class="btn o sm" data-admin-shortcut="Reviews">Edit reviews</button></div>');
+ $$('[data-admin-shortcut]',m).forEach(b=>b.onclick=()=>{tab=b.dataset.adminShortcut;drawAdmin()});
  const newest=messages.slice(0,5);
  const messageRows=newest.map(x=>'<tr><td>'+esc((x.at||'').slice(0,10))+'</td><td>'+esc(x.name||'—')+'<br><small>'+esc(x.email||x.phone||'')+'</small></td><td>'+esc(x.subject||x.type||'Website enquiry')+'</td><td>'+esc(x.status||'New')+'</td></tr>').join('');
- panel(m,'Recent messages and enquiries',newest.length?'<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Date</th><th>Sender</th><th>Subject</th><th>Status</th></tr></thead><tbody>'+messageRows+'</tbody></table></div>':'<p class="note">No messages have been saved from this browser yet.</p>');
- panel(m,'Data visibility','<p class="note"><b>Important:</b> this site is still static. The lists here include only records saved in this browser. They cannot show logins, contact messages or orders from other visitors or devices. To collect everyone’s activity, this website must be connected to a shared database with server-side authentication. Email drafts are not delivered until the sender presses Send.</p>');
+ panel(m,'Recent messages and enquiries',newest.length?'<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Date</th><th>Sender</th><th>Subject</th><th>Status</th></tr></thead><tbody>'+messageRows+'</tbody></table></div>':'<p class="note">No messages yet.</p>');
+ const recent=events.slice(0,8);
+ if(recent.length&&!SB_READY){const recentRows=recent.map(x=>'<tr><td>'+esc((x.at||'').replace('T',' ').slice(0,16))+'</td><td>'+esc(x.action||'Activity')+'</td><td>'+esc(x.name||'—')+'</td><td>'+esc(x.email||'—')+'</td><td>'+esc(x.role||'visitor')+'</td></tr>').join('');panel(m,'Recent account activity','<div class="admin-table-wrap"><table class="admin-table"><thead><tr><th>Date / time</th><th>Activity</th><th>Name</th><th>Email</th><th>Role</th></tr></thead><tbody>'+recentRows+'</tbody></table></div>')}
+ panel(m,'Database',SB_READY?'<p class="note"><span class="st-verified">connected</span> — payments, messages, accounts and website content are shared across all devices. Account sign-ins are managed in Supabase → Authentication → Users.</p>':'<p class="note"><span class="st-pending">not connected</span> — the database could not be reached from this browser.</p>');
 }
 function trustEd(m){
  const T=C.trust||DEFAULT.trust;
@@ -467,8 +459,8 @@ function activityV(m){
  $('#clearActivity',p).onclick=()=>{if(!events.length)return;if(confirm('Clear all activity records saved in this browser?')){ls.set(K.l,[]);drawAdmin()}};
 }
 function settingsV(m){backendPanel(m);
- const p=panel(m,SB_READY?'Change your password':'Change admin password',`<label>New password (min 8 chars)<input type="password" id="np" autocomplete="new-password"></label><button class="btn p sm" style="margin-top:12px" id="cp">Update password</button><p class="note" style="margin-top:8px">Stored as a hash in this browser only.</p>`);
- $('#cp',p).onclick=async()=>{const v=$('#np',p).value;if(v.length<8)return toast('Use at least 8 characters');if(SB_READY){const {error}=await SB.auth.updateUser({password:v});$('#np',p).value='';return toast(error?'Could not update: '+error.message:'Password updated')}ls.set(K.a,await sha(v));$('#np',p).value='';toast('Password updated')};
+ const p=panel(m,SB_READY?'Change your password':'Change admin password',`<label>New password (min 8 chars)<input type="password" id="np" autocomplete="new-password"></label><button class="btn p sm" style="margin-top:12px" id="cp">Update password</button><p class="note" style="margin-top:8px">Your password is stored securely by the login service (Supabase), never in this website's code.</p>`);
+ $('#cp',p).onclick=async()=>{const v=$('#np',p).value;if(v.length<8)return toast('Use at least 8 characters');if(SB_READY){const {error}=await SB.auth.updateUser({password:v});$('#np',p).value='';return toast(error?'Could not update: '+error.message:'Password updated')}toast('Server not connected')};
  const b=panel(m,'Backup & restore',`<button class="btn o sm" id="ex">⬇ Export content (JSON)</button> <label class="btn o sm" style="display:inline-flex">⬆ Import<input type="file" accept=".json" id="im" hidden></label> <button class="dl" id="rs" style="margin-left:8px">Reset to defaults</button>`);
  $('#ex',b).onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(C,null,2)],{type:'application/json'}));a.download='wbbd-content.json';a.click()};
  $('#im',b).onchange=e=>{const r=new FileReader();r.onload=()=>{try{C=Object.assign({},DEFAULT,JSON.parse(r.result));commit('Imported');drawAdmin()}catch{toast('Invalid file')}};r.readAsText(e.target.files[0])};
@@ -521,7 +513,7 @@ async function showRejectAlert(){
  el.innerHTML='<div class="md rejbox" role="alertdialog" aria-modal="true"><div class="rejico">✕</div><h3>Payment Rejected</h3>'+rej.map(x=>'<div class="rejitem"><b>'+esc(x.pkg)+' · '+money(x.amount)+'</b><br>TrxID: '+esc(x.trx)+(x.reason?'<br>Reason: <b>'+esc(x.reason)+'</b>':'')+'</div>').join('')+'<p class="note" style="margin:12px 0">The details you submitted could not be verified. Please pay again with the correct information, or contact us.</p><div style="display:grid;gap:10px"><button class="btn p" id="rejAgain" style="justify-content:center">Submit payment again</button><a class="btn m" href="'+esc(ct.messenger)+'" target="_blank" rel="noopener" style="justify-content:center">💬 Contact us</a><button class="btn o" id="rejOk" style="justify-content:center">I understand</button></div></div>';
  el.classList.add('sh');
  const done=()=>{if(SB_READY)SB.rpc('mark_rejections_seen').then(()=>{},()=>{});const A=ls.get(K.p,[]);A.forEach(x=>{if((x.account||x.email)===s.email&&x.status==='rejected')x.seen=true});ls.set(K.p,A);el.classList.remove('sh');if(upEl.classList.contains('sh'))drawUser()};
- $('#rejOk',el).onclick=done;$('#rejAgain',el).onclick=()=>{done();closeUser();const i=Math.max(0,C.packages.findIndex(p=>p.n===rej[0].pkg));$('#pricing').scrollIntoView();openPay(i)};
+ $('#rejOk',el).onclick=done;$('#rejAgain',el).onclick=()=>{done();closeUser();const i=Math.max(0,C.packages.findIndex(p=>p.n===rej[0].pkg));openPay(i)};
 }
 function drawUser(){
  const s=session();if(!s)return;const ct=C.contact,b=$('#upBody');
@@ -529,7 +521,7 @@ function drawUser(){
  const isAdmin=s.role==='admin';
  b.innerHTML=`<div class="hello"><h2>Hello, ${esc(s.name)} 👋</h2><p>${esc(s.email)}${isAdmin?' · <b>Admin preview of the user panel</b>':''}</p></div>
  ${isAdmin?'':myPayHTML(s)}
- <div class="qa"><a href="#contact" data-closeup>✉ Send a message</a><a href="${esc(ct.messenger)}" target="_blank" rel="noopener"><img class="brand-icon-inline" src="assets/messenger-logo.webp" alt=""> Chat on Messenger</a><a href="#pricing" data-closeup>📦 View packages</a></div>
+ <div class="qa"><a href="contact.html" data-closeup>✉ Send a message</a><a href="${esc(ct.messenger)}" target="_blank" rel="noopener"><img class="brand-icon-inline" src="assets/messenger-logo.webp" alt=""> Chat on Messenger</a><a href="pricing.html" data-closeup>📦 View packages</a></div>
  <div class="pn" style="margin-top:20px"><h3>How to pay</h3><p class="note">Pay 50% in advance to start and the rest on delivery. bKash: <b>${esc(ct.bkash)}</b> (Send Money). Webmoney: ${esc(ct.webmoney)}. After paying, send the transaction ID to us on Messenger.</p><div class="paybadges" style="margin-top:12px">${(C.payments||[]).map(payBadge).join('')}</div></div>
  <div class="pn"><h3>My requests</h3>${orders.length?`<table><tr><th>Date</th><th>Package</th><th>Message</th></tr>${orders.map(o=>`<tr><td>${esc(o.at.slice(0,10))}</td><td>${esc(o.pkg)}</td><td>${esc(o.msg)}</td></tr>`).join('')}</table>`:'<p class="note">No requests from this browser yet. Use “Send a message” to start your project.</p>'}</div>
  ${isAdmin?'':`<div class="pn"><h3>My profile</h3><label>Name<input id="upName" value="${esc(s.name)}"></label><label style="margin-top:10px">New password (optional, min 6)<input id="upPw" type="password" autocomplete="new-password"></label><button class="btn p sm" id="upSave" style="margin-top:12px">Save profile</button></div>`}`;
@@ -641,7 +633,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.se
 /* ---------- Supabase backend (shared database + real logins) ---------- */
 const SUPA_URL='https://khwcsytjkmzqacyhthmq.supabase.co';
 const SUPA_KEY='sb_publishable_YCx1YzRzbX6YrIPeWQKkdg_Pd4aVulu'; // public "publishable" key — safe in the browser; access is limited by database row-level security
-let SB=null,SB_READY=false,_pushT=null;
+let SB=null,SB_READY=false,_pushT=null,BACKEND=Promise.resolve();
 const isAdminNow=()=>{const s=session();return !!s&&s.role==='admin'};
 const isStaffNow=()=>{const s=session();return !!s&&(s.role==='admin'||s.role==='manager')};
 function doLogout(){sessionStorage.removeItem(K.s);if(SB_READY)SB.auth.signOut().catch(()=>{})}
@@ -670,6 +662,7 @@ async function sbAuthSubmit(em,pw,err){
   if(error){err.textContent=niceAuthErr(error);return}
   const prof=await sbLoadProfile(data.user);
   if(!prof){await SB.auth.signOut();err.textContent='Your account is not fully set up yet. Please contact us.';return}
+  if(em===ADMIN_EMAIL&&prof.role!=='admin'){await SB.auth.signOut();err.textContent='This account is not set as Admin in the database yet. Run the one-line admin SQL (see README), then login again.';return}
   setSession(prof);mo.classList.remove('sh');authUI();
   recordActivity(prof.role==='admin'?'Admin sign in':prof.role==='manager'?'Manager sign in':'Sign in',{name:prof.name,email:prof.email,role:prof.role});
   if(prof.role==='admin'||prof.role==='manager'){pendingPay=null;openAdmin();return}
@@ -755,5 +748,5 @@ async function initBackend(){
  }catch(e){SB=null;SB_READY=false}}
 
 render();
-initBackend();
+BACKEND=initBackend();
 })();
