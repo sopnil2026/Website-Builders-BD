@@ -6,6 +6,7 @@
 const OPTIONAL=/^#(h-1|h-2|h-3|h-p|a-tag|a-p1|a-p2|trustGrid|stats|heroList|svGrid|pkGrid|pkSel|flt|pfGrid|galleryGrid|reviewGrid|blogGrid|trainingGrid|programGrid|steps|faqList|polList|cinfo|orderForm|ftServices|locationMap|exploreGrid)$/;
 const $=(s,r=document)=>r.querySelector(s)||(OPTIONAL.test(s)?document.createElement('div'):null), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const PAGE=document.body.dataset.page||'home';
+const AUTHPAGE=PAGE==='login'||PAGE==='signup';
 const PAGEURL={home:'index.html',about:'index.html#about',reviews:'index.html#reviews',services:'services.html',pricing:'pricing.html',portfolio:'portfolio.html',gallery:'gallery.html',blog:'blog.html',training:'training.html',program:'program.html',process:'process.html',faq:'faq.html',policy:'faq.html#policy',contact:'contact.html',location:'contact.html#location'};
 const pg=u=>{const m=/^#([a-z]+)$/.exec(String(u||''));return m&&PAGEURL[m[1]]?PAGEURL[m[1]]:u};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -295,14 +296,15 @@ $('#captchaRefresh').addEventListener('click',newCaptcha);
 newCaptcha();
 function setMode(m){mode=m;$$('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===m));
  $('#nmL').style.display=m==='signup'?'grid':'none';$('#authTitle').textContent=m==='signup'?'Create account':'Welcome back';
- $('#authSubmit').textContent=m==='signup'?'Sign up':'Login';$('#aPass').autocomplete=m==='signup'?'new-password':'current-password';$('#authErr').textContent='';newCaptcha()}
+ $('#authSubmit').textContent=m==='signup'?'Sign up':'Login';if(AUTHPAGE){try{history.replaceState(null,'',m+'.html')}catch{}document.title=(m==='signup'?'Sign up':'Login')+' – Website Builders BD'}$('#aPass').autocomplete=m==='signup'?'new-password':'current-password';$('#authErr').textContent='';newCaptcha()}
 $$('[data-tab]').forEach(b=>b.onclick=()=>setMode(b.dataset.tab));
 let pendingPay=null;
-$('[data-close]').onclick=()=>{mo.classList.remove('sh');pendingPay=null};
-mo.onclick=e=>{if(e.target===mo){mo.classList.remove('sh');pendingPay=null}};
+$('[data-close]').onclick=()=>{if(AUTHPAGE){location.href='index.html';return}mo.classList.remove('sh');pendingPay=null};
+mo.onclick=e=>{if(!AUTHPAGE&&e.target===mo){mo.classList.remove('sh');pendingPay=null}};
+if(AUTHPAGE){const mn=$('main');if(mn)mn.appendChild(mo);mo.classList.add('sh','inline');setMode(PAGE)}
 function authUI(){const s=session();const b=$('#authBtn');
  if(s){b.textContent=s.role==='admin'?'⚙ Admin Panel':s.role==='manager'?'🧑‍💼 Manager Panel':'👤 My Panel';b.onclick=()=>(s.role==='admin'||s.role==='manager')?openAdmin():openUser()}
- else{b.textContent='Login / Sign up';b.onclick=()=>{setMode('login');mo.classList.add('sh')}}}
+ else{b.textContent='Login / Sign up';b.onclick=()=>{if(AUTHPAGE){setMode('login');mo.classList.add('sh')}else location.href='login.html'}}}
 function logoutMenu(){if(confirm('Logout?')){doLogout();authUI();toast('Logged out')}}
 $('#authForm').addEventListener('submit',async e=>{
  e.preventDefault();const em=$('#aEmail').value.trim().toLowerCase(),pw=$('#aPass').value,err=$('#authErr');err.textContent='';
@@ -322,7 +324,7 @@ let tab='Dashboard';
 const MGR_TABS=['Payments','Orders','Messages'];
 const roleTabs=()=>{const s=session();return s&&s.role==='manager'?MGR_TABS:ADM};
 function openAdmin(){const s=session();if(!s||(s.role!=='admin'&&s.role!=='manager'))return;const mg=s.role==='manager';$('#admin aside h4').lastChild.textContent=mg?'Manager Panel':'Admin Panel';$('#adUser').style.display=mg?'none':'';if(!roleTabs().includes(tab))tab=roleTabs()[0];$('#admin').classList.add('sh');document.body.style.overflow='hidden';drawAdmin()}
-function closeAdmin(){$('#admin').classList.remove('sh');document.body.style.overflow=''}
+function closeAdmin(){$('#admin').classList.remove('sh');document.body.style.overflow='';if(AUTHPAGE&&!mo.classList.contains('sh')&&!upEl.classList.contains('sh'))location.href='index.html'}
 $('#adExit').onclick=closeAdmin;
 $('#adUser').onclick=()=>{closeAdmin();openUser()};
 $('#adOut').onclick=()=>{doLogout();closeAdmin();authUI();toast('Logged out')};
@@ -494,7 +496,7 @@ function payEd(m){
 /* ---------- user panel ---------- */
 const upEl=$('#userpanel');
 function openUser(){const s=session();if(!s||s.role==='manager')return;if(SB_READY)syncPayments().then(()=>{if(upEl.classList.contains('sh'))drawUser()});upEl.classList.add('sh');document.body.style.overflow='hidden';$('#upAdmin').style.display=s.role==='admin'?'':'none';drawUser()}
-function closeUser(){upEl.classList.remove('sh');document.body.style.overflow=''}
+function closeUser(){upEl.classList.remove('sh');document.body.style.overflow='';if(AUTHPAGE&&!mo.classList.contains('sh')&&!$('#admin').classList.contains('sh'))location.href='index.html'}
 $('#upClose').onclick=closeUser;
 $('#upOut').onclick=()=>{doLogout();closeUser();authUI();toast('Logged out')};
 $('#upAdmin').onclick=()=>{closeUser();openAdmin()};
@@ -615,7 +617,7 @@ function paymentsV(m){
  $('#pcSave',cfg).onclick=()=>{C.payCfg.percent=Math.min(100,Math.max(1,+$('#pcPct',cfg).value||50));C.payCfg.bkashMode=$('#pcMode',cfg).value;C.payCfg.note=$('#pcNote',cfg).value;commit()};
 }
 
-addEventListener('keydown',e=>{if(e.key==='Escape'){mo.classList.remove('sh');const _p=$('#payMo');if(_p)_p.classList.remove('sh');$('#pill').classList.remove('op');$('#burger').setAttribute('aria-expanded','false');}});
+addEventListener('keydown',e=>{if(e.key==='Escape'){if(!AUTHPAGE)mo.classList.remove('sh');const _p=$('#payMo');if(_p)_p.classList.remove('sh');$('#pill').classList.remove('op');$('#burger').setAttribute('aria-expanded','false');}});
 window.addEventListener('storage',e=>{
  if(e.key===K.c&&e.newValue){
   try{

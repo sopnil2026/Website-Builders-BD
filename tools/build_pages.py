@@ -57,6 +57,8 @@ PAGES = [
  ('program', 'program.html', 'Our Program', 'Our Programs – ' + BRAND, 'Structured programs to turn an idea into a useful digital project.', ['program']),
  ('process', 'process.html', 'Process', 'How It Works – ' + BRAND, 'Our clear 5-step process from idea to launch.', ['process']),
  ('faq', 'faq.html', 'FAQ & Policies', 'FAQ & Policies – ' + BRAND, 'Answers to common questions, plus our refund, privacy and terms.', ['faq', 'policy']),
+ ('login', 'login.html', 'Login', 'Login – '+BRAND, 'Login to your Website Builders BD account.', []),
+ ('signup', 'signup.html', 'Sign up', 'Create Account – '+BRAND, 'Create your Website Builders BD account.', []),
  ('contact', 'contact.html', 'Contact', 'Contact Us – ' + BRAND, 'Send a message, chat on Messenger, Telegram or WhatsApp, and find us in Bogura.', ['contact', 'location']),
 ]
 PRICENOTE = '<div class="wrap"><p class="pk-note">Questions about payment or refunds? Read our <a href="faq.html#policy">refund policy</a> or <a href="contact.html">send us a message</a>.</p></div>'
