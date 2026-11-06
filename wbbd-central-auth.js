@@ -61,7 +61,7 @@
     if (!emailOk(email)) throw new Error('Enter a valid email address.');
     const { data, error } = await temp().auth.signUp({ email, password, options: { data: { name } } });
     if (error) throw new Error(friendly(error));
-    if (data.session) await temp().auth.signOut();
+    if (data.session) await temp().auth.signOut({ scope: 'local' });
     message(data.session ? 'Account created. Now log in with your email and password.' : 'Account created. Confirm your email if requested, then log in.', true);
     setTimeout(() => location.assign('login.html'), 700);
   }
@@ -73,8 +73,8 @@
     const s = data.session;
     if (!data.user || !s?.access_token || !s?.refresh_token) throw new Error('Could not create a temporary login session.');
     const { data: p, error: pe } = await temp().from('profiles').select('id,email,name,role').eq('id', data.user.id).maybeSingle();
-    if (pe || !p) { await temp().auth.signOut(); throw new Error('Your account profile is not ready. Contact the website administrator.'); }
-    if (email.toLowerCase() === ADMIN && p.role !== 'admin') { await temp().auth.signOut(); throw new Error('This email is not marked as Admin in the website database.'); }
+    if (pe || !p) { await temp().auth.signOut({ scope: 'local' }); throw new Error('Your account profile is not ready. Contact the website administrator.'); }
+    if (email.toLowerCase() === ADMIN && p.role !== 'admin') { await temp().auth.signOut({ scope: 'local' }); throw new Error('This email is not marked as Admin in the website database.'); }
     const sent = await api('/api/v1/public/otp/send', { email, userId: data.user.id }, s.access_token);
     pending = { email, userId: data.user.id, profile: p, accessToken: s.access_token, refreshToken: s.refresh_token, challengeId: sent.challengeId };
     showOtp(email, Number(sent.expiresIn) || 300, Number(sent.resendAfter) || 60);
@@ -85,6 +85,7 @@
   }
   function stopClocks() { clearInterval(resendClock); clearInterval(expiryClock); resendClock = expiryClock = null; }
   function showOtp(email, expires, resend) {
+    attempts = 0;
     const form = $('#authForm'), modal = form?.closest('.md');
     if (!form || !modal) throw new Error('Login form or dialog was not found.');
     form.style.display = 'none';
@@ -95,7 +96,7 @@
       card = document.createElement('section'); card.id = 'wbbdOtpChallenge'; card.className = 'wbbd-otp-screen';
       card.innerHTML =
         '<div class="wbbd-otp-progress"><span class="done">✓ <b>Password</b></span><i></i><span class="current">2 <b>Email code</b></span></div>' +
-        '<div class="wbbd-otp-emblem" aria-hidden="true">✓</div>' +
+        '<img class="wbbd-otp-logo" src="assets/logo.png" alt="Website Builders BD">' +
         '<div class="wbbd-otp-heading"><span>ACCOUNT SECURITY</span><h3>Verify it’s you</h3><p>We sent a one-time sign-in code to your email address.</p><strong id="wbbdOtpEmail"></strong></div>' +
         '<form id="wbbdOtpForm"><label for="wbbdOtpCode">6-digit verification code</label><input id="wbbdOtpCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" minlength="6" pattern="[0-9]{6}" required placeholder="• • • • • •"><div class="wbbd-otp-meta"><span id="wbbdOtpExpiry">Code expires in 05:00</span><span>🔒 One-time code</span></div><p id="wbbdOtpStatus" role="status" aria-live="polite"></p><button class="btn p" id="wbbdOtpVerify" type="submit">Verify &amp; continue →</button></form>' +
         '<div class="wbbd-otp-resend"><span>Didn’t receive the email?</span><button type="button" id="wbbdOtpResend" disabled>Resend code in 60s</button></div>' +
@@ -158,7 +159,7 @@
         throw new Error('Central Server has not activated MFA for this Supabase session. Contact the administrator.');
       }
       window.WBBD_MFA_VERIFIED = true;
-      await temp().auth.signOut().catch(() => {});
+      await temp().auth.signOut({ scope: 'local' }).catch(() => {});
       localStorage.setItem(MARKER_KEY, JSON.stringify({ uid, expiresAt: Date.now() + 12 * 60 * 60 * 1000 }));
       sessionStorage.removeItem(BOOT_KEY);
       sessionStorage.setItem(SESSION_KEY, JSON.stringify({ email: p.email, name: p.name || p.email, role: p.role, uid: p.id, loginAt: new Date().toISOString() }));
@@ -175,7 +176,7 @@
     stopClocks();
     if (pending) { pending.accessToken = ''; pending.refreshToken = ''; }
     pending = null; attempts = 0;
-    if (preAuth) await preAuth.auth.signOut().catch(() => {});
+    if (preAuth) await preAuth.auth.signOut({ scope: 'local' }).catch(() => {});
     const card = $('#wbbdOtpChallenge'); if (card) card.remove();
     const f = $('#authForm'); if (f) f.style.display = '';
     f?.closest('.md')?.classList.remove('wbbd-otp-active');
@@ -212,100 +213,5 @@
       if (!sessionStorage.getItem(BOOT_KEY)) { sessionStorage.setItem(BOOT_KEY, '1'); location.reload(); }
     } catch (e) { console.warn('[WBBD MFA] Session check failed:', e?.message || e); }
   }
-  function b64Bytes(s) {
-    const pad = '='.repeat((4 - s.length % 4) % 4);
-    return Uint8Array.from([...atob((s + pad).replace(/-/g, '+').replace(/_/g, '/'))].map(c => c.charCodeAt(0)));
-  }
-  async function enablePush(button) {
-    if (!ready) throw new Error('Central Server URL is not configured.');
-    if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) throw new Error('This browser does not support Web Push.');
-    const ss = json(sessionStorage.getItem(SESSION_KEY)); if (!ss?.uid) throw new Error('Please log in first.');
-    if (await Notification.requestPermission() !== 'granted') throw new Error('Notification permission was not granted.');
-    const reg = await navigator.serviceWorker.register('./sw.js', { scope: './' });
-    const kr = await fetch(apiBase + '/api/v1/push/public-key', { cache: 'no-store' }), key = await kr.json().catch(() => ({}));
-    if (!kr.ok || !key.publicKey) throw new Error('Could not load the VAPID public key.');
-    let sub = await reg.pushManager.getSubscription();
-    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64Bytes(key.publicKey) });
-    const { data } = await auth().auth.getSession(), token = data?.session?.access_token;
-    if (!token) throw new Error('Login expired. Please sign in again.');
-    await api('/api/v1/public/push/subscribe', { userId: ss.uid, subscription: sub.toJSON() }, token);
-    button.textContent = '🔔 Notifications enabled';
-  }
-  function ensurePushComposer() {
-    if ($('#wbbdPushBackdrop')) return;
-    const modal = document.createElement('div');
-    modal.id = 'wbbdPushBackdrop'; modal.className = 'wbbd-push-backdrop'; modal.setAttribute('aria-hidden','true');
-    modal.innerHTML =
-      '<section class="wbbd-push-dialog" role="dialog" aria-modal="true" aria-labelledby="wbbdPushHeading">' +
-      '<button type="button" class="wbbd-push-close" id="wbbdPushClose" aria-label="Close">×</button>' +
-      '<span class="wbbd-push-kicker">ADMIN BROADCAST</span><h3 id="wbbdPushHeading">Send a browser notification</h3>' +
-      '<p>Deliver a short update to users who enabled Website Builders BD notifications.</p>' +
-      '<form id="wbbdPushForm"><label>Title<input id="wbbdPushTitle" maxlength="90" required placeholder="e.g. New website service available"></label>' +
-      '<label>Message<textarea id="wbbdPushBody" maxlength="240" rows="4" required placeholder="Write your notification message"></textarea></label>' +
-      '<label>Open this page when clicked<input id="wbbdPushUrl" maxlength="300" value="./" placeholder="/pricing.html"></label>' +
-      '<p id="wbbdPushStatus" role="status" aria-live="polite"></p>' +
-      '<button id="wbbdPushSend" class="btn p" type="submit">Send notification</button></form></section>';
-    document.body.appendChild(modal);
-    $('#wbbdPushForm',modal).addEventListener('submit', sendAdminPush);
-    $('#wbbdPushClose',modal).addEventListener('click', closePushComposer);
-    modal.addEventListener('click', e => { if (e.target === modal) closePushComposer(); });
-  }
-  function closePushComposer() {
-    const modal = $('#wbbdPushBackdrop');
-    if (modal) { modal.classList.remove('is-open'); modal.setAttribute('aria-hidden','true'); }
-  }
-  function safePushUrl(value) {
-    const raw = String(value || './').trim() || './';
-    const url = new URL(raw, location.origin);
-    if (url.origin !== location.origin || raw.startsWith('//')) throw new Error('Notification links must point to this website.');
-    return url.pathname + url.search + url.hash;
-  }
-  async function sendAdminPush(event) {
-    event.preventDefault();
-    const title = String($('#wbbdPushTitle')?.value || '').trim();
-    const body = String($('#wbbdPushBody')?.value || '').trim();
-    const status = $('#wbbdPushStatus'), button = $('#wbbdPushSend');
-    if (!title || !body) { if (status) status.textContent = 'Enter both a title and message.'; return; }
-    if (!ready) { if (status) status.textContent = 'Central Server URL is not configured yet.'; return; }
-    button.disabled = true; button.textContent = 'Sending…';
-    if (status) status.textContent = '';
-    try {
-      const { data } = await auth().auth.getSession();
-      const token = data?.session?.access_token;
-      if (!token) throw new Error('Your admin login session has expired. Please log in again.');
-      const { data: profile, error } = await auth().from('profiles').select('role').eq('id', data.session.user.id).maybeSingle();
-      if (error || profile?.role !== 'admin') throw new Error('Only an authenticated Admin can send notifications.');
-      const result = await api('/api/v1/admin/push/send', { title, body, url: safePushUrl($('#wbbdPushUrl')?.value) }, token);
-      if (status) status.textContent = 'Notification request accepted. Sent to ' + Number(result.sentCount || 0) + ' subscribed browser(s).';
-      $('#wbbdPushForm').reset();
-      $('#wbbdPushUrl').value = './';
-    } catch (e) {
-      if (status) status.textContent = friendly(e);
-    } finally { button.disabled = false; button.textContent = 'Send notification'; }
-  }
-  function injectControls() {
-    const up = $('#userpanel');
-    if (up?.classList.contains('sh')) {
-      const area = $('.uphead > div', up);
-      if (area && !$('#wbbdEnablePush')) {
-        const b = document.createElement('button'); b.id = 'wbbdEnablePush'; b.className = 'btn o sm'; b.type = 'button'; b.textContent = '🔔 Enable notifications';
-        b.addEventListener('click', async () => { b.disabled = true; try { await enablePush(b); } catch (e) { b.disabled = false; b.textContent = '🔔 Enable notifications'; alert(e.message); } });
-        area.insertBefore(b, area.firstChild);
-      }
-    }
-    const side = $('#admin .ad aside');
-    if (side && !$('#wbbdOpenPushComposer')) {
-      ensurePushComposer();
-      const b = document.createElement('button'); b.id = 'wbbdOpenPushComposer'; b.className = 'btn o sm';
-      b.type = 'button'; b.textContent = '🔔 Send notification';
-      b.style.cssText = 'display:block;width:100%;text-align:center;margin:10px 0';
-      b.addEventListener('click', () => {
-        const modal = $('#wbbdPushBackdrop');
-        if (modal) { modal.classList.add('is-open'); modal.setAttribute('aria-hidden','false'); $('#wbbdPushTitle')?.focus(); }
-      });
-      const exit = $('#adExit', side); if (exit) exit.insertAdjacentElement('beforebegin', b); else side.appendChild(b);
-    }
-  }
-  new MutationObserver(injectControls).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
-  injectControls(); window.addEventListener('load', enforceSession, { once: true });
+  window.addEventListener('load', enforceSession, { once: true });
 })();

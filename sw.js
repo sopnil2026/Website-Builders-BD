@@ -17,36 +17,3 @@ self.addEventListener('fetch',event=>{
   return response;
  }).catch(()=>caches.match(event.request).then(c=>c||caches.match('./index.html'))));
 });
-
-/* Sopnil Central Web Push */
-self.addEventListener('push', event => {
-  let p = {};
-  try { p = event.data ? event.data.json() : {}; }
-  catch { p = { body: event.data ? event.data.text() : '' }; }
-  const title = String(p.title || 'Website Builders BD').slice(0, 90);
-  const options = {
-    body: String(p.body || 'You have a new notification.').slice(0, 240),
-    icon: './assets/icon-192.png',
-    badge: './assets/icon-192.png',
-    tag: String(p.tag || 'wbbd-central-notification'),
-    data: { url: p.url || './' },
-    renotify: false
-  };
-  event.waitUntil(self.registration.showNotification(title, options));
-});
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
-  const target = new URL(event.notification.data?.url || './', self.location.origin);
-  if (target.origin !== self.location.origin) return;
-  event.waitUntil((async () => {
-    const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    for (const client of open) {
-      if (client.url.startsWith(self.location.origin) && 'focus' in client) {
-        await client.focus();
-        if ('navigate' in client) await client.navigate(target.href);
-        return;
-      }
-    }
-    if (self.clients.openWindow) await self.clients.openWindow(target.href);
-  })());
-});
