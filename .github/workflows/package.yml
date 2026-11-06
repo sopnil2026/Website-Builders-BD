@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -16,10 +19,16 @@ jobs:
       - name: Check out the website source
         uses: actions/checkout@v4
 
+      - name: Check JavaScript syntax
+        run: |
+          node --check app.js
+          node --check wbbd-central-config.js
+          node --check wbbd-central-auth.js
+          node --check sw.js
       - name: Prepare upload-ready website files
         run: |
           mkdir -p site-package/assets
-          cp index.html style.css app.js sw.js manifest.webmanifest README.md site-package/
+          cp *.html style.css app.js sw.js wbbd-central-auth.js wbbd-central-auth.css wbbd-central-config.js manifest.webmanifest README.md README-CENTRAL-OTP-BN.md site-package/
           cp -R assets/. site-package/assets/
           touch site-package/.nojekyll
           cd site-package

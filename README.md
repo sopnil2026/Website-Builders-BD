@@ -46,3 +46,24 @@ They are generated from `tools/partials` and `tools/sections` with `python3 tool
 update public.profiles set role = 'admin' where email = 'sopnilprodhan13@gmail.com';
 ```
 There is no admin password in the website code. The password is the one chosen at sign-up and is managed by Supabase (Authentication → Users to reset it).
+
+
+## Central OTP Authentication & Browser Push
+
+The existing Supabase email/password authentication and Admin/User/Manager dashboards are extended with mandatory email OTP. The original pages and design are retained.
+
+- Sign-up creates the Supabase account, then returns the user to the Login page.
+- Login checks the password first, then requests a fresh six-digit email OTP through Sopnil Central. The server must expire codes after 300 seconds, enforce one-time use, resend cooldowns and attempt limits.
+- No dashboard session is created until OTP verification and the database-side MFA check both succeed.
+- User Panel includes a browser notification opt-in. Admin Panel links to the Central Push Admin interface.
+- The Central Server base URL is intentionally a placeholder in wbbd-central-config.js. Login remains fail-closed until a real HTTPS server is configured.
+
+### Required setup
+
+1. Deploy the Central Node.js API and implement the routes, JWT verification, OTP ticket redemption, SMTP and VAPID behavior described in README-CENTRAL-OTP-BN.md.
+2. Set apiBase in wbbd-central-config.js to that server's HTTPS origin. No private API secret or VAPID private key belongs in frontend files.
+3. Run supabase/central-otp-mfa.sql in the Supabase SQL Editor. The Central Server must write auth_mfa_sessions only after successful OTP ticket redemption using its server-only service_role.
+4. Add the exact GitHub Pages/custom domain origin to the Central Server CORS allow-list.
+5. Test signup, login, new OTP on every login, invalid/expired/reused code, resend, each role dashboard, logout and push notifications.
+
+Important: The GitHub repository and supplied ZIP do not contain the Central Node.js Server source or a deployed Central API URL. This repository contains the frontend integration, Supabase MFA migration and complete server API contract, but email delivery and real push sending cannot be tested or enabled until the Central Server is deployed and configured. No fake/demo login is provided.
