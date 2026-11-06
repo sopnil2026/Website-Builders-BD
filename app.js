@@ -27,9 +27,9 @@ const DEFAULT={
   {i:'🌐',t:'Domain & Hosting Help',d:'We help you pick, buy and connect your domain and hosting.'},
   {i:'🖼️',t:'Logo & Branding',d:'Simple, memorable branding that matches your website.'}],
  packages:[
-  {n:'Basic',price:'৳ 5,000',feat:['1–3 page website','Mobile responsive','Contact form','Messenger button','7 days delivery'],hot:false},
-  {n:'Standard',price:'৳ 12,000',feat:['Up to 8 pages','Custom animations','SEO basics','Admin-editable content','2 free revisions','14 days delivery'],hot:true},
-  {n:'Premium',price:'৳ 25,000',feat:['E-commerce or web app','Login & admin panel','Payment integration','Advanced SEO & speed','Priority support','21 days delivery'],hot:false}],
+  {n:'Basic',price:'৳ 1,000',feat:['1–3 page website','Mobile responsive','Contact form','Messenger button','7 days delivery'],hot:false},
+  {n:'Standard',price:'৳ 3,000',feat:['Up to 8 pages','Custom animations','SEO basics','Admin-editable content','2 free revisions','14 days delivery'],hot:true},
+  {n:'Premium',price:'৳ 5,000',feat:['E-commerce or web app','Login & admin panel','Payment integration','Advanced SEO & speed','Priority support','21 days delivery'],hot:false}],
  portfolio:[
   {t:'My Portfolio Website',c:'Portfolio',d:'Our own animated portfolio website — a live, real project.',url:'https://sopnil2026.github.io/sopnilPortfolio',demo:false,color:'#f97316,#ea580c'},
   {t:'Spice Garden Restaurant',c:'Business',d:'Menu, gallery and table-booking style layout.',url:'',demo:true,color:'#b45309,#78350f'},
