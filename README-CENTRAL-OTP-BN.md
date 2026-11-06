@@ -1,59 +1,57 @@
-# Website Builders BD — Central OTP ও Browser Push Deployment
+# Website Builders BD — Central OTP Deployment
 
-বর্তমান Supabase Auth, Admin/Manager/User role routing, HTML page এবং visual design অপরিবর্তিত রেখে email OTP flow যোগ করা হয়েছে।
+বর্তমান Website Builders BD-এর UI/UX, pages এবং মূল Admin/User Dashboard অপরিবর্তিত রেখে password login-এর পর email OTP যোগ করা হয়েছে। OTP-এর জন্য আলাদা Admin Panel বা push-notification composer নেই।
 
-## Browser flow
+## Login flow
 
-1. Signup Supabase Auth-এ account তৈরি করে এবং Login page-এ ফেরে।
-2. Login-এর password Supabase Auth যাচাই করে। প্রথম session non-persistent।
-3. Browser authenticated Supabase access token সহ Central Server-এ OTP send request পাঠায়।
-4. Central Server Gmail-এ fresh 6-digit code পাঠায়। Server-side expiry 300 seconds, one-time use, resend cooldown এবং rate/attempt limit বাধ্যতামূলক।
-5. Verify এবং ticket redeem সফল হলে browser temporary Supabase session persistent করে।
-6. Browser is_mfa_verified() RPC দিয়ে server-side MFA row পরীক্ষা করে। তা true না হলে login বন্ধ থাকবে।
-7. Role আগের Supabase profiles row থেকেই পড়া হয়; existing Admin/Manager/User panel খোলে।
-8. User Panel থেকে push subscription করা যায়; Admin Panel-এর ভেতর authenticated notification composer দিয়ে admin subscribers-দের notification পাঠাতে পারেন।
+1. Signup আগের Supabase Auth-এ account তৈরি করে।
+2. Login-এর password Supabase Auth যাচাই করে; temporary session persist হয় না।
+3. Central Server bearer token যাচাই করে account email-এ নতুন ৬ সংখ্যার OTP পাঠায়।
+4. ইমেইলের subject: Website Builders BD — Login Verification Code। ইমেইলে Website Builders BD-এর আসল logo ব্যবহার করা হয়।
+5. OTP ৫ মিনিটে expire হয়; resend cooldown ৬০ সেকেন্ড; প্রতি code-এ সর্বোচ্চ ৫টি ভুল চেষ্টা।
+6. সঠিক OTP verify হলে one-time ticket redeem হয় এবং একই Supabase session-এর MFA verified record তৈরি হয়।
+7. আগের role routing অনুযায়ী মূল User/Admin Dashboard খোলে।
+
+## API routes
+
+- POST /api/v1/public/otp/send
+- POST /api/v1/public/otp/verify
+- POST /api/v1/public/otp/ticket/redeem
+- GET /healthz
 
 ## Files
 
-- wbbd-central-config.js — public API URL placeholder এবং public Supabase config।
-- wbbd-central-auth.js — signup/login flow, OTP interface, authenticated API, session enforcement, push subscription।
-- wbbd-central-auth.css — mobile/desktop OTP styling।
-- sw.js — existing network-first cache behavior plus push display/click handlers।
-- supabase/central-otp-mfa.sql — server-side MFA session table and RLS gates।
-- README-CENTRAL-OTP-BN.md — deployment guide.
+- wbbd-central-config.js — public API URL setting; live URL deploy-এর পর বসবে।
+- wbbd-central-auth.js — password, OTP UI, ticket redeem এবং session gate।
+- wbbd-central-auth.css — responsive OTP interface।
+- central-server/ — Node.js API, Gmail template, tests এবং Dockerfile।
+- supabase/central-otp-mfa.sql — MFA, OTP challenge ও one-time ticket schema/functions।
 
-## Mandatory Supabase migration
+## Security
 
-Supabase Dashboard → SQL Editor-এ supabase/central-otp-mfa.sql একবার চালান। Migration auth_mfa_sessions table ও is_mfa_verified() function তৈরি করে। RPC JWT-এর Supabase session_id claim-কে server-created record-এর সঙ্গে মেলায়। Browser-এর localStorage marker security authority নয়।
+Server Supabase getUser(token) দিয়ে bearer token যাচাই করে। User ID, email এবং session ID authenticated identity থেকে আসে। OTP/ticket hash ছাড়া database-এ raw OTP/ticket থাকে না। Constant-time hash compare, database row lock-এ attempt count ও atomic single-use, 60-second cooldown, per-user send limit, IP rate limit এবং exact-origin CORS রয়েছে।
 
-নিজের profile read OTP-এর আগে allow করা আছে, যাতে login role read করতে পারে। Payment data, staff messages, staff profile access, profile edits, payment review, message management এবং admin site-content writes MFA-তে gated। Public content read ও anonymous contact form insert আগের মতোই থাকে।
+Supabase service-role key ও Gmail app password শুধু backend environment-এ থাকবে। Frontend বা GitHub-এ যাবে না। OTP verify না হলে database RLS protected data access আটকে দেয়।
 
-Central Server-এর ticket redeem route OTP success-এর পর bearer JWT signature/issuer/audience/expiry যাচাই করে ওই একই JWT-এর sub এবং session_id claim দিয়ে auth_mfa_sessions row insert করবে। Supabase service_role key কেবল Central Server-এর environment variable-এ থাকবে; browser-কে table write permission দেওয়া হয়নি। expires_at সর্বোচ্চ 12 ঘণ্টা। Logout বা server-side revoke-এ row delete করতে হবে।
+## Database migration
 
-## Central Server REST contract
+Updated single migration: supabase/central-otp-mfa.sql। এটি Supabase SQL Editor-এ একবার run করতে হবে। Existing policies এবং project schema দেখে apply করার আগে migration review করবেন।
 
-সব authenticated route-এ Authorization: Bearer <Supabase access token> যাচাই করতে হবে। শুধু browser থেকে পাঠানো email, userId, projectSlug অথবা CORS বিশ্বাস করবেন না।
+## Backend deployment values
 
-| Route | Server requirement |
-|---|---|
-| POST /api/v1/public/otp/send | Supabase JWT verify; email-confirmed user, sub ও session binding; random fresh 6-digit OTP পাঠানো; challengeId, expiresIn=300, resendAfter return |
-| POST /api/v1/public/otp/verify | JWT/challenge/user binding; 5-minute expiry; max attempts; atomic one-time consume; short-lived single-use ticket return |
-| POST /api/v1/public/otp/ticket/redeem | Ticket one-time redeem; same user/session binding; service_role দিয়ে MFA row write; verified/email/userId return |
-| GET /api/v1/push/public-key | VAPID public key return |
-| POST /api/v1/public/push/subscribe | JWT verify; subscription-এর owner JWT user id থেকে derive করে store |
-| POST /api/v1/admin/push/send | Bearer JWT verify; Supabase profiles-এ role=admin server-side lookup; active subscriptions-এ notification send; sentCount return |
+central-server/.env.example-এ environment variable names আছে। Hosting server-এ এগুলো প্রয়োজন:
 
-Admin broadcast route-এ browser-এর role value বিশ্বাস করবেন না: server JWT verify করে database থেকে profiles.role=admin নিশ্চিত করবে, তারপর শুধু active push subscriptions-এ notification পাঠাবে। title/body length সীমা এবং same-origin URL validation server-side-ও enforce করুন। OTP plain text database-এ store করবেন না; hash/HMAC, constant-time compare, atomic consume, resend invalidation, IP/email/user rate limits এবং explicit exact-origin CORS allow-list implement করুন। SMTP credentials, VAPID private key, service_role এবং API private keys only server environment variables.
+- SUPABASE_URL
+- SUPABASE_SERVICE_ROLE_KEY
+- GMAIL_USER
+- GMAIL_APP_PASSWORD
+- ALLOWED_ORIGINS
+- EMAIL_LOGO_URL
 
-## Deploy checklist
+Gmail SMTP sender account-এর owner-authorized app password প্রয়োজন। Supabase service-role secret Supabase project থেকে owner-authorizedভাবে নিতে হবে। এগুলো ChatGPT chat বা GitHub repository-তে দেবেন না।
 
-1. Central Node.js server deploy করুন; HTTPS origin সংগ্রহ করুন।
-2. wbbd-central-config.js-এর apiBase-এ actual HTTPS origin বসান। Placeholder থাকলে OTP login fail-closed থাকবে।
-3. Server-এ routes, Gmail SMTP, VAPID keypair, JWT verification, database MFA row write এবং admin-only push sender deploy করুন।
-4. CORS allow-list-এ website origin যোগ করুন (GitHub Pages: https://sopnil2026.github.io; custom domain থাকলে সেটিও)।
-5. Supabase migration চালান।
-6. Signup, email confirmation, নতুন OTP every login, wrong/expired/reused code, resend, user/admin/manager dashboards, logout/re-login, browser push ও admin send test করুন।
+Backend deploy হওয়ার পর পাওয়া HTTPS origin root-এর wbbd-central-config.js-এর apiBase-এ বসাতে হবে। তারপর SQL migration, Gmail test email, wrong/expired/reused code test এবং existing User/Admin dashboard e2e test চালাতে হবে।
 
-## Not yet live
+## Live status
 
-Repository/ZIP-এ Central Node.js Server source বা deployed API URL নেই। তাই frontend, migration, API contract ও GitHub workflow প্রস্তুত করা যায়; Gmail delivery, OTP validation endpoint, trusted ticket redemption, VAPID delivery এবং end-to-end production tests Central Server না থাকায় সম্পন্ন হয়েছে বলা যাবে না। কোনো mock/demo OTP বা fake login fallback নেই.
+Backend source, SQL, branded email template, API routes এবং automated security tests repository-তে আছে। Hosting service, Gmail sender authorization এবং Supabase service-role secret এই repository-এর অংশ নয়। তাই API এখনো live নয় এবং Gmail OTP production-এ চালু হয়েছে বলা যাবে না। এগুলো owner-authorizedভাবে configure ও end-to-end test না হওয়া পর্যন্ত existing branch merge করা উচিত নয়।
