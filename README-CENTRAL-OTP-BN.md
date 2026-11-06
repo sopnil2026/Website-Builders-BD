@@ -11,7 +11,7 @@
 5. Verify এবং ticket redeem সফল হলে browser temporary Supabase session persistent করে।
 6. Browser is_mfa_verified() RPC দিয়ে server-side MFA row পরীক্ষা করে। তা true না হলে login বন্ধ থাকবে।
 7. Role আগের Supabase profiles row থেকেই পড়া হয়; existing Admin/Manager/User panel খোলে।
-8. User Panel থেকে push subscription করা যায়; Admin Panel-এর Central Push Admin link server-এর admin interface খোলে।
+8. User Panel থেকে push subscription করা যায়; Admin Panel-এর ভেতর authenticated notification composer দিয়ে admin subscribers-দের notification পাঠাতে পারেন।
 
 ## Files
 
