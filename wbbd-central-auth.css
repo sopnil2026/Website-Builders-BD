@@ -25,3 +25,19 @@
 .wbbd-otp-back{display:block;margin:0 auto;font-size:12px}
 @media(max-width:540px){.wbbd-otp-active{padding:22px 16px!important;border-radius:20px!important}.wbbd-otp-progress{margin-bottom:19px}.wbbd-otp-heading h3{font-size:22px}#wbbdOtpCode{height:56px;letter-spacing:7px}}
 @media(max-height:620px){.wbbd-otp-active{max-height:calc(100dvh - 18px);overflow-y:auto}.wbbd-otp-progress{margin:0 0 12px}.wbbd-otp-emblem{width:42px;height:42px;margin-bottom:8px}.wbbd-otp-heading{margin-bottom:12px}.wbbd-otp-heading p{margin-bottom:8px}}
+
+/* Admin notification composer */
+.wbbd-push-backdrop{display:none;position:fixed;inset:0;z-index:12000;place-items:center;padding:18px;background:rgba(15,23,42,.62);backdrop-filter:blur(7px)}
+.wbbd-push-backdrop.is-open{display:grid}
+.wbbd-push-dialog{position:relative;width:min(100%,480px);max-height:calc(100dvh - 36px);overflow:auto;padding:28px;border:1px solid #e2e8f0;border-radius:22px;background:#fff;color:#0f172a;box-shadow:0 28px 90px rgba(15,23,42,.3)}
+.wbbd-push-close{position:absolute;right:16px;top:13px;border:0;background:#f1f5f9;border-radius:10px;width:34px;height:34px;font-size:22px;color:#475569;cursor:pointer}
+.wbbd-push-kicker{font-size:10px;letter-spacing:2px;font-weight:900;color:#ea580c}
+.wbbd-push-dialog h3{margin:7px 0;font-size:23px}
+.wbbd-push-dialog>p{margin:0 0 18px;color:#64748b;font-size:13px;line-height:1.55}
+#wbbdPushForm{display:grid;gap:13px}
+#wbbdPushForm label{display:grid;gap:6px;color:#334155;font-size:12px;font-weight:800}
+#wbbdPushForm input,#wbbdPushForm textarea{width:100%;min-width:0;border:1px solid #cbd5e1;border-radius:11px;padding:11px 12px;font:inherit;font-size:14px;color:#0f172a;background:#fff;outline:none}
+#wbbdPushForm input:focus,#wbbdPushForm textarea:focus{border-color:#f97316;box-shadow:0 0 0 3px #f9731620}
+#wbbdPushStatus{min-height:18px;margin:0;font-size:12px;color:#475569}
+#wbbdPushSend{width:100%;justify-content:center;min-height:46px}
+@media(max-width:520px){.wbbd-push-dialog{padding:23px 17px;border-radius:18px}.wbbd-push-dialog h3{font-size:20px}}

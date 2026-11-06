@@ -55,7 +55,7 @@ The existing Supabase email/password authentication and Admin/User/Manager dashb
 - Sign-up creates the Supabase account, then returns the user to the Login page.
 - Login checks the password first, then requests a fresh six-digit email OTP through Sopnil Central. The server must expire codes after 300 seconds, enforce one-time use, resend cooldowns and attempt limits.
 - No dashboard session is created until OTP verification and the database-side MFA check both succeed.
-- User Panel includes a browser notification opt-in. Admin Panel links to the Central Push Admin interface.
+- User Panel includes a browser notification opt-in. Admin Panel includes a browser-notification composer that sends through the authenticated Central API.
 - The Central Server base URL is intentionally a placeholder in wbbd-central-config.js. Login remains fail-closed until a real HTTPS server is configured.
 
 ### Required setup

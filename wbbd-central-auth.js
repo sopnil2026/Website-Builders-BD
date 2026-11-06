@@ -231,6 +231,58 @@
     await api('/api/v1/public/push/subscribe', { userId: ss.uid, subscription: sub.toJSON() }, token);
     button.textContent = '🔔 Notifications enabled';
   }
+  function ensurePushComposer() {
+    if ($('#wbbdPushBackdrop')) return;
+    const modal = document.createElement('div');
+    modal.id = 'wbbdPushBackdrop'; modal.className = 'wbbd-push-backdrop'; modal.setAttribute('aria-hidden','true');
+    modal.innerHTML =
+      '<section class="wbbd-push-dialog" role="dialog" aria-modal="true" aria-labelledby="wbbdPushHeading">' +
+      '<button type="button" class="wbbd-push-close" id="wbbdPushClose" aria-label="Close">×</button>' +
+      '<span class="wbbd-push-kicker">ADMIN BROADCAST</span><h3 id="wbbdPushHeading">Send a browser notification</h3>' +
+      '<p>Deliver a short update to users who enabled Website Builders BD notifications.</p>' +
+      '<form id="wbbdPushForm"><label>Title<input id="wbbdPushTitle" maxlength="90" required placeholder="e.g. New website service available"></label>' +
+      '<label>Message<textarea id="wbbdPushBody" maxlength="240" rows="4" required placeholder="Write your notification message"></textarea></label>' +
+      '<label>Open this page when clicked<input id="wbbdPushUrl" maxlength="300" value="./" placeholder="/pricing.html"></label>' +
+      '<p id="wbbdPushStatus" role="status" aria-live="polite"></p>' +
+      '<button id="wbbdPushSend" class="btn p" type="submit">Send notification</button></form></section>';
+    document.body.appendChild(modal);
+    $('#wbbdPushForm',modal).addEventListener('submit', sendAdminPush);
+    $('#wbbdPushClose',modal).addEventListener('click', closePushComposer);
+    modal.addEventListener('click', e => { if (e.target === modal) closePushComposer(); });
+  }
+  function closePushComposer() {
+    const modal = $('#wbbdPushBackdrop');
+    if (modal) { modal.classList.remove('is-open'); modal.setAttribute('aria-hidden','true'); }
+  }
+  function safePushUrl(value) {
+    const raw = String(value || './').trim() || './';
+    const url = new URL(raw, location.origin);
+    if (url.origin !== location.origin || raw.startsWith('//')) throw new Error('Notification links must point to this website.');
+    return url.pathname + url.search + url.hash;
+  }
+  async function sendAdminPush(event) {
+    event.preventDefault();
+    const title = String($('#wbbdPushTitle')?.value || '').trim();
+    const body = String($('#wbbdPushBody')?.value || '').trim();
+    const status = $('#wbbdPushStatus'), button = $('#wbbdPushSend');
+    if (!title || !body) { if (status) status.textContent = 'Enter both a title and message.'; return; }
+    if (!ready) { if (status) status.textContent = 'Central Server URL is not configured yet.'; return; }
+    button.disabled = true; button.textContent = 'Sending…';
+    if (status) status.textContent = '';
+    try {
+      const { data } = await auth().auth.getSession();
+      const token = data?.session?.access_token;
+      if (!token) throw new Error('Your admin login session has expired. Please log in again.');
+      const { data: profile, error } = await auth().from('profiles').select('role').eq('id', data.session.user.id).maybeSingle();
+      if (error || profile?.role !== 'admin') throw new Error('Only an authenticated Admin can send notifications.');
+      const result = await api('/api/v1/admin/push/send', { title, body, url: safePushUrl($('#wbbdPushUrl')?.value) }, token);
+      if (status) status.textContent = 'Notification request accepted. Sent to ' + Number(result.sentCount || 0) + ' subscribed browser(s).';
+      $('#wbbdPushForm').reset();
+      $('#wbbdPushUrl').value = './';
+    } catch (e) {
+      if (status) status.textContent = friendly(e);
+    } finally { button.disabled = false; button.textContent = 'Send notification'; }
+  }
   function injectControls() {
     const up = $('#userpanel');
     if (up?.classList.contains('sh')) {
@@ -242,12 +294,16 @@
       }
     }
     const side = $('#admin .ad aside');
-    if (side && !$('#wbbdCentralAdminLink')) {
-      const a = document.createElement('a'); a.id = 'wbbdCentralAdminLink'; a.className = 'btn o sm';
-      a.href = ready ? apiBase + '/admin' : '#'; a.target = '_blank'; a.rel = 'noopener'; a.textContent = '🔔 Central push admin';
-      a.style.cssText = 'display:block;text-align:center;margin-top:10px';
-      if (!ready) a.addEventListener('click', e => { e.preventDefault(); alert('Central Server is not deployed/configured yet.'); });
-      const exit = $('#adExit', side); if (exit) exit.insertAdjacentElement('beforebegin', a); else side.appendChild(a);
+    if (side && !$('#wbbdOpenPushComposer')) {
+      ensurePushComposer();
+      const b = document.createElement('button'); b.id = 'wbbdOpenPushComposer'; b.className = 'btn o sm';
+      b.type = 'button'; b.textContent = '🔔 Send notification';
+      b.style.cssText = 'display:block;width:100%;text-align:center;margin:10px 0';
+      b.addEventListener('click', () => {
+        const modal = $('#wbbdPushBackdrop');
+        if (modal) { modal.classList.add('is-open'); modal.setAttribute('aria-hidden','false'); $('#wbbdPushTitle')?.focus(); }
+      });
+      const exit = $('#adExit', side); if (exit) exit.insertAdjacentElement('beforebegin', b); else side.appendChild(b);
     }
   }
   new MutationObserver(injectControls).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });

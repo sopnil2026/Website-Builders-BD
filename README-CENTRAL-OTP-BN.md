@@ -41,9 +41,9 @@ Central Server-এর ticket redeem route OTP success-এর পর bearer JWT s
 | POST /api/v1/public/otp/ticket/redeem | Ticket one-time redeem; same user/session binding; service_role দিয়ে MFA row write; verified/email/userId return |
 | GET /api/v1/push/public-key | VAPID public key return |
 | POST /api/v1/public/push/subscribe | JWT verify; subscription-এর owner JWT user id থেকে derive করে store |
-| /admin | Server-side role=admin verification ছাড়া push send নয় |
+| POST /api/v1/admin/push/send | Bearer JWT verify; Supabase profiles-এ role=admin server-side lookup; active subscriptions-এ notification send; sentCount return |
 
-OTP plain text database-এ store করবেন না; hash/HMAC, constant-time compare, atomic consume, resend invalidation, IP/email/user rate limits এবং explicit exact-origin CORS allow-list implement করুন। SMTP credentials, VAPID private key, service_role এবং API private keys only server environment variables.
+Admin broadcast route-এ browser-এর role value বিশ্বাস করবেন না: server JWT verify করে database থেকে profiles.role=admin নিশ্চিত করবে, তারপর শুধু active push subscriptions-এ notification পাঠাবে। title/body length সীমা এবং same-origin URL validation server-side-ও enforce করুন। OTP plain text database-এ store করবেন না; hash/HMAC, constant-time compare, atomic consume, resend invalidation, IP/email/user rate limits এবং explicit exact-origin CORS allow-list implement করুন। SMTP credentials, VAPID private key, service_role এবং API private keys only server environment variables.
 
 ## Deploy checklist
 
