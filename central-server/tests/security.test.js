@@ -44,6 +44,7 @@ test('branded email uses requested subject and official logo URL', () => {
   assert.match(email.subject, /Website Builders BD/);
   assert.match(email.subject, /Login Verification Code/);
   assert.match(email.html, /https:\/\/websitebuildersbd\.work\.gd\/assets\/logo\.png/);
-  assert.match(email.html, /012345/);
+  const displayedDigits = [...email.html.matchAll(/<span[^>]*>([0-9])<\\/span>/g)].map(match => match[1]).join('');
+  assert.equal(displayedDigits, '012345');
   assert.match(email.text, /012345/);
 });
