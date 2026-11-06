@@ -103,7 +103,7 @@ function sha256fb(m){ // fallback for non-secure contexts
   h=[h[0]+a|0,h[1]+bb|0,h[2]+c|0,h[3]+d|0,h[4]+e|0,h[5]+f|0,h[6]+g|0,h[7]+hh|0]}
  return h.map(x=>(x>>>0).toString(16).padStart(8,'0')).join('');
 }
-const session=()=>{try{return JSON.parse(sessionStorage.getItem(K.s))}catch{return null}};
+const session=()=>{if(window.WBBD_MFA_VERIFIED!==true)return null;try{return JSON.parse(sessionStorage.getItem(K.s))}catch{return null}};
 function addLocalRecord(key,item,limit=500){
  const list=ls.get(key,[]);
  list.unshift(item);
@@ -739,13 +739,24 @@ async function initBackend(){
  if(!window.supabase||!window.supabase.createClient)return;
  try{
   SB=window.supabase.createClient(SUPA_URL,SUPA_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:false}});
+  window.WBBD_SUPABASE_CLIENT=SB; // shared by Central OTP after successful email verification
   const r=await Promise.race([SB.from('site_content').select('data').eq('id',1).maybeSingle(),new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),8000))]);
   if(r.error){SB=null;return}                       // tables not created yet, or offline: stay in local mode
   SB_READY=true;
   if(r.data&&r.data.data&&Object.keys(r.data.data).length){applyContent(r.data.data);render()}
   const {data:{session:ss}}=await SB.auth.getSession();
-  if(ss){const prof=await sbLoadProfile(ss.user);if(prof)setSession(prof);else sessionStorage.removeItem(K.s)}
-  else sessionStorage.removeItem(K.s);              // no real login => no admin/manager/customer UI
+  if(ss){
+   const {data:mfaVerified,error:mfaError}=await SB.rpc('is_mfa_verified');
+   if(!mfaError&&mfaVerified===true){
+    window.WBBD_MFA_VERIFIED=true;
+    const prof=await sbLoadProfile(ss.user);
+    if(prof)setSession(prof);else sessionStorage.removeItem(K.s);
+   }else{
+    window.WBBD_MFA_VERIFIED=false;
+    sessionStorage.removeItem(K.s);
+    await SB.auth.signOut().catch(()=>{});
+   }
+  }else{window.WBBD_MFA_VERIFIED=false;sessionStorage.removeItem(K.s);} // no OTP-verified session => no dashboard UI
   authUI()
  }catch(e){SB=null;SB_READY=false}}
 

@@ -1,0 +1,21 @@
+{
+  "name": "website-builders-bd-central-otp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Private email OTP verification API for Website Builders BD",
+  "engines": { "node": ">=22 <27" },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test",
+    "check": "node --check src/server.js && node --check src/app.js"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.4.1",
+    "@fastify/rate-limit": "^11.2.2",
+    "@supabase/supabase-js": "^2.119.0",
+    "dotenv": "^18.0.9",
+    "fastify": "^5.12.8",
+    "nodemailer": "^10.3.1"
+  }
+}

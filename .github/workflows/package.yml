@@ -1,7 +1,10 @@
-name: Build uploadable Website Builders BD ZIP
+name: Build Website Builders BD and Central OTP backend
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
   workflow_dispatch:
@@ -13,21 +16,42 @@ jobs:
   package:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the website source
+      - name: Check out source
         uses: actions/checkout@v4
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check app.js
+          node --check wbbd-central-config.js
+          node --check wbbd-central-auth.js
+          node --check sw.js
+          find central-server/src central-server/tests -name '*.js' -print0 | xargs -0 -n1 node --check
+
+      - name: Install and test Central OTP backend
+        run: |
+          npm install --prefix central-server --ignore-scripts --no-audit --no-fund
+          npm test --prefix central-server
 
       - name: Prepare upload-ready website files
         run: |
           mkdir -p site-package/assets
-          cp index.html style.css app.js sw.js manifest.webmanifest README.md site-package/
+          cp *.html style.css app.js sw.js wbbd-central-auth.js wbbd-central-auth.css wbbd-central-config.js manifest.webmanifest README.md README-CENTRAL-OTP-BN.md site-package/
           cp -R assets/. site-package/assets/
           touch site-package/.nojekyll
           cd site-package
           zip -qr ../Website-Builders-BD-final.zip .
 
-      - name: Upload final website ZIP
+      - name: Package Central OTP backend source
+        run: |
+          cd central-server
+          zip -qr ../Central-OTP-Backend.zip . -x ".env" ".env.*" "node_modules/*"
+          zip -q ../Central-OTP-Backend.zip .env.example
+
+      - name: Upload website and backend packages
         uses: actions/upload-artifact@v4
         with:
-          name: Website-Builders-BD-final
-          path: Website-Builders-BD-final.zip
+          name: Website-Builders-BD-and-Central-OTP
+          path: |
+            Website-Builders-BD-final.zip
+            Central-OTP-Backend.zip
           retention-days: 30
