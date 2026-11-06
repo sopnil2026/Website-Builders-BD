@@ -10,10 +10,7 @@ function escapeHtml(value) {
 
 export function buildOtpEmail({ code, logoUrl, expiresMinutes = 5 }) {
   const safeLogo = escapeHtml(logoUrl);
-  const digits = code.split('').map(d =>
-    '<span style="display:inline-block;min-width:36px;padding:13px 5px;margin:0 2px;border:1px solid #fed7aa;border-radius:10px;background:#fff7ed;color:#9a3412;font-size:26px;font-weight:800;text-align:center;">' +
-    d + '</span>'
-  ).join('');
+  const digits = '<span style="display:inline-block;padding:14px 20px;border:1px solid #fed7aa;border-radius:12px;background:#fff7ed;color:#9a3412;font-family:Consolas,monospace;font-size:30px;font-weight:800;letter-spacing:9px;text-align:center;">' + code + '</span>';
 
   const html = [
     '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>',
