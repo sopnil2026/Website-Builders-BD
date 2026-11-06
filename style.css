@@ -1709,3 +1709,9 @@ a.sv.ex:hover em{text-decoration:underline}
 .mo.inline .md{box-shadow:0 30px 80px -20px rgba(15,23,42,.25);border:1px solid var(--line);border-radius:26px;max-height:none;padding:36px}
 .mo.inline .x{display:none}
 @media(max-width:640px){.mo.inline{padding:92px 12px 40px}.mo.inline .md{border-radius:22px;padding:26px 18px}}
+
+/* ===== Pop-ups must always scroll when the screen is short (small laptops, phones in landscape) ===== */
+.mo{overflow-y:auto;overscroll-behavior:contain}
+.mo:not(.inline) .md{max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;margin:auto}
+.mo:not(.inline) .md{padding-top:26px;padding-bottom:26px}
+@media(max-height:760px){.mo:not(.inline) .md img[alt=""]{width:96px!important;margin-bottom:4px!important}.mo:not(.inline) .md .captcha-help{display:none}.mo:not(.inline) .md form{gap:10px!important}}
