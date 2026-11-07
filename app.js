@@ -636,7 +636,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.se
 const SUPA_URL='https://khwcsytjkmzqacyhthmq.supabase.co';
 const SUPA_KEY='sb_publishable_YCx1YzRzbX6YrIPeWQKkdg_Pd4aVulu'; // public "publishable" key — safe in the browser; access is limited by database row-level security
 /* Central OTP server. Leave `url` empty to turn the email-code step off. The key is the PUBLIC key (safe in the browser). */
-const OTP={wakeMs:8000,url:'https://sopnil-central-server.onrender.com',key:'pk_WUruBr4wr4Sl-TSkHn9j6DJg'};
+const OTP={wakeMs:8000,url:'' /* OTP server: https://sopnil-central-server.onrender.com – paused until it is confirmed live */,key:'pk_WUruBr4wr4Sl-TSkHn9j6DJg'};
 let SB=null,SB_READY=false,_pushT=null,BACKEND=Promise.resolve();
 const isAdminNow=()=>{const s=session();return !!s&&s.role==='admin'};
 const isStaffNow=()=>{const s=session();return !!s&&(s.role==='admin'||s.role==='manager')};
