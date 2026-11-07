@@ -636,7 +636,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.se
 const SUPA_URL='https://khwcsytjkmzqacyhthmq.supabase.co';
 const SUPA_KEY='sb_publishable_YCx1YzRzbX6YrIPeWQKkdg_Pd4aVulu'; // public "publishable" key — safe in the browser; access is limited by database row-level security
 /* Central OTP server. Leave `url` empty to turn the email-code step off. The key is the PUBLIC key (safe in the browser). */
-const OTP={url:'',key:'pk_WUruBr4wr4Sl-TSkHn9j6DJg'};
+const OTP={url:'https://sopnil-central-server.onrender.com',key:'pk_WUruBr4wr4Sl-TSkHn9j6DJg'};
 let SB=null,SB_READY=false,_pushT=null,BACKEND=Promise.resolve();
 const isAdminNow=()=>{const s=session();return !!s&&s.role==='admin'};
 const isStaffNow=()=>{const s=session();return !!s&&(s.role==='admin'||s.role==='manager')};
@@ -693,7 +693,14 @@ let otpCtx=null;
 async function otpStart(em,pw,name,err){
  let wait=0,info='';
  try{const r=await otpApi('/v1/otp/send',{email:em,purpose:'login',name});wait=r.resendAfter||60}
- catch(x){if(x.code==='cooldown'){wait=x.retry||30;info='A code was sent a moment ago. Enter it below, or resend when the timer ends.'}else{err.textContent=x.message;return}}
+ catch(x){
+  if(x.code==='cooldown'){wait=x.retry||30;info='A code was sent a moment ago. Enter it below, or resend when the timer ends.'}
+  else if(em===ADMIN_EMAIL&&(!x.code||x.code==='email_failed'||x.code==='server_error')){ /* never lock the owner out when the mail service is down */
+   const {data,error}=await SB.auth.signInWithPassword({email:em,password:pw});
+   if(error){err.textContent=niceAuthErr(error);return}
+   const prof=await sbLoadProfile(data.user);if(!prof){await SB.auth.signOut();err.textContent='Your account is not fully set up yet.';return}
+   finishLogin(prof);toast('Email code service is unavailable – signed in with password only.');return}
+  else{err.textContent=x.message;return}}
  otpCtx={em,pw,name};
  ['#authForm','#authTabs','#authSub'].forEach(s=>$(s).style.display='none');
  $('#authTitle').textContent='Check your email';$('#otpTo').textContent=em;$('#otpBox').style.display='block';$('#otpErr').textContent=info;$('#otpCode').value='';
