@@ -42,8 +42,11 @@ export async function sendSmtp(cfg, { from, to, data }) {
   const opts = { host: cfg.host, port: cfg.port, servername: cfg.host, rejectUnauthorized: cfg.rejectUnauthorized };
   const sock = await new Promise((resolve, reject) => {
     const s = cfg.secure ? tls.connect(opts, () => resolve(s)) : net.connect({ host: cfg.host, port: cfg.port }, () => resolve(s));
-    s.once('error', reject);
-    s.setTimeout(cfg.timeoutMs, () => { s.destroy(); reject(new Error('SMTP connect timeout')); });
+    s.once('error', (e) => {
+      const why = e.message || e.code || (e.errors && e.errors.map((x) => x.code || x.message).join('/')) || 'unknown';
+      reject(new Error(`Cannot connect to ${cfg.host}:${cfg.port} (${why}). Some hosts (e.g. Render free) block SMTP ports – set BREVO_API_KEY to send over HTTPS instead.`));
+    });
+    s.setTimeout(cfg.timeoutMs, () => { s.destroy(); reject(new Error(`Connection to ${cfg.host}:${cfg.port} timed out. Some hosts (e.g. Render free) block SMTP ports – set BREVO_API_KEY to send over HTTPS instead.`)); });
   });
   let c = new Conn(sock, cfg.timeoutMs);
   try {
