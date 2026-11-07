@@ -1,0 +1,23 @@
+# One-click deploy on Render (Blueprint). The folder of this server is central-server/.
+services:
+  - type: web
+    name: sopnil-central-server
+    runtime: node
+    rootDir: central-server
+    plan: free
+    buildCommand: echo "no dependencies to install"
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - { key: NODE_VERSION, value: "22" }
+      - { key: NODE_ENV, value: production }
+      - { key: TRUST_PROXY, value: "1" }
+      - { key: SERVER_SECRET, generateValue: true }
+      - { key: ADMIN_TOKEN, generateValue: true }
+      - { key: SMTP_HOST, value: smtp.gmail.com }
+      - { key: SMTP_PORT, value: "465" }
+      - { key: SMTP_USER, sync: false }
+      - { key: SMTP_PASS, sync: false }
+      - { key: MAIL_FROM, sync: false }
+      - { key: VAPID_PUBLIC, sync: false }
+      - { key: VAPID_PRIVATE, sync: false }

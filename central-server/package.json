@@ -1,0 +1,13 @@
+{
+  "name": "sopnil-central-server",
+  "version": "1.0.0",
+  "description": "Reusable central Email OTP, email notification and web-push server for all Sopnil websites. Zero npm dependencies.",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.5" },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "keys": "node --disable-warning=ExperimentalWarning scripts/keys.js",
+    "test": "node --disable-warning=ExperimentalWarning test/run.js"
+  }
+}

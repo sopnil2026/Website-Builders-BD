@@ -294,7 +294,7 @@ let captchaExpected=0;
 function newCaptcha(){const x=2+Math.floor(Math.random()*8),y=1+Math.floor(Math.random()*9);captchaExpected=x+y;const q=$('#captchaQuestion'),a=$('#captchaAnswer');if(q)q.textContent=x+' + '+y+' = ?';if(a)a.value=''}
 $('#captchaRefresh').addEventListener('click',newCaptcha);
 newCaptcha();
-function setMode(m){mode=m;$$('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===m));
+function setMode(m){mode=m;if(typeof otpReset==='function'&&$('#otpBox').style.display==='block')otpReset();$$('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===m));
  $('#nmL').style.display=m==='signup'?'grid':'none';$('#authTitle').textContent=m==='signup'?'Create account':'Welcome back';
  $('#authSubmit').textContent=m==='signup'?'Sign up':'Login';if(AUTHPAGE){try{history.replaceState(null,'',m+'.html')}catch{}document.title=(m==='signup'?'Sign up':'Login')+' – Website Builders BD'}$('#aPass').autocomplete=m==='signup'?'new-password':'current-password';$('#authErr').textContent='';newCaptcha()}
 $$('[data-tab]').forEach(b=>b.onclick=()=>setMode(b.dataset.tab));
@@ -635,6 +635,8 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.se
 /* ---------- Supabase backend (shared database + real logins) ---------- */
 const SUPA_URL='https://khwcsytjkmzqacyhthmq.supabase.co';
 const SUPA_KEY='sb_publishable_YCx1YzRzbX6YrIPeWQKkdg_Pd4aVulu'; // public "publishable" key — safe in the browser; access is limited by database row-level security
+/* Central OTP server. Leave `url` empty to turn the email-code step off. The key is the PUBLIC key (safe in the browser). */
+const OTP={url:'',key:'pk_WUruBr4wr4Sl-TSkHn9j6DJg'};
 let SB=null,SB_READY=false,_pushT=null,BACKEND=Promise.resolve();
 const isAdminNow=()=>{const s=session();return !!s&&s.role==='admin'};
 const isStaffNow=()=>{const s=session();return !!s&&(s.role==='admin'||s.role==='manager')};
@@ -665,12 +667,54 @@ async function sbAuthSubmit(em,pw,err){
   const prof=await sbLoadProfile(data.user);
   if(!prof){await SB.auth.signOut();err.textContent='Your account is not fully set up yet. Please contact us.';return}
   if(em===ADMIN_EMAIL&&prof.role!=='admin'){await SB.auth.signOut();err.textContent='This account is not set as Admin in the database yet. Run the one-line admin SQL (see README), then login again.';return}
-  setSession(prof);mo.classList.remove('sh');authUI();
-  recordActivity(prof.role==='admin'?'Admin sign in':prof.role==='manager'?'Manager sign in':'Sign in',{name:prof.name,email:prof.email,role:prof.role});
-  if(prof.role==='admin'||prof.role==='manager'){pendingPay=null;openAdmin();return}
-  toast('Welcome back, '+prof.name+'!');
-  if(pendingPay!==null){const pi=pendingPay;pendingPay=null;openPay(pi)}else{openUser();showRejectAlert()}
+  if(OTP.url){await SB.auth.signOut();await otpStart(em,pw,prof.name,err);return}
+  finishLogin(prof);
  }catch(x){err.textContent='Network problem. Please check your internet and try again.'}}
+
+function finishLogin(prof){
+ otpReset();setSession(prof);mo.classList.remove('sh');authUI();
+ recordActivity(prof.role==='admin'?'Admin sign in':prof.role==='manager'?'Manager sign in':'Sign in',{name:prof.name,email:prof.email,role:prof.role});
+ if(prof.role==='admin'||prof.role==='manager'){pendingPay=null;openAdmin();return}
+ toast('Welcome back, '+prof.name+'!');
+ if(pendingPay!==null){const pi=pendingPay;pendingPay=null;openPay(pi)}else{openUser();showRejectAlert()}}
+
+/* ---------- email OTP (second login step, handled by the central OTP server) ---------- */
+async function otpApi(path,body){
+ let r;try{r=await fetch(OTP.url.replace(/\/+$/,'')+path,{method:'POST',headers:{'Content-Type':'application/json','X-API-Key':OTP.key},body:JSON.stringify(body)})}
+ catch{throw new Error('Cannot reach the verification service. Check your internet and try again.')}
+ let j={};try{j=await r.json()}catch{}
+ if(!r.ok||j.ok===false){const e=new Error(j.message||'Verification service error. Please try again.');e.code=j.error;e.retry=j.retryAfter;throw e}
+ return j}
+let otpTimer=null;
+function otpCooldown(sec){const b=$('#otpResend');clearInterval(otpTimer);let n=sec;
+ const tick=()=>{b.disabled=n>0;b.textContent=n>0?'Resend code in '+n+'s':'Resend code';if(n--<=0)clearInterval(otpTimer)};tick();otpTimer=setInterval(tick,1000)}
+function otpReset(){otpCtx=null;clearInterval(otpTimer);$('#otpBox').style.display='none';['#authForm','#authTabs','#authSub'].forEach(s=>$(s).style.display='');$('#nmL').style.display=mode==='signup'?'grid':'none';$('#otpCode').value='';$('#otpErr').textContent=''}
+let otpCtx=null;
+async function otpStart(em,pw,name,err){
+ let wait=0,info='';
+ try{const r=await otpApi('/v1/otp/send',{email:em,purpose:'login',name});wait=r.resendAfter||60}
+ catch(x){if(x.code==='cooldown'){wait=x.retry||30;info='A code was sent a moment ago. Enter it below, or resend when the timer ends.'}else{err.textContent=x.message;return}}
+ otpCtx={em,pw,name};
+ ['#authForm','#authTabs','#authSub'].forEach(s=>$(s).style.display='none');
+ $('#authTitle').textContent='Check your email';$('#otpTo').textContent=em;$('#otpBox').style.display='block';$('#otpErr').textContent=info;$('#otpCode').value='';
+ otpCooldown(wait);setTimeout(()=>$('#otpCode').focus(),50)}
+$('#otpForm').addEventListener('submit',async e=>{e.preventDefault();
+ if(!otpCtx)return;const er=$('#otpErr'),b=$('#otpSubmit'),code=$('#otpCode').value.replace(/\D/g,'');er.textContent='';
+ if(code.length!==6){er.textContent='Enter the 6-digit code from your email.';return}
+ b.disabled=true;
+ try{await otpApi('/v1/otp/verify',{email:otpCtx.em,code,purpose:'login'});
+  const {data,error}=await SB.auth.signInWithPassword({email:otpCtx.em,password:otpCtx.pw});
+  if(error){er.textContent=niceAuthErr(error);return}
+  const prof=await sbLoadProfile(data.user);
+  if(!prof){await SB.auth.signOut();er.textContent='Your account is not fully set up yet. Please contact us.';return}
+  finishLogin(prof)}
+ catch(x){er.textContent=x.message;if(x.code==='code_expired'||x.code==='too_many_attempts')$('#otpCode').value=''}
+ finally{b.disabled=false}});
+$('#otpResend').onclick=async()=>{if(!otpCtx)return;const er=$('#otpErr');er.textContent='';
+ try{const r=await otpApi('/v1/otp/send',{email:otpCtx.em,purpose:'login',name:otpCtx.name});otpCooldown(r.resendAfter||60);toast('A new code was sent')}
+ catch(x){er.textContent=x.message;if(x.retry)otpCooldown(Math.min(x.retry,120))}};
+$('#otpBack').onclick=()=>{otpReset();setMode('login')};
+$('#otpCode').addEventListener('input',e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,6);if(e.target.value.length===6)$('#otpForm').requestSubmit()});
 
 /* shared website content */
 function applyContent(remote){C=Object.assign({},DEFAULT,remote);C.contact=Object.assign({},DEFAULT.contact,remote.contact||{});_pc()}

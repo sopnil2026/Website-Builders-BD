@@ -1,0 +1,36 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Central Server – Admin</title>
+<style>
+:root{--o:#f97316;--n:#0f172a;--m:#64748b;--l:#e2e8f0;--bg:#f8fafc}*{box-sizing:border-box}body{margin:0;font:15px/1.5 system-ui,Arial,sans-serif;background:var(--bg);color:var(--n)}
+header{background:var(--n);color:#fff;padding:14px 20px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}header b{font-size:18px}header span{color:#94a3b8;font-size:13px}
+main{max-width:1000px;margin:0 auto;padding:20px 16px 60px}.card{background:#fff;border:1px solid var(--l);border-radius:14px;padding:18px;margin-bottom:16px}h2{margin:0 0 12px;font-size:17px}
+input,select,button{font:inherit;padding:10px 12px;border:1px solid var(--l);border-radius:10px;max-width:100%}button{background:var(--o);color:#fff;border:0;font-weight:700;cursor:pointer}button.g{background:#fff;color:var(--n);border:1px solid var(--l)}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}.row>*{flex:1;min-width:150px}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}.stat{background:var(--bg);border-radius:12px;padding:12px}.stat b{display:block;font-size:24px}.stat span{color:var(--m);font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--l);vertical-align:top}.w{overflow:auto}code{background:#f1f5f9;padding:2px 6px;border-radius:6px;word-break:break-all}.ok{color:#16a34a;font-weight:700}.bad{color:#dc2626;font-weight:700}.note{color:var(--m);font-size:13px}pre{background:var(--n);color:#e2e8f0;padding:12px;border-radius:10px;overflow:auto;white-space:pre-wrap;word-break:break-all}
+</style></head><body>
+<header><b>🔐 Central Server</b><span>OTP · Email · Push · Admin</span></header>
+<main>
+<div class="card" id="login"><h2>Admin login</h2><div class="row"><input id="tok" type="password" placeholder="ADMIN_TOKEN" autocomplete="current-password"><button id="go">Open</button></div><div class="note" id="lerr"></div></div>
+<div id="app" hidden>
+ <div class="card"><h2>Last 24 hours</h2><div class="stats" id="stats"></div><p class="note" id="smtp"></p></div>
+ <div class="card"><h2>Send a test email</h2><div class="row"><select id="tapp"></select><input id="tto" type="email" placeholder="your@gmail.com"><button id="tsend">Send test OTP email</button></div><div class="note" id="tres"></div></div>
+ <div class="card"><h2>Websites (apps)</h2><div class="w"><table id="apps"></table></div>
+  <h2 style="margin-top:18px">Add a new website</h2><div class="row"><input id="an" placeholder="Name e.g. My Online Store"><input id="ao" placeholder="Allowed origin e.g. https://mystore.com"></div><div class="row"><input id="al" placeholder="Logo URL (https://…png)"><input id="as" placeholder="Site URL"><button id="acreate">Create</button></div><div id="ares"></div></div>
+ <div class="card"><h2>Recent activity</h2><div class="w"><table id="logs"></table></div></div>
+</div></main>
+<script>
+const $=s=>document.querySelector(s);let T='';
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(p,b){const r=await fetch('/admin/api/'+p,{method:b?'POST':'GET',headers:{Authorization:'Bearer '+T,'Content-Type':'application/json'},body:b?JSON.stringify(b):undefined});const j=await r.json();if(!r.ok)throw new Error(j.message||'Error');return j}
+async function load(){const o=await api('overview');$('#login').hidden=true;$('#app').hidden=false;
+ const L=o.last24h;$('#stats').innerHTML=[['Codes sent',L.otpSent],['Verified',L.otpVerified],['Wrong codes',L.otpFailed],['Email errors',L.emailFailed],['Emails sent',L.emailsSent],['Push sent',L.pushSent],['Push subscribers',o.pushSubscribers]].map(x=>`<div class="stat"><b>${x[1]}</b><span>${x[0]}</span></div>`).join('');
+ $('#smtp').innerHTML='SMTP: <code>'+esc(o.smtp.host+':'+o.smtp.port)+'</code> user <code>'+esc(o.smtp.user)+'</code> – '+(o.smtp.configured?'<span class="ok">configured</span>':'<span class="bad">NOT configured (set SMTP_USER and SMTP_PASS)</span>');
+ $('#tapp').innerHTML=o.apps.map(a=>`<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
+ $('#apps').innerHTML='<tr><th>Name</th><th>Public key</th><th>Allowed origins</th><th>Secret key</th></tr>'+o.apps.map(a=>`<tr><td>${esc(a.name)}<br><span class="note">${esc(a.id)}</span></td><td><code>${esc(a.publicKey)}</code></td><td>${a.origins.map(esc).join('<br>')||'—'}</td><td>${a.hasSecretKey?'set':'none'} <button class="g" data-rot="${esc(a.id)}">Generate new</button></td></tr>`).join('');
+ const g=await api('logs');$('#logs').innerHTML='<tr><th>Time</th><th>App</th><th>Event</th><th>Email</th><th>IP</th><th>Detail</th></tr>'+g.logs.map(l=>`<tr><td>${new Date(l.ts*1000).toLocaleString()}</td><td>${esc(l.app_id)}</td><td>${esc(l.type)}</td><td>${esc(l.email)}</td><td>${esc(l.ip)}</td><td>${esc(l.detail)}</td></tr>`).join('')}
+$('#go').onclick=async()=>{T=$('#tok').value.trim();try{await load();sessionStorage.setItem('t',T)}catch(e){$('#lerr').textContent=e.message}};
+$('#tok').onkeydown=e=>{if(e.key==='Enter')$('#go').click()};
+$('#tsend').onclick=async()=>{$('#tres').textContent='Sending…';try{await api('test-email',{appId:$('#tapp').value,to:$('#tto').value});$('#tres').innerHTML='<span class="ok">Sent ✓ check the inbox (and spam).</span>'}catch(e){$('#tres').innerHTML='<span class="bad">'+esc(e.message)+'</span>'}};
+$('#acreate').onclick=async()=>{try{const r=await api('apps',{name:$('#an').value,origins:[$('#ao').value],logoUrl:$('#al').value,siteUrl:$('#as').value});$('#ares').innerHTML='<pre>id: '+esc(r.id)+'\npublic key (put in the website): '+esc(r.publicKey)+'\nsecret key (server only, shown once): '+esc(r.secretKey)+'</pre><p class="note">Apps created here live in the database. On a host with a temporary disk also add the app to apps.config.json.</p>';load()}catch(e){$('#ares').innerHTML='<span class="bad">'+esc(e.message)+'</span>'}};
+document.addEventListener('click',async e=>{const id=e.target.dataset&&e.target.dataset.rot;if(!id)return;if(!confirm('Generate a new secret key? The old one stops working.'))return;try{const r=await api('apps/'+id+'/rotate-secret',{});alert('New secret key (shown once):\n\n'+r.secretKey)}catch(x){alert(x.message)}load()});
+const s=sessionStorage.getItem('t');if(s){T=s;load().catch(()=>sessionStorage.removeItem('t'))}
+</script></body></html>

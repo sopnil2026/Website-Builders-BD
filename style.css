@@ -1715,3 +1715,10 @@ a.sv.ex:hover em{text-decoration:underline}
 .mo:not(.inline) .md{max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;margin:auto}
 .mo:not(.inline) .md{padding-top:26px;padding-bottom:26px}
 @media(max-height:760px){.mo:not(.inline) .md img[alt=""]{width:96px!important;margin-bottom:4px!important}.mo:not(.inline) .md .captcha-help{display:none}.mo:not(.inline) .md form{gap:10px!important}}
+
+/* ===== Email OTP step ===== */
+.otp-code{font:800 32px/1 'Courier New',monospace;letter-spacing:12px;text-align:center;padding:16px 8px 16px 20px!important;border-radius:16px!important}
+.otp-code::placeholder{letter-spacing:12px;color:#cbd5e1}
+.otp-links{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:14px;color:var(--mut)}
+.otp-links button{background:none;border:0;padding:4px;font:inherit;font-weight:700;color:var(--o2);cursor:pointer}
+.otp-links button:disabled{color:var(--mut);cursor:default;font-weight:600}
