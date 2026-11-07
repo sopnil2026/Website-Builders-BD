@@ -19,5 +19,6 @@ services:
       - { key: SMTP_USER, sync: false }
       - { key: SMTP_PASS, sync: false }
       - { key: MAIL_FROM, sync: false }
+      - { key: BREVO_API_KEY, sync: false }
       - { key: VAPID_PUBLIC, sync: false }
       - { key: VAPID_PRIVATE, sync: false }

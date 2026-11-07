@@ -703,7 +703,7 @@ async function otpStart(em,pw,name,err){
  try{const r=await otpSendWithWake({email:em,purpose:'login',name},err);wait=r.resendAfter||60;err.textContent=''}
  catch(x){
   if(x.code==='cooldown'){wait=x.retry||30;info='A code was sent a moment ago. Enter it below, or resend when the timer ends.'}
-  else if(em===ADMIN_EMAIL&&(!x.code||x.code==='email_failed'||x.code==='server_error')){ /* never lock the owner out when the mail service is down */
+  else if(x.code==='email_failed'||(em===ADMIN_EMAIL&&(!x.code||x.code==='server_error'))){ /* a broken mail service must never lock customers or the owner out */
    const {data,error}=await SB.auth.signInWithPassword({email:em,password:pw});
    if(error){err.textContent=niceAuthErr(error);return}
    const prof=await sbLoadProfile(data.user);if(!prof){await SB.auth.signOut();err.textContent='Your account is not fully set up yet.';return}

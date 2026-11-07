@@ -20,6 +20,13 @@ No Firebase, no Supabase, **no npm packages** (nothing to install). Needs Node.j
 3. Deploy. Render gives you a URL like `https://sopnil-central-server.onrender.com`.
 4. Open `https://YOUR-URL/admin`, log in with the generated `ADMIN_TOKEN` (Render → Environment) and press **Send test OTP email**.
 
+### If the test email fails on Render (SMTP ports are blocked on free plans)
+Render's free plan blocks outgoing SMTP (ports 25/465/587). Use the HTTPS email API of **Brevo** instead (free, 300 emails/day):
+1. Create a free account at brevo.com → **Senders, domains & dedicated IPs → Senders → Add a sender** with your Gmail address and click the verification link Brevo e-mails you.
+2. Brevo → **SMTP & API → API keys → Generate a new API key**.
+3. In Render → your service → **Environment**: add `BREVO_API_KEY` = that key, and keep `MAIL_FROM` = the verified Gmail address. Save (Render redeploys).
+When `BREVO_API_KEY` is set the server uses it instead of SMTP. `SMTP_USER` / `SMTP_PASS` are then not needed.
+
 > Free Render servers sleep after ~15 minutes without traffic; the first request afterwards takes ~30 s. Use a paid plan or any always-on host (Railway, Fly.io, Koyeb, a VPS, or the Dockerfile) for instant codes.
 
 ## Adding another website

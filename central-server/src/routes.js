@@ -165,7 +165,7 @@ route('GET', '/admin/api/overview', (ctx) => {
   needAdmin(ctx);
   const d = now() - 86400, c = (type) => q.get('SELECT COUNT(*) c FROM logs WHERE type=? AND ts>?', type, d).c;
   return { apps: listApps().map(publicApp), last24h: { otpSent: c('otp_sent'), otpVerified: c('otp_verified'), otpFailed: c('otp_failed'), emailFailed: c('otp_email_failed') + c('email_failed'), emailsSent: c('email_sent'), pushSent: c('push_sent') },
-    pushSubscribers: q.get('SELECT COUNT(*) c FROM push_subs').c, smtp: { host: config.smtp.host, port: config.smtp.port, user: config.smtp.user ? maskEmail(config.smtp.user) : '(not set)', configured: !!(config.smtp.user && config.smtp.pass) } };
+    pushSubscribers: q.get('SELECT COUNT(*) c FROM push_subs').c, smtp: config.brevo.key ? { host: 'api.brevo.com (HTTPS)', port: 443, user: maskEmail(config.smtp.from || 'sender@unset.invalid'), configured: !!config.smtp.from } : { host: config.smtp.host, port: config.smtp.port, user: config.smtp.user ? maskEmail(config.smtp.user) : '(not set)', configured: !!(config.smtp.user && config.smtp.pass) } };
 });
 route('GET', '/admin/api/logs', (ctx) => { needAdmin(ctx); return { logs: q.all('SELECT ts,app_id,type,email,ip,detail FROM logs ORDER BY id DESC LIMIT 200') }; });
 route('POST', '/admin/api/apps', (ctx) => {

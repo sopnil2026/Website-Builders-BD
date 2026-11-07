@@ -43,6 +43,8 @@ export const config = {
     rejectUnauthorized: env.SMTP_REJECT_UNAUTHORIZED !== 'false',
     timeoutMs: num(env.SMTP_TIMEOUT_MS, 20000),
   },
+  // HTTPS email API (works on hosts that block SMTP ports, e.g. Render free). Set BREVO_API_KEY to use it instead of SMTP.
+  brevo: { key: env.BREVO_API_KEY || '', url: env.BREVO_URL || 'https://api.brevo.com/v3/smtp/email' },
   otp: {
     ttl: num(env.OTP_TTL, 300),
     cooldown: num(env.OTP_COOLDOWN, 60),

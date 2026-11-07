@@ -211,6 +211,21 @@ await test('admin test-email', async () => { const r = await adm('test-email', {
 await test('admin page and client library are served', async () => { const a = await fetch(B + '/admin'); assert.match(await a.text(), /Central Server/); const c = await fetch(B + '/client.js'); assert.match(await c.text(), /SopnilServer/); });
 await test('bad JSON and unknown routes are handled', async () => { const r = await fetch(B + '/v1/otp/send', { method: 'POST', headers: { 'X-API-Key': PK, 'Content-Type': 'application/json' }, body: '{oops' }); assert.equal(r.status, 400); assert.equal((await fetch(B + '/nope')).status, 404); });
 
+console.log('HTTPS email provider (Brevo)');
+await test('sends through the HTTPS API when BREVO_API_KEY is set (for hosts that block SMTP)', async () => {
+  const seen = []; const api = http.createServer((req, res) => { const ch = []; req.on('data', (c) => ch.push(c)); req.on('end', () => { seen.push({ h: req.headers, b: JSON.parse(Buffer.concat(ch)) }); res.writeHead(201, { 'content-type': 'application/json' }); res.end('{"messageId":"x"}'); }); });
+  await new Promise((r) => api.listen(0, '127.0.0.1', r));
+  const P2 = PORT + 1;
+  const c2 = spawn('node', ['--disable-warning=ExperimentalWarning', 'server.js'], { cwd: ROOT, env: { ...process.env, PORT: P2, DB_PATH: tmp + '/db2.sqlite', APPS_FILE: tmp + '/apps.json', SERVER_SECRET: 'test-secret-test-secret-test', SMTP_HOST: '', SMTP_USER: '', SMTP_PASS: '', MAIL_FROM: 'owner@gmail.com', BREVO_API_KEY: 'xkeysib-test', BREVO_URL: `http://127.0.0.1:${api.address().port}/v3/smtp/email`, NODE_ENV: 'development' }, stdio: ['ignore', 'pipe', 'inherit'] });
+  await new Promise((r) => c2.stdout.on('data', (d) => /listening/.test(d) && r()));
+  const r = await fetch(`http://127.0.0.1:${P2}/v1/otp/send`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-API-Key': PK, Origin: ORIGIN }, body: JSON.stringify({ email: 'api@example.com', name: 'Api' }) });
+  assert.equal(r.status, 200);
+  assert.equal(seen.length, 1); assert.equal(seen[0].h['api-key'], 'xkeysib-test');
+  assert.deepEqual(seen[0].b.sender, { name: 'Website Builders BD', email: 'owner@gmail.com' }); assert.equal(seen[0].b.to[0].email, 'api@example.com');
+  assert.match(seen[0].b.htmlContent, /Website Builders BD/); assert.match(seen[0].b.textContent, /\b\d{6}\b/);
+  c2.kill(); api.close();
+});
+
 child.kill(); smtp.srv.close(); pushSrv.close();
 console.log(`\n${passed} passed, ${failed} failed`);
 console.log('Sample email saved to', tmp + '/sample-email.html');

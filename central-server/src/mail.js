@@ -27,6 +27,15 @@ export function buildMime({ fromName, fromAddr, to, subject, text, html }) {
 export async function sendMail(app, { to, subject, text, html }) {
   const addr = (/<([^>]+)>/.exec(config.smtp.from) || [null, config.smtp.from])[1];
   if (!addr) throw new Error('MAIL_FROM / SMTP_USER is not configured');
+  if (config.brevo.key) {
+    const r = await fetch(config.brevo.url, {
+      method: 'POST', signal: AbortSignal.timeout(20000),
+      headers: { 'api-key': config.brevo.key, 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({ sender: { name: app.from_name || app.name, email: addr }, to: [{ email: to }], subject, htmlContent: html, textContent: text }),
+    });
+    if (!r.ok) { let m = ''; try { m = (await r.json()).message || ''; } catch { /* ignore */ } throw new Error(`Brevo ${r.status}: ${m || 'request failed'}`); }
+    return;
+  }
   const data = buildMime({ fromName: app.from_name || app.name, fromAddr: addr, to, subject, text, html });
   await sendSmtp(config.smtp, { from: addr, to, data });
 }
