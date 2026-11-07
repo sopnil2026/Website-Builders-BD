@@ -5,8 +5,11 @@
     "publicKey": "pk_WUruBr4wr4Sl-TSkHn9j6DJg",
     "origins": [
       "https://websitebuildersbd.work.gd",
+      "http://websitebuildersbd.work.gd",
       "https://www.websitebuildersbd.work.gd",
-      "https://sopnil2026.github.io"
+      "http://www.websitebuildersbd.work.gd",
+      "https://sopnil2026.github.io",
+      "http://sopnil2026.github.io"
     ],
     "logoUrl": "https://raw.githubusercontent.com/sopnil2026/Website-Builders-BD/main/assets/email-logo.png",
     "siteUrl": "https://websitebuildersbd.work.gd",

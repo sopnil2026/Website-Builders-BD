@@ -294,7 +294,7 @@ let captchaExpected=0;
 function newCaptcha(){const x=2+Math.floor(Math.random()*8),y=1+Math.floor(Math.random()*9);captchaExpected=x+y;const q=$('#captchaQuestion'),a=$('#captchaAnswer');if(q)q.textContent=x+' + '+y+' = ?';if(a)a.value=''}
 $('#captchaRefresh').addEventListener('click',newCaptcha);
 newCaptcha();
-function setMode(m){mode=m;if(typeof otpReset==='function'&&$('#otpBox').style.display==='block')otpReset();$$('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===m));
+function setMode(m){mode=m;try{warmOtp()}catch{}if(typeof otpReset==='function'&&$('#otpBox').style.display==='block')otpReset();$$('[data-tab]').forEach(b=>b.classList.toggle('on',b.dataset.tab===m));
  $('#nmL').style.display=m==='signup'?'grid':'none';$('#authTitle').textContent=m==='signup'?'Create account':'Welcome back';
  $('#authSubmit').textContent=m==='signup'?'Sign up':'Login';if(AUTHPAGE){try{history.replaceState(null,'',m+'.html')}catch{}document.title=(m==='signup'?'Sign up':'Login')+' – Website Builders BD'}$('#aPass').autocomplete=m==='signup'?'new-password':'current-password';$('#authErr').textContent='';newCaptcha()}
 $$('[data-tab]').forEach(b=>b.onclick=()=>setMode(b.dataset.tab));
@@ -636,7 +636,7 @@ if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.se
 const SUPA_URL='https://khwcsytjkmzqacyhthmq.supabase.co';
 const SUPA_KEY='sb_publishable_YCx1YzRzbX6YrIPeWQKkdg_Pd4aVulu'; // public "publishable" key — safe in the browser; access is limited by database row-level security
 /* Central OTP server. Leave `url` empty to turn the email-code step off. The key is the PUBLIC key (safe in the browser). */
-const OTP={url:'https://sopnil-central-server.onrender.com',key:'pk_WUruBr4wr4Sl-TSkHn9j6DJg'};
+const OTP={wakeMs:8000,url:'https://sopnil-central-server.onrender.com',key:'pk_WUruBr4wr4Sl-TSkHn9j6DJg'};
 let SB=null,SB_READY=false,_pushT=null,BACKEND=Promise.resolve();
 const isAdminNow=()=>{const s=session();return !!s&&s.role==='admin'};
 const isStaffNow=()=>{const s=session();return !!s&&(s.role==='admin'||s.role==='manager')};
@@ -685,6 +685,14 @@ async function otpApi(path,body){
  let j={};try{j=await r.json()}catch{}
  if(!r.ok||j.ok===false){const e=new Error(j.message||'Verification service error. Please try again.');e.code=j.error;e.retry=j.retryAfter;throw e}
  return j}
+/* Free hosts put the server to sleep when idle: wake it up early, and keep retrying while it boots. */
+var _warm=false;
+function warmOtp(){if(_warm||!OTP.url)return;_warm=true;try{fetch(OTP.url.replace(/\/+$/,'')+'/health',{mode:'no-cors',cache:'no-store'}).catch(()=>{})}catch{}}
+warmOtp();
+async function otpSendWithWake(body,err){
+ for(let i=0;;i++){
+  try{return await otpApi('/v1/otp/send',body)}
+  catch(x){if(x.code||i>=6)throw x;err.textContent='Starting the verification server… please wait, this can take up to a minute.';await new Promise(r=>setTimeout(r,OTP.wakeMs))}}}
 let otpTimer=null;
 function otpCooldown(sec){const b=$('#otpResend');clearInterval(otpTimer);let n=sec;
  const tick=()=>{b.disabled=n>0;b.textContent=n>0?'Resend code in '+n+'s':'Resend code';if(n--<=0)clearInterval(otpTimer)};tick();otpTimer=setInterval(tick,1000)}
@@ -692,7 +700,7 @@ function otpReset(){otpCtx=null;clearInterval(otpTimer);$('#otpBox').style.displ
 let otpCtx=null;
 async function otpStart(em,pw,name,err){
  let wait=0,info='';
- try{const r=await otpApi('/v1/otp/send',{email:em,purpose:'login',name});wait=r.resendAfter||60}
+ try{const r=await otpSendWithWake({email:em,purpose:'login',name},err);wait=r.resendAfter||60;err.textContent=''}
  catch(x){
   if(x.code==='cooldown'){wait=x.retry||30;info='A code was sent a moment ago. Enter it below, or resend when the timer ends.'}
   else if(em===ADMIN_EMAIL&&(!x.code||x.code==='email_failed'||x.code==='server_error')){ /* never lock the owner out when the mail service is down */
