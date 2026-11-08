@@ -692,7 +692,7 @@ warmOtp();
 async function otpSendWithWake(body,err){
  for(let i=0;;i++){
   try{return await otpApi('/v1/otp/send',body)}
-  catch(x){if(x.code||i>=6)throw x;err.textContent='Starting the verification server… please wait, this can take up to a minute.';await new Promise(r=>setTimeout(r,OTP.wakeMs))}}}
+  catch(x){if(x.code||i>=4)throw x;err.textContent='Starting the verification server… please wait, this can take up to a minute.';await new Promise(r=>setTimeout(r,OTP.wakeMs))}}}
 let otpTimer=null;
 function otpCooldown(sec){const b=$('#otpResend');clearInterval(otpTimer);let n=sec;
  const tick=()=>{b.disabled=n>0;b.textContent=n>0?'Resend code in '+n+'s':'Resend code';if(n--<=0)clearInterval(otpTimer)};tick();otpTimer=setInterval(tick,1000)}
@@ -703,7 +703,7 @@ async function otpStart(em,pw,name,err){
  try{const r=await otpSendWithWake({email:em,purpose:'login',name},err);wait=r.resendAfter||60;err.textContent=''}
  catch(x){
   if(x.code==='cooldown'){wait=x.retry||30;info='A code was sent a moment ago. Enter it below, or resend when the timer ends.'}
-  else if(x.code==='email_failed'||(em===ADMIN_EMAIL&&(!x.code||x.code==='server_error'))){ /* a broken mail service must never lock customers or the owner out */
+  else if(!['invalid_email','too_many_codes','rate_limited'].includes(x.code)){ /* if the code service or its mail is down, never lock customers or the owner out */
    const {data,error}=await SB.auth.signInWithPassword({email:em,password:pw});
    if(error){err.textContent=niceAuthErr(error);return}
    const prof=await sbLoadProfile(data.user);if(!prof){await SB.auth.signOut();err.textContent='Your account is not fully set up yet.';return}
