@@ -80,25 +80,9 @@
     <label id="nmL" style="display:none">Full name<input id="aName"></label>
     <label>Email<input id="aEmail" type="email" required autocomplete="username"></label>
     <label>Password<input id="aPass" type="password" required minlength="6" autocomplete="current-password"></label>
-    <div class="captcha-box" id="captchaBox" aria-describedby="captchaHelp">
-      <div class="captcha-heading"><b>Human verification</b><span>Anti-bot check</span></div>
-      <div class="captcha-challenge"><strong id="captchaQuestion" aria-live="polite">4 + 3 = ?</strong><button type="button" id="captchaRefresh" class="captcha-refresh" aria-label="Generate a new captcha question">↻ Refresh</button></div>
-      <label class="captcha-answer" for="captchaAnswer">Answer<input id="captchaAnswer" type="number" inputmode="numeric" step="1" required autocomplete="off" placeholder="Enter the result"></label>
-      <small class="captcha-help" id="captchaHelp">Solve this quick question before logging in or creating an account.</small>
-    </div>
     <div class="err" id="authErr" role="alert" aria-live="polite"></div>
     <button class="btn p" style="justify-content:center" id="authSubmit">Login</button>
   </form>
-  <div id="otpBox" style="display:none">
-    <p class="note" style="text-align:center">We sent a 6-digit code to<br><b id="otpTo"></b></p>
-    <form id="otpForm" style="display:grid;gap:14px;margin-top:14px">
-      <input id="otpCode" class="otp-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="••••••" aria-label="6-digit verification code">
-      <div class="err" id="otpErr" role="alert" aria-live="polite"></div>
-      <button class="btn p" style="justify-content:center" id="otpSubmit">Verify &amp; Login</button>
-    </form>
-    <div class="otp-links"><button type="button" id="otpResend">Resend code</button><span>·</span><button type="button" id="otpBack">Use a different account</button></div>
-    <p class="note" style="text-align:center;margin-top:10px">Check your Spam folder if you do not see the email within a minute.</p>
-  </div>
 </div></div>
 
 <!-- Admin -->
