@@ -1700,3 +1700,89 @@ a.sv.ex:hover em{text-decoration:underline}
 .mo:not(.inline) .md{padding-top:26px;padding-bottom:26px}
 @media(max-height:760px){.mo:not(.inline) .md img[alt=""]{width:96px!important;margin-bottom:4px!important}.mo:not(.inline) .md form{gap:10px!important}}
 
+
+
+/* ===== Login/signup page scrolling and mobile action-button visibility fix ===== */
+/* Keep the document itself scrollable; the inline auth panel must not trap wheel or touch scrolling. */
+html,
+body {
+  min-height: 100%;
+}
+body[data-page="login"],
+body[data-page="signup"] {
+  height: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  overflow-y: auto !important;
+}
+body[data-page="login"] main,
+body[data-page="signup"] main {
+  min-height: 0;
+  height: auto;
+  overflow: visible;
+}
+.mo.inline,
+.mo.inline.sh {
+  position: relative;
+  inset: auto;
+  display: grid;
+  width: 100%;
+  height: auto;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: visible;
+  overscroll-behavior: auto;
+  touch-action: pan-y;
+}
+.mo.inline .md {
+  width: min(100%, 430px);
+  max-width: 430px;
+  min-width: 0;
+  max-height: none;
+  overflow: visible;
+  margin: 0 auto;
+}
+
+/* Restore the mobile Send Message action without squeezing the logo, login and menu controls. */
+@media (max-width: 640px) {
+  header .nav {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  header .acts {
+    flex: 1 1 auto;
+    min-width: 0;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+  header .acts .btn.p.sm {
+    display: inline-flex !important;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  header .acts .btn.o.sm {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+  .mo.inline,
+  .mo.inline.sh {
+    padding: 112px 12px calc(48px + env(safe-area-inset-bottom));
+  }
+  .mo.inline .md {
+    width: 100%;
+    padding: 26px 18px;
+  }
+}
+@media (max-width: 360px) {
+  header .acts .btn.p.sm,
+  header .acts .btn.o.sm {
+    padding: 7px 8px;
+    font-size: 11px;
+  }
+  .mo.inline,
+  .mo.inline.sh {
+    padding-top: 122px;
+  }
+}
