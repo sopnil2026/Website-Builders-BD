@@ -1786,3 +1786,41 @@ body[data-page="signup"] main {
     padding-top: 122px;
   }
 }
+
+
+/* ===== Keep the footer Send Message action fully visible below Login/Sign up ===== */
+body[data-page="login"] footer .ftop,
+body[data-page="signup"] footer .ftop {
+  position: relative;
+  z-index: 1;
+  transform: none !important;
+  margin-top: 0 !important;
+  margin-bottom: 36px !important;
+}
+body[data-page="login"] footer .ftop .cta,
+body[data-page="signup"] footer .ftop .cta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+body[data-page="login"] footer .ftop .cta .btn,
+body[data-page="signup"] footer .ftop .cta .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  flex: 0 1 auto;
+  white-space: normal;
+}
+@media (max-width: 640px) {
+  body[data-page="login"] footer .ftop .cta,
+  body[data-page="signup"] footer .ftop .cta {
+    width: 100%;
+  }
+  body[data-page="login"] footer .ftop .cta .btn,
+  body[data-page="signup"] footer .ftop .cta .btn {
+    width: 100%;
+    flex: 1 1 100%;
+  }
+}
