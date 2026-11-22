@@ -1824,3 +1824,53 @@ body[data-page="signup"] footer .ftop .cta .btn {
     flex: 1 1 100%;
   }
 }
+
+
+/* ---- Nov 2026 mobile screenshot fix: compact header and non-overlapping quick contacts ---- */
+@media (max-width:640px){
+  header{padding:8px 0}
+  header.sc{padding:7px 0}
+  header .nav{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    row-gap:8px;
+    column-gap:8px;
+  }
+  header .nav>.logo{
+    flex:0 0 auto;
+    min-width:70px;
+    align-items:flex-start;
+  }
+  header .nav>.logo img{height:34px;max-width:88px}
+  header .nav>.logo span{text-align:left}
+  header .acts{
+    flex:1 1 auto;
+    min-width:0;
+    justify-content:flex-end;
+    gap:6px;
+  }
+  header .acts .btn.o.sm{
+    padding:8px 11px;
+    font-size:12px;
+  }
+  header .burger{width:34px;height:36px;flex:0 0 34px}
+  .hero{padding-top:128px}
+  .hero .wrap{gap:28px}
+  .eyebrow{font-size:11px;letter-spacing:.12em}
+  h1{font-size:clamp(36px,8.2vw,42px);line-height:1.08}
+  .lead{font-size:16px;line-height:1.65}
+  /* Hero already contains Messenger and Send Message actions; hide the
+     fixed floating stack on phones so it cannot cover those buttons. */
+  .fl{display:none!important}
+  #top{bottom:14px;left:14px}
+  body{padding-bottom:env(safe-area-inset-bottom)}
+}
+@media (max-width:380px){
+  header .nav>.logo{min-width:62px}
+  header .nav>.logo img{height:30px;max-width:78px}
+  header .acts .btn.o.sm{padding:7px 8px;font-size:11px}
+  header .burger{width:32px;height:34px;flex-basis:32px}
+  .hero{padding-top:122px}
+  h1{font-size:36px}
+}
