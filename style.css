@@ -2035,3 +2035,31 @@ body[data-page="signup"] footer .ftop .cta .btn {
     height: 35px !important;
   }
 }
+
+
+/* ===== Slightly larger brand logo on mobile header ===== */
+@media (max-width: 640px) {
+  header .nav > .logo {
+    flex: 0 0 70px !important;
+    width: 70px !important;
+    min-width: 70px !important;
+  }
+  header .nav > .logo img {
+    height: 40px !important;
+    max-width: 70px !important;
+  }
+  header .nav > .logo span {
+    font-size: 8.5px !important;
+  }
+}
+@media (max-width: 360px) {
+  header .nav > .logo {
+    flex-basis: 62px !important;
+    width: 62px !important;
+    min-width: 62px !important;
+  }
+  header .nav > .logo img {
+    height: 36px !important;
+    max-width: 62px !important;
+  }
+}
