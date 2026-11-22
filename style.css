@@ -1968,3 +1968,70 @@ body[data-page="signup"] footer .ftop .cta .btn {
     height: 32px !important;
   }
 }
+
+
+/* ===== Mobile header: slightly larger logo and action controls ===== */
+@media (max-width: 640px) {
+  header .wrap {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+  header .nav {
+    gap: 6px !important;
+  }
+  header .nav > .logo {
+    flex: 0 0 62px !important;
+    width: 62px !important;
+    min-width: 62px !important;
+    gap: 2px !important;
+  }
+  header .nav > .logo img {
+    height: 33px !important;
+    max-width: 62px !important;
+  }
+  header .nav > .logo span {
+    font-size: 8px !important;
+    line-height: 1.05 !important;
+  }
+  header .acts {
+    gap: 5px !important;
+  }
+  header .acts .btn.o.sm,
+  header .acts .btn.p.sm {
+    padding: 8px 8px !important;
+    font-size: 10.5px !important;
+    gap: 4px !important;
+  }
+  header .burger {
+    flex-basis: 35px !important;
+    width: 35px !important;
+    min-width: 35px !important;
+    height: 37px !important;
+    font-size: 21px !important;
+  }
+}
+@media (max-width: 360px) {
+  header .nav > .logo {
+    flex-basis: 56px !important;
+    width: 56px !important;
+    min-width: 56px !important;
+  }
+  header .nav > .logo img {
+    height: 30px !important;
+    max-width: 56px !important;
+  }
+  header .nav > .logo span {
+    font-size: 7.5px !important;
+  }
+  header .acts .btn.o.sm,
+  header .acts .btn.p.sm {
+    padding: 7px 6px !important;
+    font-size: 9.5px !important;
+  }
+  header .burger {
+    flex-basis: 33px !important;
+    width: 33px !important;
+    min-width: 33px !important;
+    height: 35px !important;
+  }
+}
